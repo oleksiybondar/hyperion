@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><!DOCTYPE html>
+      <html lang="en">
+      <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Root Page with Iframe and Control Panel</title>
+  <style>
+    /* Basic styles for demonstration purposes */
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    iframe {
+        width: 95%;
+        height: 400px;
+    }
+
+    .control-panel {
+      display: flex;
+      justify-content: center;
+      margin: 20px;
+    }
+    .control-button {
+      cursor: pointer;
+      padding: 10px;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+<h1 class="root-page">Main Page Content</h1>
+<p>This is the main page content.</p>
+
+
+<!-- Static Iframe Element -->
+<iframe src="basic_elements_search_and_interactions.html" id="static-test-iframe"></iframe>
+
+<!-- Iframe Element -->
+<iframe src="iframes_child.html" id="test-iframe"></iframe>
+
+<!-- Control Panel with Button to Re-render the Iframe -->
+<div class="control-panel">
+  <button class="control-button" onclick="reRenderIframe()">Re-render Iframe</button>
+</div>
+
+<script>
+  function reRenderIframe() {
+    // Simulate re-rendering of the iframe by removing and adding it again
+    const iframe = document.getElementById("test-iframe");
+    iframe.parentNode.removeChild(iframe);
+
+    const newIframe = document.createElement("iframe");
+    newIframe.src = "iframes_child.html";
+    newIframe.id = "test-iframe";
+    document.body.appendChild(newIframe);
+  }
+</script>
+
+</body>
+</html>

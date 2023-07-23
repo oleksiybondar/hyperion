@@ -1,0 +1,40 @@
+.debug, .grey-color, .status-skipped {
+    color: #808080;
+}
+
+.grey2-color {
+    color: #bbbbbb;
+}
+
+.info, .blue-color, .button.pageSource, .test-meta-field .value .tag {
+    color: #00adfc;
+}
+
+.warning, .orange-color, .status-undefined {
+    color: #cc6300;
+}
+
+.yellow-color, .button.timestamp{
+    color: #ffd957;
+}
+
+.error, .fatal, .assert-false, .red-color, .exception, .button.backtrace, .status-failed {
+    color: #ff0000;
+}
+
+
+.assert-true, .green-color, .status-passed {
+    color: #00ad00;
+}
+
+.green2-color, .button.screenSnap {
+    color: #68a771;
+}
+
+.pink-color, .button.level {
+    color: #b272a8
+}
+
+.purple-color, .button.logger {
+    color: #467bd1;
+}

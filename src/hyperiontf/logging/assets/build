@@ -1,0 +1,69 @@
+#!/bin/bash
+echo 'Generation HTML Template...'
+[ -e template.html ] && rm template.html
+
+echo '  Generating HTML stub...'
+echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Test Log | Hyperion Testing Framework</title>' > template.html
+echo '  Done!'
+
+echo '  Minify JavaScript and appending to HTML...'
+echo '<script type="application/javascript">' >> template.html
+if [ "$1" == "dev" ]; then
+  cat js/helpers.js >> template.html
+  cat js/config.js >> template.html
+  cat js/eventBroker.js >> template.html
+  cat js/controlPanel.js >> template.html
+  cat js/line.js >> template.html
+  cat js/logger.js >> template.html
+  cat js/app.js >> template.html
+else
+  minify js/helpers.js >> template.html
+  minify js/config.js >> template.html
+  minify js/eventBroker.js >> template.html
+  minify js/controlPanel.js >> template.html
+  minify js/line.js >> template.html
+  minify js/logger.js >> template.html
+  minify js/app.js >> template.html
+fi
+echo '</script>' >> template.html
+echo '  Done!'
+
+echo '  Minify CSS and appending to HTML...'
+echo '<style>' >> template.html
+if [ "$1" == "dev" ]; then
+  cat css/icon.css >> template.html
+  cat css/icon-images.css >> template.html
+  cat css/icon-color-filters.css >> template.html
+  cat css/tooltip.css >> template.html
+  cat css/colors.css >> template.html
+  cat css/button.css >> template.html
+  cat css/button-border-colors.css >> template.html
+  cat css/filter-bar.css >> template.html
+  cat css/log-message.css >> template.html
+  cat css/header.css >> template.html
+  cat css/misc.css >> template.html
+else
+  minify css/icon.css >> template.html
+  minify css/icon-images.css >> template.html
+  minify css/icon-color-filters.css >> template.html
+  minify css/tooltip.css >> template.html
+  minify css/colors.css >> template.html
+  minify css/button.css >> template.html
+  minify css/button-border-colors.css >> template.html
+  minify css/filter-bar.css >> template.html
+  minify css/log-message.css >> template.html
+  minify css/header.css >> template.html
+  minify css/misc.css >> template.html
+fi
+echo '</style>' >> template.html
+echo '  Done!'
+
+echo '  Finalizing HTML template...'
+echo '</head><body></body></html>
+<!--!IMPORTANT NOTE!-->
+<!--This is element located outside the HTML and BODY tag and has no tag close, this being made on purpose as this is a-->
+<!--trick for logger, which can easily append JSON lines without rereading and formatting the file. Then at browser runtime-->
+<!--this tag will be automatically closed and prepended into a body, and then it will be readable by Logger JS application-->
+<div class="hidden" id="ndjson-data">' >> template.html
+echo '  Done!'
+echo 'All Done!'

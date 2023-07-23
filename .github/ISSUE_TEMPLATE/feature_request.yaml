@@ -1,0 +1,76 @@
+name: Feature Request
+description: Suggest a new feature for the Hyperion Testing Framework
+body:
+  - type: markdown
+    attributes:
+      value: "### Hyperion Testing Framework - Feature Request"
+
+  - type: input
+    id: feature-title
+    attributes:
+      label: Feature Title
+      description: "Provide a concise title for the feature."
+      placeholder: "Enter the title of the feature here"
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: "Describe the feature in detail, including what it would do, why it would be useful, and how it would work."
+      placeholder: "Enter the detailed description of the feature here"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: automation-tools
+    attributes:
+      label: Related Automation Tools
+      description: "Select the automation tools that this feature request is related to."
+      options:
+        - label: selenium
+        - label: appium
+        - label: playwright
+
+  - type: dropdown
+    id: target-platform
+    attributes:
+      label: Target Platform
+      description: "Specify the platform the feature is intended for: web, mobile, desktop, mobile-hybrid, or desktop-hybrid."
+      options:
+        - web
+        - mobile
+        - desktop
+        - mobile-hybrid
+        - desktop-hybrid
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Use Cases
+      description: "Describe the use cases for this feature. Explain how different types of users would utilize this feature."
+      placeholder: "Describe the use cases here"
+
+  - type: textarea
+    id: alternatives-considered
+    attributes:
+      label: Alternatives Considered
+      description: "Describe any alternative solutions or features you have considered. Explain why the feature you are requesting is preferable."
+      placeholder: "Describe the alternatives here, if any"
+
+  - type: checkboxes
+    id: impact
+    attributes:
+      label: Impact
+      description: "Indicate the potential impact of this feature on existing functionalities."
+      options:
+        - label: "No impact on existing functionalities"
+        - label: "Minor impact on existing functionalities"
+        - label: "Major impact on existing functionalities"
+
+  - type: markdown
+    attributes:
+      value: "### Additional Information\n\nInclude any other information, files, or links that might be relevant to the feature request."

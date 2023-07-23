@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "hyperiontf"
+version = "0.1.0"
+description = "Hyperion Testing Framework"
+authors = ["Oleksiy Bondar <bondaroleksiyandriyovich@gmail.com>"]
+license = "Apache 2.0 License"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+jsonschema = "^4.18.6"
+selenium = "^4.11.2"
+Appium-Python-Client = "^2.11.1"
+playwright = "^1.36.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

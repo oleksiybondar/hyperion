@@ -1,0 +1,26 @@
+.filters-panel-wrapper, .filter-container {
+    display: flex;
+}
+
+.source-filter-bar-wrapper {
+    min-width: 31%;
+}
+
+.filters-panel-wrapper {
+    border-bottom: solid;
+    border-width: 1px;
+    height: 97px;
+}
+
+.content-filter-bar-wrapper {
+    min-width: 250px;
+}
+
+.filter-container {
+    flex-flow: row wrap;
+    justify-content: center;
+}
+
+.filter-bar .label {
+    text-align: center;
+}

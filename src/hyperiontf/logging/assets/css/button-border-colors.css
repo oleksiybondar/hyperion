@@ -1,0 +1,43 @@
+.button{
+    border-color: #bbbbbb;
+}
+
+.button.debug.enabled, .button.enabled.grey-color{
+    border-color: #808080;
+}
+
+.button.enabled.grey2-color {
+    border-color: #bbbbbb;
+}
+
+.button.info.enabled, .button.enabled.blue-color, .button.enabled.pageSource {
+    border-color: #00adfc;
+}
+
+.button.assert-true.enabled, .button.enabled.green-color {
+    border-color: #00ad00;
+}
+
+.button.enabled.green2-color, .button.enabled.screenSnap {
+    border-color: #68a771;
+}
+
+.button.warning.enabled, .button.enabled.orange-color {
+    border-color: #cc6300;
+}
+
+.button.error.enabled, .button.fatal.enabled, .button.enabled.red-color, .button.enabled.backtrace {
+    border-color: #ff0000;
+}
+
+.yellow-color.button.enabled, .button.enabled.timestamp{
+    border-color: #ffd957;
+}
+
+.pink-color.button.enabled, .button.enabled.level {
+    border-color: #b272a8
+}
+
+.purple-color.button.enabled, .button.enabled.logger {
+    border-color: #467bd1;
+}

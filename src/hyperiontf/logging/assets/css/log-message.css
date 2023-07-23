@@ -1,0 +1,125 @@
+.message-wrapper {
+    display: flex;
+    min-height: 40px;
+}
+
+.message-wrapper .expand-collapse-stub {
+    width: 25px;
+    overflow: hidden;
+    text-align: right;
+    padding: 3px 3px 3px 3px;
+}
+
+.message-wrapper .time-stamp {
+    width: 100px;
+    overflow: hidden;
+    text-align: right;
+    padding: 3px 3px 3px 3px;
+}
+
+.message-wrapper .level {
+    width: 75px;
+    text-align: center;
+    padding: 3px 3px 3px 3px;
+}
+
+.message-wrapper .message {
+    padding: 3px 3px 3px 3px;
+    overflow-y: hidden;
+    max-height: 100%;
+    flex-grow: 1;
+    display: flex
+}
+
+.message-wrapper .message .message-content {
+    flex-grow: 1;
+    width: calc(1vw - 225px);
+    word-wrap: break-word;
+}
+
+
+.message-wrapper .message .message-expand-collapse-wrapper {
+    position: relative;
+    top: 30px;
+    right: 2px;
+
+    margin-bottom: 40px;
+
+
+}
+
+.message-wrapper .message .message-expand-collapse-wrapper .icon {
+    height: 100%;
+}
+
+.message-wrapper .message .message-expand-collapse-wrapper .stick-top {
+    background-position: top;
+}
+
+.message-wrapper .message .message-expand-collapse-wrapper .stick-bottom {
+    background-position: bottom;
+}
+
+.message-wrapper .message.collapsed{
+    max-height: 150px;
+}
+
+.message-wrapper .logger-name {
+    width: 135px;
+    text-align: center;
+    padding: 3px 3px 3px 3px;
+}
+
+.message-wrapper .logger-source {
+    width: 25px;
+    padding: 3px 3px 3px 3px;
+}
+
+.message-wrapper .time-stamp, .message-wrapper .logger-name, .message-wrapper .level {
+    border-right: dotted #3c3f41 1px;
+}
+
+.document-header .message-wrapper .time-stamp, .document-header .message-wrapper .logger-name, .document-header .message-wrapper .level {
+    border-right: dotted #bbbbbb 1px;
+}
+
+.message-wrapper .icon {
+    padding: 2px 2px 2px 2px;
+}
+
+.message-wrapper .expand-collapse-wrapper{
+    position: absolute;
+    left: 5px;
+    margin-top: 3px;
+}
+
+.message-wrapper .logger-source{
+    position: absolute;
+    right: 12px;
+}
+
+.log-line-wrapper  img {
+    max-width: 1000px;
+}
+
+.log-line-wrapper  .screen-snaps-wrapper, .log-line-wrapper  .page-sources-wrapper {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+}
+
+.log-line-wrapper  .screen-snap-wrapper, .log-line-wrapper  .page-source-wrapper {
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    margin: 5px 5px 5px 5px;
+}
+
+.main-content .log-line-wrapper {
+    border-bottom: solid #3c3f41 1px;
+}
+
+.log-line-wrapper .exception {
+    padding-left: 7%;
+    padding-right: 7%;
+}

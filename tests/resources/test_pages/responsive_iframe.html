@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viewport Resizing with Buttons</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background-color: #f2f2f2;
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    #iframe-container {
+      max-width: 100%;
+      overflow: hidden;
+      margin-top: 40px; /* Add margin to push the iframe below the header */
+    }
+
+    iframe {
+      width: 100%;
+      height: 500px; /* Set an initial height for the iframe */
+      border: none;
+    }
+
+    .button-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .button {
+      margin: 5px;
+      padding: 10px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="button-container">
+    <button class="button" onclick="resizeIframe('xs')">Extra Small (xs)</button>
+    <button class="button" onclick="resizeIframe('sm')">Small (sm)</button>
+    <button class="button" onclick="resizeIframe('md')">Medium (md)</button>
+    <button class="button" onclick="resizeIframe('lg')">Large (lg)</button>
+    <button class="button" onclick="resizeIframe('xl')">Extra Large (xl)</button>
+    <button class="button" onclick="resizeIframe('xxl')">Extra Extra Large (xxl)</button>
+  </div>
+</header>
+
+<div id="iframe-container">
+  <iframe src="responsive_locators.html"></iframe>
+</div>
+
+<script>
+  function resizeIframe(viewport) {
+    const iframe = document.querySelector('iframe');
+    const viewports = {
+      xs: 320,
+      sm: 576,
+      md: 768,
+      lg: 992,
+      xl: 1200,
+      xxl: 1440
+    };
+
+    iframe.style.width = `${viewports[viewport]}px`;
+  }
+</script>
+</body>
+</html>

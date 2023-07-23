@@ -1,0 +1,87 @@
+name: Bug Report
+description: Report a bug in the Hyperion Testing Framework
+body:
+  - type: markdown
+    attributes:
+      value: "### Hyperion Testing Framework - Bug Report"
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: "Provide a clear and concise description of the bug. Include screenshots if applicable."
+      placeholder: "Enter the description of the bug here"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps or Code to Reproduce
+      description: "Detail the exact steps to reproduce the bug, or provide the code snippet that causes the issue."
+      placeholder: "Enter the steps or code to reproduce the bug here"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: automation-tool
+    attributes:
+      label: Automation Tool
+      description: "Specify the automation tool used."
+      options:
+        - selenium
+        - playwright
+        - appium
+    validations:
+      required: true
+
+  - type: input
+    id: package-version
+    attributes:
+      label: Related Package Version
+      description: "Provide the version of the related package (selenium/playwright/appium/etc.) used."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Runtime Operating System
+      description: "Select the operating system where the code runs."
+      options:
+        - Windows
+        - Linux
+        - macOS
+    validations:
+      required: true
+
+  - type: input
+    id: os-full-name-version
+    attributes:
+      label: OS Full Name and Version (Optional)
+      description: "Provide the full name and version of the operating system, if available (e.g., Windows 10, macOS Big Sur, Ubuntu 18.04, etc.)."
+      placeholder: "Enter the full name and version here"
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: "Specify the platform: web, mobile, desktop, mobile-hybrid, or desktop-hybrid."
+      options:
+        - web
+        - mobile
+        - desktop
+        - mobile-hybrid
+        - desktop-hybrid
+    validations:
+      required: true
+
+  - type: input
+    id: framework-logs
+    attributes:
+      label: Optional Framework Logs
+      description: "If available, attach logs from the framework with enabled logs capture."
+
+  - type: markdown
+    attributes:
+      value: "### Additional Information\n\nInclude any other information that might be relevant to the issue."

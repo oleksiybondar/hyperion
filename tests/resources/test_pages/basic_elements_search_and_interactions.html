@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page for Element and Widget Locators</title>
+    <style>
+        /* Basic styles for demonstration purposes */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .single-element {
+            background-color: lightblue;
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin: 5px;
+        }
+        .unique-element-1 {
+            background-color: lightgreen;
+        }
+        .unique-element-2 {
+            background-color: lightcoral;
+        }
+        .multiple-element {
+            background-color: pink;
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin: 5px;
+        }
+        .widget {
+            background-color: lightgray;
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin: 5px;
+        }
+        .widget .child-element {
+            background-color: lightyellow;
+        }
+        .clickable {
+            cursor: pointer;
+            background-color: orange;
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin: 5px;
+        }
+        input[type="text"] {
+            padding: 5px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+<!-- Single Elements -->
+<div class="single-element" data-testid="single-element-1" id="single-element-1">
+    Single Element 1 (ID: single-element-1)
+</div>
+
+<p class="single-element unique-element-1" data-testid="single-element-2">
+    Single Element 2 (Unique Style 1)
+</p>
+
+<button class="single-element unique-element-2" data-testid="single-element-3">
+    Single Element 3 (Unique Style 2)
+</button>
+
+<!-- Multiple Elements -->
+<div class="multiple-element" data-testid="multiple-element-1">
+    Multiple Element 1
+</div>
+
+<div class="multiple-element" data-testid="multiple-element-2">
+    Multiple Element 2
+</div>
+
+<span class="multiple-element" data-testid="multiple-element-3">
+    Multiple Element 3
+  </span>
+
+<!-- Single Widget -->
+<div class="widget" data-testid="single-widget-1">
+    Single Widget 1
+    <p class="child-element" data-testid="widget-child-1">Widget Child Element 1</p>
+</div>
+
+<!-- Nested Single Widget -->
+<div class="widget" data-testid="nested-single-widget">
+    Nested Single Widget
+    <div class="widget" data-testid="nested-child-widget">
+        Nested Child Widget
+        <span class="child-element" data-testid="nested-widget-child-1">Nested Widget Child Element 1</span>
+    </div>
+</div>
+
+<!-- Multiple Widgets -->
+<div class="widget" data-testid="multiple-widget-1">
+    Multiple Widget 1
+    <p class="child-element" data-testid="widget-child-2">Widget Child Element 2</p>
+</div>
+
+<div class="widget" data-testid="multiple-widget-2">
+    Multiple Widget 2
+    <button class="child-element" data-testid="widget-child-3">Widget Child Element 3</button>
+</div>
+
+<!-- Nested Multiple Widgets -->
+<div class="widget" data-testid="nested-multiple-widget">
+    Nested Multiple Widget
+    <div class="widget" data-testid="nested-widget-1">
+        Nested Widget 1
+        <p class="child-element" data-testid="nested-widget-child-2">Nested Widget Child Element 2</p>
+    </div>
+    <div class="widget" data-testid="nested-widget-2">
+        Nested Widget 2
+        <span class="child-element" data-testid="nested-widget-child-3">Nested Widget Child Element 3</span>
+    </div>
+</div>
+
+<!-- Clickable Element for Action Verification -->
+<div class="clickable" id="clickable-element" onclick="updateClickCount()" data-testid="clickable-element">
+    Click Me (Click Count: <span id="click-count">0</span>)
+</div>
+
+<!-- Input Element for Action Verification -->
+<input type="text" id="input-element" placeholder="Type here..." data-testid="input-element">
+
+<script>
+  let clickCount = 0;
+
+  function updateClickCount() {
+    clickCount++;
+    document.getElementById("click-count").innerText = clickCount;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viewport Specific Elements</title>
+    <style>
+        /* Sample styling to differentiate elements for different viewports */
+        .box {
+            width: 100%;
+            height: 100px;
+            text-align: center;
+            margin-bottom: 10px;
+            background-color: #f2f2f2;
+            border: 1px solid #ccc;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            position: relative;
+        }
+
+        /* Show only the element with the class 'active' */
+        .box.active {
+            display: flex;
+        }
+
+        .content {
+            padding: 10px;
+        }
+
+        @media (min-width: 576px) {
+            .box-sm {
+                background-color: #ffc107;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .box-md {
+                background-color: #17a2b8;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .box-lg {
+                background-color: #28a745;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .box-xl {
+                background-color: #dc3545;
+            }
+        }
+
+        @media (min-width: 1400px) {
+            .box-xxl {
+                background-color: #6610f2;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container"></div>
+
+<script>
+  // Function to calculate the current viewport and render the appropriate elements
+  function renderElements() {
+    const viewports = {
+      xs: { min: 0, max: 575.98 },
+      sm: { min: 576, max: 767.98 },
+      md: { min: 768, max: 991.98 },
+      lg: { min: 992, max: 1199.98 },
+      xl: { min: 1200, max: 1399.98 },
+      xxl: { min: 1400, max: Infinity }
+    };
+
+    let currentViewport = 'xs';
+    const windowWidth = window.innerWidth;
+
+    for (const viewport in viewports) {
+      const { min, max } = viewports[viewport];
+      if (windowWidth >= min && windowWidth <= max) {
+        currentViewport = viewport;
+        break;
+      }
+    }
+
+    const container = document.querySelector('.container');
+    container.innerHTML = '';
+
+    const elementCount = windowWidth >= viewports.lg.min ? 4 : 3; // Show 4 elements for large and extra large viewports, otherwise show 3 elements
+
+    for (let i = 1; i <= elementCount; i++) {
+      const newElement = document.createElement('div');
+      newElement.classList.add('box', `box-${currentViewport}`, `el${i}`, 'active');
+      newElement.innerHTML = `
+                    <div class="content">
+                        ${currentViewport.toUpperCase()} (${currentViewport}) Element ${i}
+                    </div>
+                `;
+      container.appendChild(newElement);
+    }
+  }
+
+  // Call the function initially and on window resize
+  renderElements();
+  window.addEventListener('resize', renderElements);
+</script>
+</body>
+</html>

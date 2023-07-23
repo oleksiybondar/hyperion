@@ -1,0 +1,51 @@
+
+.icon, .icon.grey2-color, .icon.header{
+    filter: invert(86%) sepia(7%) saturate(6%) hue-rotate(10deg) brightness(87%) contrast(91%)
+}
+
+.icon.debug, .icon.grey-color {
+    filter: invert(48%) sepia(79%) saturate(4%) hue-rotate(27deg) brightness(90%) contrast(87%);
+}
+
+.icon.info, .icon.header, .icon.blue-color, .icon.pageSource {
+    filter: invert(56%) sepia(62%) saturate(5020%) hue-rotate(195deg) brightness(88%) contrast(98%);
+}
+
+.icon.assert-true, .icon.green-color {
+    filter: invert(38%) sepia(99%) saturate(1063%) hue-rotate(89deg) brightness(94%) contrast(109%);
+}
+
+.icon.green2-color, .icon.screenSnap {
+    filter: invert(68%) sepia(8%) saturate(1974%) hue-rotate(77deg) brightness(88%) contrast(83%);
+}
+
+.icon.warning {
+    filter: invert(93%) sepia(32%) saturate(3091%) hue-rotate(311deg) brightness(106%) contrast(82%);
+}
+
+.icon.error, .icon.assert-false, .icon.red-color, .icon.backtrace {
+    filter: invert(31%) sepia(41%) saturate(2820%) hue-rotate(344deg) brightness(94%) contrast(93%);
+}
+
+.icon.fatal {
+    filter: invert(25%) sepia(29%) saturate(4482%) hue-rotate(345deg) brightness(83%) contrast(85%);
+}
+
+.icon.purple-color, .icon.logger {
+    filter: invert(53%) sepia(32%) saturate(5035%) hue-rotate(198deg) brightness(86%) contrast(88%);
+}
+
+.icon.pink-color, .icon.level {
+    filter: invert(59%) sepia(14%) saturate(1218%) hue-rotate(258deg) brightness(85%) contrast(85%);
+}
+
+.icon.orange-color{
+    filter: invert(93%) sepia(32%) saturate(3091%) hue-rotate(311deg) brightness(106%) contrast(82%);
+}
+
+.icon.yellow-color, .icon.timestamp{
+    filter: invert(91%) sepia(26%) saturate(1030%) hue-rotate(337deg) brightness(96%) contrast(111%);
+}
+
+
+

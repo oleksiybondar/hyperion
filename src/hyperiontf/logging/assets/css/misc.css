@@ -1,0 +1,9 @@
+.hidden {
+    display: none !important;
+}
+
+body {
+    background-color: #2B2B2B;
+    color: #bbbbbb;
+    font-family: Helvetica Neue;
+}

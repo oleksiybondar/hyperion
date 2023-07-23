@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Page with Control Panel</title>
+  <style>
+    /* Basic styles for demonstration purposes */
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    .single-element {
+      background-color: lightblue;
+      padding: 10px;
+      border: 1px solid #ccc;
+      margin: 5px;
+    }
+    .unique-element-1 {
+      background-color: lightgreen;
+    }
+    .unique-element-2 {
+      background-color: lightcoral;
+    }
+    .multiple-element {
+      background-color: pink;
+      padding: 10px;
+      border: 1px solid #ccc;
+      margin: 5px;
+    }
+    .widget {
+      background-color: lightgray;
+      padding: 10px;
+      border: 1px solid #ccc;
+      margin: 5px;
+    }
+    .widget .child-element {
+      background-color: lightyellow;
+    }
+    .control-panel {
+      display: flex;
+      justify-content: center;
+      margin: 20px;
+    }
+    .control-button {
+      cursor: pointer;
+      padding: 10px;
+      margin: 5px;
+    }
+    .clickable {
+      cursor: pointer;
+      background-color: orange;
+      padding: 10px;
+      border: 1px solid #ccc;
+      margin: 5px;
+    }
+    input[type="text"] {
+      padding: 5px;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+<!-- Single Elements -->
+<div class="single-element" data-testid="single-element-1" id="single-element-1">
+  Single Element 1 (ID: single-element-1)
+</div>
+
+<p class="single-element unique-element-1" data-testid="single-element-2">
+  Single Element 2 (Unique Style 1)
+</p>
+
+<button class="single-element unique-element-2" data-testid="single-element-3">
+  Single Element 3 (Unique Style 2)
+</button>
+
+<!-- Multiple Elements -->
+<div class="multiple-element" data-testid="multiple-element-1">
+  Multiple Element 1
+</div>
+
+<div class="multiple-element" data-testid="multiple-element-2">
+  Multiple Element 2
+</div>
+
+<span class="multiple-element" data-testid="multiple-element-3">
+    Multiple Element 3
+  </span>
+
+<!-- Single Widget -->
+<div class="widget" data-testid="single-widget-1">
+  Single Widget 1
+  <p class="child-element" data-testid="widget-child-1">Widget Child Element 1</p>
+</div>
+
+<!-- Nested Multiple Widgets -->
+<div class="widget" data-testid="nested-multiple-widget">
+  Nested Multiple Widget
+  <div class="widget" data-testid="nested-widget-1">
+    Nested Widget 1
+    <p class="child-element" data-testid="nested-widget-child-2">Nested Widget Child Element 2</p>
+  </div>
+  <div class="widget" data-testid="nested-widget-2">
+    Nested Widget 2
+    <span class="child-element" data-testid="nested-widget-child-3">Nested Widget Child Element 3</span>
+  </div>
+</div>
+
+<!-- Control Panel with Buttons -->
+<div class="control-panel">
+  <button class="control-button" onclick="reRenderSingleElement()">Re-render Single Element</button>
+  <button class="control-button" onclick="reRenderMultipleElements()">Re-render Multiple Elements</button>
+  <button class="control-button" onclick="reRenderSingleWidget()">Re-render Single Widget</button>
+  <button class="control-button" onclick="reRenderWidgetChild()">Re-render Widget Child</button>
+  <button class="control-button" onclick="reRenderNestedWidget()">Re-render NestedWidgets</button>
+</div>
+
+<!-- Additional Elements for Testing -->
+<div class="clickable" id="clickable-element" onclick="updateClickCount()" data-testid="clickable-element">
+  Click Me (Click Count: <span id="click-count">0</span>)
+</div>
+
+<input type="text" id="input-element" placeholder="Type here..." data-testid="input-element">
+
+<p class="single-element unique-element-1" data-testid="single-element-4">
+  Single Element 4 (Unique Style 1)
+</p>
+
+<button class="single-element unique-element-2" data-testid="single-element-5">
+  Single Element 5 (Unique Style 2)
+</button>
+
+<div class="multiple-element" data-testid="multiple-element-4">
+  Multiple Element 4
+</div>
+
+<div class="multiple-element" data-testid="multiple-element-5">
+  Multiple Element 5
+</div>
+
+<span class="multiple-element" data-testid="multiple-element-6">
+    Multiple Element 6
+  </span>
+
+<div class="widget" data-testid="single-widget-2">
+  Single Widget 2
+  <p class="child-element" data-testid="widget-child-2">Widget Child Element 2</p>
+</div>
+
+<div class="widget" data-testid="single-widget-3">
+  Single Widget 3
+  <button class="child-element" data-testid="widget-child-3">Widget Child Element 3</button>
+</div>
+
+<div class="widget" data-testid="multiple-widget-3">
+  Multiple Widget 3
+  <p class="child-element" data-testid="widget-child-4">Widget Child Element 4</p>
+</div>
+
+<div class="widget" data-testid="multiple-widget-4">
+  Multiple Widget 4
+  <span class="child-element" data-testid="widget-child-5">Widget Child Element 5</span>
+</div>
+
+<script>
+  let clickCount = 0;
+
+  function updateClickCount() {
+    clickCount++;
+    document.getElementById("click-count").innerText = clickCount;
+  }
+
+  function reRenderSingleElement() {
+    const singleElement = document.getElementById("single-element-1");
+    singleElement.parentNode.removeChild(singleElement);
+    const newSingleElement = document.createElement("div");
+    newSingleElement.className = "single-element";
+    newSingleElement.id = "single-element-1";
+    newSingleElement.setAttribute("data-testid", "single-element-1");
+    newSingleElement.innerText = "Re-rendered Single Element";
+    document.body.appendChild(newSingleElement);
+  }
+
+  function reRenderMultipleElements() {
+    const multipleElements = document.querySelectorAll("[data-testid^='multiple-element']");
+    multipleElements.forEach((element, index) => {
+      element.parentNode.removeChild(element);
+      const newMultipleElement = document.createElement("div");
+      newMultipleElement.className = "multiple-element";
+      newMultipleElement.setAttribute("data-testid", `multiple-element-${index + 1}`);
+      newMultipleElement.innerText = `Re-rendered Multiple Element ${index + 1}`;
+      document.body.appendChild(newMultipleElement);
+    });
+  }
+
+  function reRenderSingleWidget() {
+    const singleWidget = document.querySelector("[data-testid='single-widget-1']");
+    singleWidget.parentNode.removeChild(singleWidget);
+    const newSingleWidget = document.createElement("div");
+    newSingleWidget.className = "widget";
+    newSingleWidget.setAttribute("data-testid", "single-widget-1");
+    newSingleWidget.innerText = "Re-rendered Single Widget";
+    const newChildElement = document.createElement("p");
+    newChildElement.className = "child-element";
+    newChildElement.setAttribute("data-testid", "widget-child-1");
+    newChildElement.innerText = "Re-rendered Widget Child Element";
+    newSingleWidget.appendChild(newChildElement);
+    document.body.appendChild(newSingleWidget);
+  }
+
+  function reRenderWidgetChild() {
+    const widgetChild = document.querySelector("[data-testid='widget-child-1']");
+    widgetChild.parentNode.removeChild(widgetChild);
+    const newWidgetChild = document.createElement("p");
+    newWidgetChild.className = "child-element";
+    newWidgetChild.setAttribute("data-testid", "widget-child-1");
+    newWidgetChild.innerText = "Re-rendered Widget Child Element";
+    const singleWidget = document.querySelector("[data-testid='single-widget-1']");
+    singleWidget.appendChild(newWidgetChild);
+  }
+
+  function reRenderNestedWidget() {
+    const nestedWidget = document.querySelector("[data-testid='nested-multiple-widget']");
+    nestedWidget.parentNode.removeChild(nestedWidget);
+    const newNestedWidget = document.createElement("div");
+    newNestedWidget.className = "widget";
+    newNestedWidget.setAttribute("data-testid", "nested-multiple-widget");
+    newNestedWidget.innerText = "Re-rendered Nested Multiple Widget";
+
+    const newNestedWidget1 = document.createElement("div");
+    newNestedWidget1.className = "widget";
+    newNestedWidget1.setAttribute("data-testid", "nested-widget-1");
+    newNestedWidget1.innerText = "Re-rendered Nested Widget 1";
+
+    const newChildElement1 = document.createElement("p");
+    newChildElement1.className = "child-element";
+    newChildElement1.setAttribute("data-testid", "nested-widget-child-2");
+    newChildElement1.innerText = "Re-rendered Nested Widget Child Element 2";
+    newNestedWidget1.appendChild(newChildElement1);
+    newNestedWidget.appendChild(newNestedWidget1);
+
+    const newNestedWidget2 = document.createElement("div");
+    newNestedWidget2.className = "widget";
+    newNestedWidget2.setAttribute("data-testid", "nested-widget-2");
+    newNestedWidget2.innerText = "Re-rendered Nested Widget 2";
+
+    const newChildElement2 = document.createElement("span");
+    newChildElement2.className = "child-element";
+    newChildElement2.setAttribute("data-testid", "nested-widget-child-3");
+    newChildElement2.innerText = "Re-rendered Nested Widget Child Element 3";
+    newNestedWidget2.appendChild(newChildElement2);
+    newNestedWidget.appendChild(newNestedWidget2);
+
+    document.body.appendChild(newNestedWidget);
+  }
+</script>
+</body>
+</html>

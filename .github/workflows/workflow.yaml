@@ -1,0 +1,97 @@
+name: Hyperion Test Framework Workflow
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+  push:
+    branches:
+      - master
+    paths:
+      - 'src/**'
+      - 'tests/**'
+
+jobs:
+  style-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+
+      - name: Install style check dependencies
+        run: pip install mypy black
+
+      - name: Run MyPy for type checking
+        run: mypy src/
+
+      - name: Run Black for code formatting
+        run: black --check src/
+
+      - name: Run Ruff for additional style checks
+        uses: chartboost/ruff-action@v1
+
+  test-execution:
+    needs: style-checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install test dependencies
+        run: |
+          pip install jsonschema
+          pip install selenium
+          pip install Appium-Python-Client
+          pip install playwright
+          pip install pytest
+
+      - name: Extend PYTHONPATH
+        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src" >> $GITHUB_ENV
+
+      - name: Run PyTest (excluding demo_test.py)
+        run: |
+          cd tests
+          pytest ./ --ignore=test/demo_test.py
+
+      - name: Upload logs as artifact
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-logs
+          path: tests/logs/ # Replace this with the actual path to your log files
+          retention-days: 7
+
+  build-check:
+    needs: test-execution
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install dependencies with Poetry
+        run: poetry install
+
+      - name: Build with Poetry (without publishing)
+        run: poetry build

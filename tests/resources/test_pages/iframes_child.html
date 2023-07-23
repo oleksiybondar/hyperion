@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iframe Page with Control Panel</title>
+    <style>
+        /* Basic styles for demonstration purposes */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        iframe {
+            width: 90%;
+            height: 350px;
+        }
+
+        .control-panel {
+            display: flex;
+            justify-content: center;
+            margin: 20px;
+        }
+        .control-button {
+            cursor: pointer;
+            padding: 10px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+<h1 class="child-title">Iframe Content</h1>
+<p>This is content inside the iframe.</p>
+
+<!-- Iframe Element -->
+<iframe src="basic_elements_search_and_interactions.html" id="test-iframe-child"></iframe>
+
+<!-- Control Panel with Button to Re-render the Iframe -->
+<div class="control-panel-child">
+    <button class="control-button-child" onclick="reRenderIframe()">Re-render Iframe</button>
+</div>
+
+<script>
+  function reRenderIframe() {
+    // Simulate re-rendering of the iframe by removing and adding it again
+    const iframe = document.getElementById("test-iframe-child");
+    iframe.parentNode.removeChild(iframe);
+
+    const newIframe = document.createElement("iframe");
+    newIframe.src = "basic_elements_search_and_interactions.html";
+    newIframe.id = "test-iframe-child";
+    document.body.appendChild(newIframe);
+  }
+</script>
+
+</body>
+</html>
