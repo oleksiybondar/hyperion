@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Any
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By as SeleniumBy
@@ -22,7 +22,44 @@ if config.logger.intercept_selenium_logs:
 
 
 class Page:
-    def __init__(self, driver: webdriver.chrome):
+    chrome_driver = None
+    firefox_driver = None
+    edge_driver = None
+
+    @staticmethod
+    def get_chrome_driver_bin():
+        if Page.chrome_driver is not None:
+            return Page.chrome_driver
+
+        from webdriver_manager.chrome import ChromeDriverManager
+
+        Page.chrome_driver = ChromeDriverManager().install()
+
+        return Page.chrome_driver
+
+    @staticmethod
+    def get_firefox_driver_bin():
+        if Page.firefox_driver is not None:
+            return Page.firefox_driver
+
+        from webdriver_manager.firefox import GeckoDriverManager
+
+        Page.firefox_driver = GeckoDriverManager().install()
+
+        return Page.firefox_driver
+
+    @staticmethod
+    def get_edge_driver_bin():
+        if Page.edge_driver is not None:
+            return Page.edge_driver
+
+        from webdriver_manager.microsoft import EdgeChromiumDriverManager
+
+        Page.edge_driver = EdgeChromiumDriverManager().install()
+
+        return Page.edge_driver
+
+    def __init__(self, driver: Any):
         self.automation_type = AutomationTool.SELENIUM
         self.driver = driver
 
@@ -31,37 +68,34 @@ class Page:
         lowered_browser = browser.lower()
         if lowered_browser == Browser.CHROME:
             from selenium.webdriver.chrome.service import Service as ChromiumService
-            from webdriver_manager.chrome import ChromeDriverManager
 
             options = Page.process_chrome_caps(caps)
             driver = webdriver.Chrome(
-                service=ChromiumService(ChromeDriverManager().install()),
+                service=ChromiumService(Page.get_chrome_driver_bin()),
                 options=options,
             )
         elif lowered_browser == Browser.FIREFOX:
             from selenium.webdriver.firefox.service import Service as FirefoxService
-            from webdriver_manager.firefox import GeckoDriverManager
 
             options = Page.process_firefox_caps(caps)
             driver = webdriver.Firefox(
-                service=FirefoxService(GeckoDriverManager().install()), options=options
-            )
+                service=FirefoxService(Page.get_firefox_driver_bin()), options=options
+            )  # type: ignore
         elif lowered_browser == Browser.EDGE:
             from selenium.webdriver.edge.service import Service as EdgeService
-            from webdriver_manager.microsoft import EdgeChromiumDriverManager
 
             options = Page.process_edge_caps(caps)
             driver = webdriver.Edge(
-                service=EdgeService(EdgeChromiumDriverManager().install()),
+                service=EdgeService(Page.get_edge_driver_bin()),
                 options=options,
-            )
+            )  # type: ignore
         elif lowered_browser == Browser.SAFARI:
-            driver = webdriver.Safari()
+            driver = webdriver.Safari()  # type: ignore
         elif lowered_browser == Browser.REMOTE:
             remote_caps = Page.process_remote_caps(caps)
             driver = webdriver.Remote(
                 command_executor=caps["remote_url"], desired_capabilities=remote_caps
-            )
+            )  # type: ignore
         else:
             raise Exception(f"Unsupported browser {browser}")
 

@@ -3,16 +3,15 @@ from hyperiontf.executors.pytest import automatic_log_setup, fixture  # noqa: F4
 from page_objects.basic_elements_page_with_controls import (
     BasicElementsSearchWithControls,
 )
+from .caps_variants import caps_variants
 
 import os
 
 dirname = os.path.dirname(__file__)
 test_page_path = os.path.join(
-    dirname, "resources/test_pages/stale_errors_autohandle.html"
+    dirname, "../resources/test_pages/stale_errors_autohandle.html"
 )
 page_url = f"file://{test_page_path}"
-selenium_caps = {"automation": "selenium"}
-playwright_caps = {"automation": "playwright"}
 
 
 @fixture(scope="function", log=False)
@@ -24,7 +23,7 @@ def page(request):
 
 
 @pytest.mark.tags("SingleElement", "text", "StaleErrorAutoRecovery", "click")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_re_render_single_element_and_assert_updated_text(page):
     """
     Test re-rendering a single element using the control panel and asserting its updated text.
@@ -37,7 +36,7 @@ def test_re_render_single_element_and_assert_updated_text(page):
 
 
 @pytest.mark.tags("MultipleElement", "StaleErrorAutoRecovery", "text", "click")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_recover_from_stale_reference_error_multiple_elements(page):
     """
     Test recovering from StaleElementReferenceError when dealing with multiple elements
@@ -55,7 +54,7 @@ def test_recover_from_stale_reference_error_multiple_elements(page):
 @pytest.mark.tags(
     "SingleWidget", "SingleElement", "StaleErrorAutoRecovery", "text", "click"
 )
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_auto_recovery_with_direct_chain(page):
     """
     Test auto-recovery of widget child element with direct chain.
@@ -79,7 +78,7 @@ def test_auto_recovery_with_direct_chain(page):
     "text",
     "click",
 )
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_auto_recovery_with_memorized_element(page):
     """
     Test auto-recovery of memorized widget child element in variable.
@@ -106,7 +105,7 @@ def test_auto_recovery_with_memorized_element(page):
     "StaleErrorAutoRecovery",
 )
 @pytest.mark.tags("MemorizedElement", "text", "click")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_nested_widgets_auto_recovery_with_memorized_chain(page):
     """
     Test auto-recovery of memorized nested widgets child element in variable.

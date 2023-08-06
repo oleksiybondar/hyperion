@@ -210,9 +210,7 @@ class Response:
                 f"'{self.request.full_url}' to '{response.request.full_url}'."
             )
 
-    def validate_json_schema(
-        self, schema: Union[str, dict], is_assertion: bool = True
-    ) -> bool:
+    def validate_json_schema(self, schema: Any, is_assertion: bool = True) -> bool:
         """
         Validates the response content against the provided JSON Schema.
 

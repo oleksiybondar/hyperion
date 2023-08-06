@@ -160,7 +160,7 @@ class LocatableElement:
         """
         node = self.parent
         while hasattr(node, "parent"):
-            if hasattr(node, "context_manager"):
+            if hasattr(node, "context_manager") or hasattr(node, "content_manager"):
                 return node
             node = node.parent
         return node

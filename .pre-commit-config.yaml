@@ -1,9 +1,4 @@
 repos:
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.4.1 # Use the desired version
-    hooks:
-      - id: mypy
-        additional_dependencies: [types-requests, types-PyYAML]
   - repo: https://github.com/psf/black
     rev: 23.7.0 # Use the desired version
     hooks:
@@ -13,4 +8,10 @@ repos:
     rev: v0.0.282
     hooks:
       - id: ruff
-        args: ['--ignore=E501']
+        args: [ '--ignore=E501' ]
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.4.1 # Use the desired version
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests, types-PyYAML , types-jsonschema]
+

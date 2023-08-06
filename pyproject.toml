@@ -7,11 +7,13 @@ license = "Apache 2.0 License"
 readme = "README.md"
 
 [tool.poetry.dependencies]
+requests="^2.31.0"
 python = "^3.11"
 jsonschema = "^4.18.6"
 selenium = "^4.11.2"
 Appium-Python-Client = "^2.11.1"
 playwright = "^1.36.0"
+webdriver_manager="^3.9.1"
 
 
 [build-system]

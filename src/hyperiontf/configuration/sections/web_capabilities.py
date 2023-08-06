@@ -10,7 +10,7 @@ class WebCapabilities(Capabilities):
     def __init__(self):
         self.automation = "selenium"
         self.browser = self.get_default_browser()
-        self.headless = False
+        self.headless = True
 
     @staticmethod
     def get_default_browser():

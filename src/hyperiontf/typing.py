@@ -298,6 +298,7 @@ class HTTPHeader:
     ACCEPT_LANGUAGE = "Accept-Language"
     COOKIE = "Cookie"
     SET_COOKIE = "Set-Cookie"
+    LOCATION = "Location"
 
 
 class ContentType:

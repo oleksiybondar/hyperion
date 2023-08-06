@@ -1,18 +1,17 @@
 import pytest
 from hyperiontf.executors.pytest import automatic_log_setup, fixture  # noqa: F401
 from page_objects.iframe_page import IframesPage
+from .caps_variants import caps_variants
 
 import os
 
 # The paths to the test pages
 root_page_path = os.path.join(
-    os.path.dirname(__file__), "resources/test_pages/iframes_root.html"
+    os.path.dirname(__file__), "../resources/test_pages/iframes_root.html"
 )
 
 # The URLs of the test pages
 root_page_url = f"file://{root_page_path}"
-selenium_caps = {"automation": "selenium"}
-playwright_caps = {"automation": "playwright"}
 
 
 @fixture(scope="function", log=False)
@@ -24,7 +23,7 @@ def page(request):
 
 
 @pytest.mark.tags("Iframe", "AutoResolve", "SingleElement", "text")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_auto_resolve_context_switching_to_iframe(page):
     """
     Test automatic context resolution from default (page context) to iframe.
@@ -35,7 +34,7 @@ def test_auto_resolve_context_switching_to_iframe(page):
 
 
 @pytest.mark.tags("Iframe", "AutoResolve", "SingleElement", "text")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_auto_resolve_context_switching_from_iframe(page):
     """
     Test automatic context resolution from iframe back to default (page context).
@@ -48,7 +47,7 @@ def test_auto_resolve_context_switching_from_iframe(page):
 
 
 @pytest.mark.tags("Iframe", "AutoResolve", "SingleElement", "text")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_auto_resolve_context_switching_to_nested_iframe(page):
     """
     Test automatic context resolution when switching to a nested iframe.
@@ -58,7 +57,7 @@ def test_auto_resolve_context_switching_to_nested_iframe(page):
 
 
 @pytest.mark.tags("Iframe", "AutoResolve", "ContextSwitching", "text")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_switch_back_to_root_from_inner_iframe(page):
     """
     Test switching back to the root page from the innermost iframe using direct child element.
@@ -71,7 +70,7 @@ def test_switch_back_to_root_from_inner_iframe(page):
 
 
 @pytest.mark.tags("Iframe", "AutoResolve", "ContextSwitching", "text")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_switch_back_to_mid_level_iframe_from_inner_iframe(page):
     """
     Test switching back to a mid-level iframe from the innermost iframe using direct child element.
@@ -84,7 +83,7 @@ def test_switch_back_to_mid_level_iframe_from_inner_iframe(page):
 
 
 @pytest.mark.tags("Iframe", "AutoResolve", "ContextSwitching", "text")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_switch_back_to_mid_level_iframe_using_memorized_child(page):
     """
     Test switching back to a mid-level iframe using a memorized child element from the mid-level iframe.
@@ -108,7 +107,7 @@ def test_switch_back_to_mid_level_iframe_using_memorized_child(page):
 
 
 @pytest.mark.tags("Iframe", "AutoResolve", "ContextSwitching", "text")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_auto_resolve_context_switching_between_iframes(page):
     """
     Test automatic context resolution when switching between iframes.
@@ -121,7 +120,7 @@ def test_auto_resolve_context_switching_between_iframes(page):
 
 
 @pytest.mark.tags("Iframe", "AutoResolve", "ContextSwitching", "text")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_dynamic_iframes_re_rendering(page):
     """
     Test automatic context resolution and stale error resolution during dynamic iframe re-rendering.

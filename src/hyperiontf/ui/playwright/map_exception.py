@@ -7,6 +7,7 @@ from hyperiontf.typing import (
 STALE_ELEMENT_ERROR_MESSAGES = [
     "Element is not attached to the DOM",
     "Frame was detached",
+    "Execution context was destroyed, most likely because of a navigation",
 ]
 
 
