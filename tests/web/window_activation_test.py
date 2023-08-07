@@ -1,29 +1,29 @@
 import pytest
 from hyperiontf.executors.pytest import automatic_log_setup, fixture  # noqa: F401
-from .page_objects.multiple_windows_page import MultipleWindowsTestPage
+from ..page_objects.multiple_windows_page import MultipleWindowsTestPage
 
+from .caps_variants import caps_variants
 import os
 
 # The paths to the test pages
 multi_tabs_test_page = os.path.join(
-    os.path.dirname(__file__), "resources/test_pages/multi_tabs.html"
+    os.path.dirname(__file__), "../resources/test_pages/multi_tabs.html"
 )
 
 # The URLs of the test pages
 page_url = f"file://{multi_tabs_test_page}"
-selenium_caps = {"automation": "selenium"}
-playwright_caps = {"automation": "playwright"}
 
 
 @fixture(scope="function", log=False)
-def page():
-    page = MultipleWindowsTestPage.start_browser()
+def page(request):
+    caps = request.param
+    page = MultipleWindowsTestPage.start_browser(caps)
     page.open(page_url)
     yield page
-    page.quit()
 
 
 @pytest.mark.tags("WindowManagement", "AutoResolve", "RootPage", "Switching")
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_auto_resolve_context_switching_to_new_window(page):
     """
     Test automatic context resolution when opening a new window from the root page.
@@ -39,6 +39,7 @@ def test_auto_resolve_context_switching_to_new_window(page):
 
 
 @pytest.mark.tags("WindowManagement", "AutoResolve", "MultiplePages", "Switching")
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_auto_resolve_context_switching_between_multiple_windows(page):
     """
     Test automatic context resolution when switching between multiple windows.

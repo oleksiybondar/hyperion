@@ -1,3 +1,5 @@
+import time
+
 from .decorators.autolog_class_method_helper import (
     auto_decorate_class_methods_with_logging,
 )
@@ -9,6 +11,7 @@ from .content_manager import ContentManager
 from .window_manager import WindowManager
 from .viewport_manager import ViewportManager
 from .automation_adapter_manager import AutomationAdaptersManager
+from hyperiontf.configuration import config
 
 
 class WebPage(BasePageObject):
@@ -36,8 +39,19 @@ class WebPage(BasePageObject):
         self.content_manager.resolve(self)
 
     @classmethod
-    def start_browser(cls, caps=None):
-        return cls((AutomationAdaptersManager().create(caps)))
+    def start_browser(cls, caps=None, attempts: int = config.page_object.start_retries):
+        try:
+            return cls((AutomationAdaptersManager().create(caps)))
+        except Exception as e:
+            logger = getLogger(LoggerSource.WEB_PAGE)
+            msg = f"Unable to start browser! {e.__class__.__name__}: {str(e)}"
+            if attempts > 0:
+                logger.debug(msg)
+                time.sleep(config.page_object.retry_delay)
+                return cls.start_browser(caps, attempts - 1)
+
+            logger.critical(msg)
+            raise e
 
     def open(self, url: str):
         self.logger.info(f"[{self.__full_name__}] Open '{url}' URL")

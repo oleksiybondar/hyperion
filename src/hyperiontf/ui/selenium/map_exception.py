@@ -17,8 +17,9 @@ def map_exception(method):
             # TODO: process exception
             match wde.__class__.__name__:
                 case "NoSuchElementException":
-                    switch_pattern = "(not known in the current browsing context)|(element reference not seen before)"
-                    if re.search(switch_pattern, wde.msg):
+                    if re.search("not known in the current browsing context", wde.msg):
+                        raise StaleElementReferenceException(msg)
+                    if re.search("element reference not seen before", wde.msg):
                         raise ContentSwitchingException(msg)
                     raise NoSuchElementException(msg)
                 case "StaleElementReferenceException":

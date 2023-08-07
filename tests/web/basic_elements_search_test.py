@@ -1,16 +1,16 @@
 import pytest
 from hyperiontf.executors.pytest import automatic_log_setup, fixture  # noqa: F401
 from page_objects.basic_elements_page import BasicElementsSearch
+from .caps_variants import caps_variants
+from hyperiontf import expect
 
 import os
 
 dirname = os.path.dirname(__file__)
 test_page_path = os.path.join(
-    dirname, "resources/test_pages/basic_elements_search_and_interactions.html"
+    dirname, "../resources/test_pages/basic_elements_search_and_interactions.html"
 )
 page_url = f"file://{test_page_path}"
-selenium_caps = {"automation": "selenium"}
-playwright_caps = {"automation": "playwright"}
 
 
 @fixture(scope="function", log=False)
@@ -22,7 +22,7 @@ def page(request):
 
 
 @pytest.mark.tags("SingleElement", "text")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_find_simple_element_and_assert_its_text(page):
     """
     Test finding a simple element and asserting its text.
@@ -31,7 +31,7 @@ def test_find_simple_element_and_assert_its_text(page):
 
 
 @pytest.mark.tags("SingleElement", "attribute")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_find_simple_element_and_assert_its_attribute(page):
     """
     Test finding a simple element and asserting its attribute.
@@ -40,16 +40,19 @@ def test_find_simple_element_and_assert_its_attribute(page):
 
 
 @pytest.mark.tags("SingleElement", "style")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_find_simple_element_and_assert_its_style(page):
     """
     Test finding a simple element and asserting its style.
     """
-    page.single_element_3.assert_style("background-color", "rgb(240, 128, 128)")
+    color = page.single_element_3.get_style("background-color")
+    expect([color]).contains_at_least_one(
+        ["rgb(240, 128, 128)", "rgba(240, 128, 128, 1)"]
+    )
 
 
 @pytest.mark.tags("MultipleElement", "text")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_find_multiple_elements_and_assert_their_texts(page):
     """
     Test finding multiple elements and asserting their texts.
@@ -62,7 +65,7 @@ def test_find_multiple_elements_and_assert_their_texts(page):
 
 
 @pytest.mark.tags("SingleWidget", "SingleElement", "text")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_find_widget_child_and_assert_its_text(page):
     """
     Test finding a widget child element and asserting its text.
@@ -71,7 +74,7 @@ def test_find_widget_child_and_assert_its_text(page):
 
 
 @pytest.mark.tags("NestedWidget", "SingleWidget", "SingleElement", "text")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_find_nested_widget_child_and_assert_its_text(page):
     """
     Test finding a nested widget child element and asserting its text
@@ -84,7 +87,7 @@ def test_find_nested_widget_child_and_assert_its_text(page):
 @pytest.mark.tags(
     "NestedWidget", "SingleWidget", "MultipleWidget", "SingleElement", "text"
 )
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_find_nested_widgets_child_and_assert_its_text(page):
     """
     Test finding a nested widgets child element and asserting its text
@@ -95,7 +98,7 @@ def test_find_nested_widgets_child_and_assert_its_text(page):
 
 
 @pytest.mark.tags("SingleElement", "click", "text")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_clickable_element_text_change(page):
     """
     Test clicking the clickable element and assert its changing text
@@ -109,7 +112,7 @@ def test_clickable_element_text_change(page):
 
 
 @pytest.mark.tags("SingleElement", "fill", "attribute")
-@pytest.mark.parametrize("page", [selenium_caps, playwright_caps], indirect=True)
+@pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_input_field_set_value_and_assert_attribute(page):
     """
     Test typing something into the input field and assert its attribute value

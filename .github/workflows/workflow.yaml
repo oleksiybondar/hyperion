@@ -29,15 +29,15 @@ jobs:
         run: pip install mypy black
 
       - name: Run MyPy for type checking
-        run: mypy src/
+        run: mypy src/ tests/**/*.py --non-interactive --install-types
 
       - name: Run Black for code formatting
-        run: black --check src/
+        run: black --check src/ tests/**/*.py
 
       - name: Run Ruff for additional style checks
-        uses: chartboost/ruff-action@v1
+        run: |
 
-  test-execution:
+  web-test-execution:
     needs: style-checks
     runs-on: ubuntu-latest
 
@@ -50,32 +50,41 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Set up Playwright
+        uses: microsoft/playwright-github-action@v1
+
+      - name: Set up Firefox
+        uses: browser-actions/setup-firefox@v1
+
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Set up Edge
+        uses: browser-actions/setup-edge@v1
+
       - name: Install test dependencies
         run: |
-          pip install jsonschema
-          pip install selenium
-          pip install Appium-Python-Client
-          pip install playwright
-          pip install pytest
+          cd tests
+          sh ./install_web_dependencies.sh
 
       - name: Extend PYTHONPATH
-        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src" >> $GITHUB_ENV
+        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src:$(pwd)/tests" >> $GITHUB_ENV
 
-      - name: Run PyTest (excluding demo_test.py)
+      - name: Run Common and Web tests
         run: |
-          cd tests
-          pytest ./ --ignore=test/demo_test.py
+            cd tests
+            pytest common/ web/
 
       - name: Upload logs as artifact
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v2
         with:
           name: test-logs
-          path: tests/logs/ # Replace this with the actual path to your log files
+          path: ${{ github.workspace }}/tests/logs/
           retention-days: 7
 
   build-check:
-    needs: test-execution
+    needs: web-test-execution
     runs-on: ubuntu-latest
 
     steps:

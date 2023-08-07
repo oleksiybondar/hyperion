@@ -133,11 +133,11 @@ class AutomationAdaptersManager:
         if automation_type == AutomationTool.SELENIUM:
             from hyperiontf.ui.selenium.page import Page as seleniumAPI
 
-            adapter = seleniumAPI.start_browser(browser, caps)
+            adapter = seleniumAPI.start_browser(browser, final_caps)
         elif automation_type == AutomationTool.PLAYWRIGHT:
             from hyperiontf.ui.playwright.page import Page as playwrightAPI
 
-            adapter = playwrightAPI.start_browser(browser, caps)
+            adapter = playwrightAPI.start_browser(browser, final_caps)
         else:
             raise UnsupportedAutomationTypeException(
                 f"Unknown automation type: {automation_type}"
