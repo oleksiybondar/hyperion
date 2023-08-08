@@ -1,4 +1,6 @@
 import requests
+
+from hyperiontf.assertions.expectation_result import ExpectationResult
 from hyperiontf.logging import getLogger
 from hyperiontf.configuration import config
 from hyperiontf.typing import LoggerSource, HTTPHeader
@@ -8,13 +10,18 @@ from hyperiontf.typing import (
     ExceededRedirectionLimitException,
     NotARedirectionException,
 )
-from hyperiontf.typing import JSONSchemaFailedAssertionException
 import json
 import xml.dom.minidom
 from typing import Union, Any
-import jsonschema
+from hyperiontf.assertions.expect import Expect
 
 logger = getLogger(LoggerSource.REST_CLIENT)
+
+CONTENT_TYPE_PARSERS = {
+    "application/json": json.loads,
+    "xml": xml.dom.minidom.parseString,
+    "html": xml.dom.minidom.parseString,
+}
 
 
 class Response:
@@ -95,25 +102,18 @@ class Response:
         :return: The parsed body of the response (as a dictionary for JSON content type).
         :rtype: Union[str, dict]
         """
-        content_type = self.response.headers.get("content-type", "").lower()
+        content_type = (
+            self.response.headers.get("content-type", "").lower().split(";")[0]
+        )
 
-        if "json" in content_type:
-            try:
-                # Try to parse the JSON
-                json_data = json.loads(self.raw_body)
-                return json_data
-            except ValueError:
-                # If parsing fails, return the raw body
-                return self.raw_body
-        elif "xml" in content_type or "html" in content_type:
-            try:
-                # Try to parse the XML or HTML and pretty-print it
-                return xml.dom.minidom.parseString(self.response.text)
-            except xml.parsers.expat.ExpatError:
-                # If parsing fails, return the raw body
-                return self.raw_body
-        else:
-            # For other content types, return the raw body
+        parser = CONTENT_TYPE_PARSERS.get(content_type, None)
+
+        if parser is None:
+            return self.raw_body
+
+        try:
+            return parser(self.raw_body)  # type: ignore
+        except (ValueError, xml.parsers.expat.ExpatError):
             return self.raw_body
 
     @property
@@ -210,7 +210,9 @@ class Response:
                 f"'{self.request.full_url}' to '{response.request.full_url}'."
             )
 
-    def validate_json_schema(self, schema: Any, is_assertion: bool = True) -> bool:
+    def validate_json_schema(
+        self, schema: Any, is_assertion: bool = True
+    ) -> ExpectationResult:
         """
         Validates the response content against the provided JSON Schema.
 
@@ -222,33 +224,12 @@ class Response:
         :return: True if the response content is valid against the JSON Schema, False otherwise (when is_assertion is False).
         :rtype: bool
         """
-        if isinstance(schema, str):
-            # Load the JSON Schema from file
-            with open(schema, "r") as schema_file:
-                schema = json.load(schema_file)
-
-        try:
-            jsonschema.validate(instance=self.body, schema=schema)
-            message = (
-                f"[{self.client.__full_name__}] Response content successfully validated against the JSON Schema."
-                f" Schema used: {json.dumps(schema, indent=2)}. Response body: {json.dumps(self.body, indent=2)}."
-            )
-            extra = {} if not is_assertion else {"assertion": True}
-            logger.info(message, extra=extra)
-            return True
-        except jsonschema.exceptions.ValidationError as e:
-            message = (
-                f"[{self.client.__full_name__}] The response content does not match the expected JSON Schema:\n"
-                f"{str(e)}\nSchema used: {json.dumps(schema, indent=2)}.\n"
-                f"Response body: {json.dumps(self.body, indent=2)}."
-            )
-
-            if is_assertion:
-                logger.critical(message, extra={"assertion": False})
-                raise JSONSchemaFailedAssertionException(message)
-            else:
-                logger.info(message)
-                return False
+        return Expect(
+            self.body,
+            is_assertion=is_assertion,
+            sender=self.client.__full_name__,
+            logger=logger,
+        ).to_match_schema(schema)
 
     def _generate_log_message(self) -> str:
         """

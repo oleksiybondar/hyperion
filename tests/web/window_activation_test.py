@@ -22,7 +22,10 @@ def page(request):
     yield page
 
 
-@pytest.mark.tags("WindowManagement", "AutoResolve", "RootPage", "Switching")
+@pytest.mark.WindowManagement
+@pytest.mark.AutoResolve
+@pytest.mark.RootPage
+@pytest.mark.Switching
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_auto_resolve_context_switching_to_new_window(page):
     """
@@ -38,7 +41,10 @@ def test_auto_resolve_context_switching_to_new_window(page):
     pass
 
 
-@pytest.mark.tags("WindowManagement", "AutoResolve", "MultiplePages", "Switching")
+@pytest.mark.WindowManagement
+@pytest.mark.AutoResolve
+@pytest.mark.MultiplePages
+@pytest.mark.Switching
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_auto_resolve_context_switching_between_multiple_windows(page):
     """

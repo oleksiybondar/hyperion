@@ -17,11 +17,14 @@ from .ui import (
     widget,
     widgets,
     webview,
+    Color,
 )
 from .logging import getLogger
-from .assertions import expect
+from .assertions import expect, verify
 from .api import Client as RESTClient
 from .configuration import config
+
+from .fs import File, Dir
 
 __all__ = [
     "By",
@@ -42,6 +45,10 @@ __all__ = [
     "dynamic",
     "dynamics",
     "expect",
+    "verify",
     "config",
     "RESTClient",
+    "File",
+    "Dir",
+    "Color",
 ]

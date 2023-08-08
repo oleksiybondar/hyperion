@@ -1,8 +1,8 @@
 import pytest
 import time
 from hyperiontf.executors.pytest import automatic_log_setup  # noqa: F401
-from page_objects.responsive_page import ResponsivePage
-from page_objects.iframe_with_responsive_elements import IframeWithResponsive
+from ..page_objects.responsive_page import ResponsivePage
+from ..page_objects.iframe_with_responsive_elements import IframeWithResponsive
 from .caps_variants import caps_variants
 
 import os
@@ -18,7 +18,9 @@ responsive_iframe = os.path.join(
 responsive_iframe_url = f"file://{responsive_iframe}"
 
 
-@pytest.mark.tags("SingleElement", "text", "ResponsiveLocator")
+@pytest.mark.SingleElement
+@pytest.mark.text
+@pytest.mark.ResponsiveLocator
 @pytest.mark.parametrize("caps", caps_variants)
 def test_find_simple_element_using_viewport_locator_and_assert_its_text(caps):
     """
@@ -31,7 +33,10 @@ def test_find_simple_element_using_viewport_locator_and_assert_its_text(caps):
     page.responsive_element3.get_text()
 
 
-@pytest.mark.tags("SingleElement", "text", "ResponsiveLocator", "SingleIframe")
+@pytest.mark.SingleElement
+@pytest.mark.text
+@pytest.mark.ResponsiveLocator
+@pytest.mark.SingleIframe
 @pytest.mark.parametrize("caps", caps_variants)
 def test_find_simple_element_in_iframe_using_viewport_locator_and_assert_its_text(caps):
     """

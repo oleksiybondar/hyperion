@@ -1,17 +1,30 @@
 repos:
+    # Code Formatting
   - repo: https://github.com/psf/black
     rev: 23.7.0 # Use the desired version
     hooks:
       - id: black
+    # Code Linting
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    # Ruff version.
     rev: v0.0.282
     hooks:
       - id: ruff
+        # E501: 88 chars line length
         args: [ '--ignore=E501' ]
+    # Type verification
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.4.1 # Use the desired version
     hooks:
       - id: mypy
         additional_dependencies: [types-requests, types-PyYAML , types-jsonschema]
-
+    # Staty code analysis for Cyclomatic-Complexity and Maintainability Index
+  - repo: https://github.com/yunojuno/pre-commit-xenon
+    rev: cc59b0431a5d072786b59430e9b342b2881064f6
+    hooks:
+      - id: xenon
+        args: [ "--max-average=A", "--max-modules=A", "--max-absolute=A" ]
+  # Code duplication analyses
+#  - repo: https://github.com/platisd/duplicate-code-detection-tool.git
+#    rev: ''  # Use the sha / tag you want to point at
+#    hooks:
+#      - id: duplicate-code-detection

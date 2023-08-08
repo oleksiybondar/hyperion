@@ -1,20 +1,25 @@
 import pytest
 from hyperiontf.executors.pytest import automatic_log_setup  # noqa: F401
-from hyperiontf import RESTClient, expect
+from hyperiontf import RESTClient
 
 
-@pytest.mark.tags("REST", "get")
+@pytest.mark.REST
+@pytest.mark.get
 def test_simple_get():
     RESTClient("http://example.com").get()
 
 
-@pytest.mark.tags("REST", "get", "redirect")
+@pytest.mark.REST
+@pytest.mark.get
+@pytest.mark.redirect
 def test_built_in_redirect():
     # redirect to https
     RESTClient("http://google.com").get()
 
 
-@pytest.mark.tags("REST", "get", "redirect")
+@pytest.mark.REST
+@pytest.mark.get
+@pytest.mark.redirect
 def test_built_own_redirect():
     # redirect to https
     RESTClient("http://google.com").get(
@@ -22,7 +27,9 @@ def test_built_own_redirect():
     ).follow_redirect()
 
 
-@pytest.mark.tags("REST", "get", "JSON Schema")
+@pytest.mark.REST
+@pytest.mark.get
+@pytest.mark.JSON_Schema
 def test_json_schema_positive():
     schema1 = {
         "type": "object",
@@ -59,7 +66,9 @@ def test_json_schema_positive():
     response.validate_json_schema(schema2)
 
 
-@pytest.mark.tags("REST", "get", "JSON Schema")
+@pytest.mark.REST
+@pytest.mark.get
+@pytest.mark.JSON_Schema
 def test_json_schema_negative():
     schema1 = {
         "type": "object",
@@ -90,5 +99,5 @@ def test_json_schema_negative():
 
     # redirect to https
     response = RESTClient("https://jsonplaceholder.typicode.com").get(path="posts/1")
-    expect(response.validate_json_schema(schema1, is_assertion=False)).to_be(False)
-    expect(response.validate_json_schema(schema2, is_assertion=False)).to_be(False)
+    assert not response.validate_json_schema(schema1, is_assertion=False)
+    assert not response.validate_json_schema(schema2, is_assertion=False)

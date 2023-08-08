@@ -206,18 +206,21 @@ class LocatableElement:
         if hasattr(self.parent, "__resolve__"):
             self.parent.__resolve__()
 
-        if self._locator is not None:
-            actual_locator = self._fetch_actual_locator(self._locator)
-        elif self._locator is None and hasattr(self, "default_locator"):
-            actual_locator = self._fetch_actual_locator(self.default_locator)
-        else:
-            raise Exception("No Locator")
+        actual_locator = self._resolve_locator()
 
         # applicable only for Multiple Element children
         if actual_locator.by == LocatorStrategies.ELEMENTS_ITEM:
             self._fetch_elements_item(actual_locator)
         else:
             self._exec_search(actual_locator, retries)
+
+    def _resolve_locator(self):
+        if self._locator is not None:
+            return self._fetch_actual_locator(self._locator)
+        if self._locator is None and hasattr(self, "default_locator"):
+            return self._fetch_actual_locator(self.default_locator)
+        else:
+            raise Exception("No Locator")
 
     def _fetch_elements_item(
         self,
@@ -279,40 +282,44 @@ class LocatableElement:
             # Elements cache is a specific attribute for the Elements class family, checking by class will cause a
             # cyclomatic import error since Elements class is also a child of the LocatableElement class.
             if self.contains_multiple_elements:
-                self._element_adapter = cast(
-                    Sized, search_scope.find_elements(actual_locator)
-                )
-                # For an array of elements, we need to know the count, so log it.
-                logger.debug(
-                    f"[{self.__full_name__}] {len(self._element_adapter)} elements found"
-                )
-                # Normally, find elements does not raise any exception.
-                if len(self._element_adapter) == 0 and retries > 0:
-                    time.sleep(config.element.search_retry_timeout)
-                    return self.find_itself(retries - 1)
+                self._exec_multiple_search(search_scope, actual_locator, retries)
             else:
                 self._element_adapter = search_scope.find_element(actual_locator)
         except HyperionUIException as uie:
-            # During retries, different exceptions may occur, so for debug purposes, we need to log them all.
-            logger.debug(
-                f"[{self.__full_name__}] Exception intercepted! {uie.__class__.__name__}: {uie}"
-            )
-            if retries > 0:
-                if (
-                    uie.__class__.__name__ == "StaleElementReferenceException"
-                    and hasattr(self.parent, "find_itself")
-                ):
-                    if self.parent.is_multi_child:
-                        self.parent.parent.find_itself()
-                    self.parent.find_itself()
-                else:
-                    time.sleep(config.element.search_retry_timeout)
-                return self.find_itself(retries - 1)
+            self._resolve_search_exception(actual_locator, uie, retries)
+
+    def _exec_multiple_search(self, search_scope, actual_locator, retries):
+        self._element_adapter = cast(Sized, search_scope.find_elements(actual_locator))
+        # For an array of elements, we need to know the count, so log it.
+        logger.debug(
+            f"[{self.__full_name__}] {len(self._element_adapter)} elements found"
+        )
+        # Normally, find elements does not raise any exception.
+        if len(self._element_adapter) == 0 and retries > 0:
+            time.sleep(config.element.search_retry_timeout)
+            return self.find_itself(retries - 1)
+
+    def _resolve_search_exception(self, actual_locator, exception, retries):
+        # During retries, different exceptions may occur, so for debug purposes, we need to log them all.
+        logger.debug(
+            f"[{self.__full_name__}] Exception intercepted! {exception.__class__.__name__}: {exception}"
+        )
+        if retries > 0:
+            if (
+                exception.__class__.__name__ == "StaleElementReferenceException"
+                and hasattr(self.parent, "find_itself")
+            ):
+                if self.parent.is_multi_child:
+                    self.parent.parent.find_itself()
+                self.parent.find_itself()
             else:
-                self.automation_adapter = NoSuchElementException(
-                    f"[{self.__full_name__}] Element was not found!\n"
-                    f"Locator: {actual_locator}"
-                )
+                time.sleep(config.element.search_retry_timeout)
+            return self.find_itself(retries - 1)
+        else:
+            self._element_adapter = NoSuchElementException(
+                f"[{self.__full_name__}] Element was not found!\n"
+                f"Locator: {actual_locator}"
+            )
 
     def _fetch_scope_object(self, actual_locator):
         """
@@ -355,50 +362,80 @@ class LocatableElement:
 
     def _fetch_actual_locator(self, locator: Union[By, Dict[str, Any]]) -> By:
         """
-        Fetches the actual locator for the element search, considering platform, operating system, and viewport specific
-        locators.
-
-        The actual locator is resolved based on a strict and recursive order, checking platform-specific locators
-        first, followed by operating system-specific locators, and finally viewport-specific locators.
+        Initiates the process of fetching the actual locator for the element search,
+        considering platform, operating system, and viewport specific locators.
 
         Args:
-            locator (By | dict, optional): The locator strategy to be resolved. Defaults to None, in which case the
-                                           class's locator attribute is used.
+            locator (By | dict): The locator strategy to be resolved.
 
         Returns:
             By: The resolved actual locator strategy.
         """
-        # if the locator is a By object, it's the only locator
-        if locator.__class__ is not dict:
-            return cast(By, locator)
+        if isinstance(locator, dict):
+            return self._fetch_platform_specific_locator(locator)
+        return locator
 
-        # if the locator is a dictionary, it means that it has multiple By objects categorized by platform, operating
-        # system, and viewport. We need to decide which one to use based on the current execution environment.
+    def _fetch_platform_specific_locator(self, locator: Dict[str, Any]) -> By:
+        """
+        Checks for a platform-specific locator and delegates to the next
+        level if not found.
 
-        # The resolve order is strict and recursive:
+        Args:
+            locator (dict): Locator dictionary.
 
-        # 1. Check if there's a platform-specific locator. If so, use it.
-        # 2. If there's no platform-specific locator, check if there's an operating system-specific locator. If so, use
-        # it.
-        # 3. If there's no operating system-specific locator, check if there's a viewport-specific locator. If so, use
-        # it.
-        # 4. If none of the above match, try to use the 'default' locator.
-        # 5. If no locator matches the current environment, raise an IncorrectLocatorException.
-        locator = cast(Dict, locator)
-        # Resolve platform-specific locator if any
-        if self.platform in locator.keys():
+        Returns:
+            By: The resolved actual locator strategy.
+        """
+        if self.platform in locator:
             return self._fetch_actual_locator(locator[self.platform])
-        # Resolve operating system-specific locator if any
-        if self.os in locator.keys():
+        return self._fetch_os_specific_locator(locator)
+
+    def _fetch_os_specific_locator(self, locator: Dict[str, Any]) -> By:
+        """
+        Checks for an operating system-specific locator and delegates to the next
+        level if not found.
+
+        Args:
+            locator (dict): Locator dictionary.
+
+        Returns:
+            By: The resolved actual locator strategy.
+        """
+        if self.os in locator:
             return self._fetch_actual_locator(locator[self.os])
-        # Resolve viewport-specific locator if any
-        if self.viewport in locator.keys():
+        return self._fetch_viewport_specific_locator(locator)
+
+    def _fetch_viewport_specific_locator(self, locator: Dict[str, Any]) -> By:
+        """
+        Checks for a viewport-specific locator and delegates to the default
+        locator if not found.
+
+        Args:
+            locator (dict): Locator dictionary.
+
+        Returns:
+            By: The resolved actual locator strategy.
+        """
+        if self.viewport in locator:
             return self._fetch_actual_locator(locator[self.viewport])
-        # If none of the above match, try to use the 'default' locator if provided
-        if "default" in locator.keys():
+        return self._fetch_default_locator(locator)
+
+    def _fetch_default_locator(self, locator: Dict[str, Any]) -> By:
+        """
+        Checks for a default locator. If not found, raises an exception.
+
+        Args:
+            locator (dict): Locator dictionary.
+
+        Returns:
+            By: The resolved actual locator strategy.
+
+        Raises:
+            IncorrectLocatorException: If no suitable locator is found.
+        """
+        if "default" in locator:
             return self._fetch_actual_locator(locator["default"])
 
-        # If no locator matches the current environment, raise an IncorrectLocatorException
         raise IncorrectLocatorException(
             f"[{self.__full_name__}] Does not contain a locator for '{self.platform}' "
             f"platform, '{self.os}' operating system, and '{self.viewport}' viewport"
