@@ -1,6 +1,6 @@
 import pytest
 from hyperiontf.executors.pytest import automatic_log_setup, fixture  # noqa: F401
-from page_objects.iframe_page import IframesPage
+from ..page_objects.iframe_page import IframesPage
 from .caps_variants import caps_variants
 
 import os
@@ -22,7 +22,10 @@ def page(request):
     yield page
 
 
-@pytest.mark.tags("Iframe", "AutoResolve", "SingleElement", "text")
+@pytest.mark.Iframe
+@pytest.mark.AutoResolve
+@pytest.mark.SingleElement
+@pytest.mark.text
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_auto_resolve_context_switching_to_iframe(page):
     """
@@ -33,7 +36,10 @@ def test_auto_resolve_context_switching_to_iframe(page):
     )
 
 
-@pytest.mark.tags("Iframe", "AutoResolve", "SingleElement", "text")
+@pytest.mark.Iframe
+@pytest.mark.AutoResolve
+@pytest.mark.SingleElement
+@pytest.mark.text
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_auto_resolve_context_switching_from_iframe(page):
     """
@@ -46,7 +52,10 @@ def test_auto_resolve_context_switching_from_iframe(page):
     page.page_header.assert_text("Main Page Content")
 
 
-@pytest.mark.tags("Iframe", "AutoResolve", "SingleElement", "text")
+@pytest.mark.Iframe
+@pytest.mark.AutoResolve
+@pytest.mark.SingleElement
+@pytest.mark.text
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_auto_resolve_context_switching_to_nested_iframe(page):
     """
@@ -56,7 +65,10 @@ def test_auto_resolve_context_switching_to_nested_iframe(page):
     nested_frame_child.assert_text("Single Element 1 (ID: single-element-1)")
 
 
-@pytest.mark.tags("Iframe", "AutoResolve", "ContextSwitching", "text")
+@pytest.mark.Iframe
+@pytest.mark.AutoResolve
+@pytest.mark.ContextSwitching
+@pytest.mark.text
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_switch_back_to_root_from_inner_iframe(page):
     """
@@ -69,7 +81,10 @@ def test_switch_back_to_root_from_inner_iframe(page):
     page.page_header.assert_text("Main Page Content")
 
 
-@pytest.mark.tags("Iframe", "AutoResolve", "ContextSwitching", "text")
+@pytest.mark.Iframe
+@pytest.mark.AutoResolve
+@pytest.mark.ContextSwitching
+@pytest.mark.text
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_switch_back_to_mid_level_iframe_from_inner_iframe(page):
     """
@@ -82,7 +97,10 @@ def test_switch_back_to_mid_level_iframe_from_inner_iframe(page):
     page.dynamic_iframe.page_header.assert_text("Iframe Content")
 
 
-@pytest.mark.tags("Iframe", "AutoResolve", "ContextSwitching", "text")
+@pytest.mark.Iframe
+@pytest.mark.AutoResolve
+@pytest.mark.ContextSwitching
+@pytest.mark.text
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_switch_back_to_mid_level_iframe_using_memorized_child(page):
     """
@@ -106,7 +124,10 @@ def test_switch_back_to_mid_level_iframe_using_memorized_child(page):
     memorized_mid_child_element.assert_text("Iframe Content")
 
 
-@pytest.mark.tags("Iframe", "AutoResolve", "ContextSwitching", "text")
+@pytest.mark.Iframe
+@pytest.mark.AutoResolve
+@pytest.mark.ContextSwitching
+@pytest.mark.text
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_auto_resolve_context_switching_between_iframes(page):
     """
@@ -119,7 +140,10 @@ def test_auto_resolve_context_switching_between_iframes(page):
     page.dynamic_iframe.page_header.assert_text("Iframe Content")
 
 
-@pytest.mark.tags("Iframe", "AutoResolve", "ContextSwitching", "text")
+@pytest.mark.Iframe
+@pytest.mark.AutoResolve
+@pytest.mark.ContextSwitching
+@pytest.mark.text
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_dynamic_iframes_re_rendering(page):
     """

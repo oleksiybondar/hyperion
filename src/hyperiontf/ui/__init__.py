@@ -18,6 +18,7 @@ from .decorators.page_object_helpers import (
     dynamics,
 )
 from .decorators.page_object_helpers import webview, webviews
+from .color import Color
 
 __all__ = [
     "By",
@@ -39,4 +40,5 @@ __all__ = [
     "dynamics",
     "webview",
     "webviews",
+    "Color",
 ]

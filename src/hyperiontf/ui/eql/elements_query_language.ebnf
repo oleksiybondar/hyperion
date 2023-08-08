@@ -1,0 +1,39 @@
+expression              = logical_expression | comparison_expression;
+logical_expression      = comparison_expression, ws, logical_operator, ws, comparison_expression;
+comparison_expression   = simple_comparison | complex_comparison;
+
+simple_comparison       = operand, ws, comparison_operator, ws, operand;
+complex_comparison      = operand, ws, complex_comparison_operator, ws, operand, ws, complex_comparison_operator, ws, operand;
+
+operand                 = value | element_chain_query;
+
+element_chain_query     = segment, { ".", segment };
+
+segment                 = identifier, [ ":", attribute_type ], [ "[", index, "]" ] ;
+identifier              = letter, { letter | digit } ;
+attribute_type          = "attribute" | "style" ;
+index                   = digit, { digit } ;
+
+comparison_operator         = complex_comparison_operator | "==" | "!=" | "~=" ;
+complex_comparison_operator = "<" | "<=" | ">" | ">=" ;
+
+
+value                   = string | number | boolean | date ;
+
+string                  = "\"", { character - "\"" }, "\"" | "'", { character - "'" }, "'" ;
+
+number                  = [ "-" ], ( integer, [ ".", { digit } ] | ".", digit, { digit } ) ;
+integer                 = digit, { digit } ;
+
+boolean                 = "true" | "false" ;
+
+date                    = "date", "(", string, ")", ;  (* Example representation *)
+
+logical_operator        = "or" | "and" ;
+
+ws                      = { space };  (* whitespace *)
+character               = letter | digit | space | special ;
+letter                  = "A" | "B" | ... | "Z" | "a" | "b" | ... | "z" ;
+digit                   = "0" | "1" | ... | "9" ;
+space                   = " " ;
+special                 = "!" | "@" | "#" | ... ;  (* any other printable characters *)

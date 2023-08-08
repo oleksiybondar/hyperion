@@ -90,24 +90,33 @@ class ContentManager:
             # If the target is not an IFrame, then traverse back to the page or WebView where the context is default.
             return self.set_default_context()
 
+        self._try_to_resolve_context(target)
+
+    def _try_to_resolve_context(self, target):
         try:
             self.set_context(target)
         except ContentSwitchingException as e:
-            self._logger.debug(
-                f"[{self.owner.__full_name__}] Exception Intercepted!\n{e.__class__.__name__}: {str(e)}"
-            )
-            # If an exception occurred during context switching, attempt to resolve the parent context first,
-            # and then retry setting the target context.
-            parent_holder = target.document_holder
-            if parent_holder != target:
-                parent_holder.__resolve__()
-            self.set_context(target)
+            self._resolve_content_switching_error(target, e)
         except StaleElementReferenceException as e:
-            self._logger.debug(
-                f"[{self.owner.__full_name__}] Exception Intercepted!\n{e.__class__.__name__}: {str(e)}"
-            )
-            target.find_itself()
-            target.__resolve__()
+            self._resolve_stale_error(target, e)
+
+    def _resolve_content_switching_error(self, target, exception):
+        self._logger.debug(
+            f"[{self.owner.__full_name__}] Exception Intercepted!\n{exception.__class__.__name__}: {str(exception)}"
+        )
+        # If an exception occurred during context switching, attempt to resolve the parent context first,
+        # and then retry setting the target context.
+        parent_holder = target.document_holder
+        if parent_holder != target:
+            parent_holder.__resolve__()
+        self.set_context(target)
+
+    def _resolve_stale_error(self, target, exception):
+        self._logger.debug(
+            f"[{self.owner.__full_name__}] Exception Intercepted!\n{exception.__class__.__name__}: {str(exception)}"
+        )
+        target.find_itself()
+        target.__resolve__()
 
     # Define an alias for resolve_context
     resolve = resolve_content

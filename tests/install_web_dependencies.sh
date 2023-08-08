@@ -6,5 +6,6 @@ pip install webdriver_manager
 pip install Appium-Python-Client
 pip install playwright
 pip install pytest
+pip install ply
 
 playwright install

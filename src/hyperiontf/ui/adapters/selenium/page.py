@@ -20,6 +20,14 @@ logger = getLogger()
 if config.logger.intercept_selenium_logs:
     logger.merge_logger_stream(AutomationTool.SELENIUM)
 
+BROWSER_START_METHODS = {
+    Browser.CHROME: "start_chrome_browser",
+    Browser.FIREFOX: "start_firefox_browser",
+    Browser.EDGE: "start_edge_browser",
+    Browser.SAFARI: "start_safari_browser",
+    Browser.REMOTE: "start_remote_browser",
+}
+
 
 class Page:
     chrome_driver = None
@@ -65,41 +73,70 @@ class Page:
 
     @staticmethod
     def start_browser(browser: str, caps: dict):
+        """
+        Initializes and starts a browser driver based on the specified browser type.
+
+        This method dynamically selects the appropriate method to start the browser
+        driver using a mapping from browser names to their respective start methods.
+
+        Parameters:
+            browser (str): The name of the browser to be started.
+            caps (dict): The desired capabilities for the browser.
+
+        Returns:
+            Page: An instance of the Page class with the started browser driver.
+
+        Raises:
+            Exception: If the specified browser is not supported.
+        """
         lowered_browser = browser.lower()
-        if lowered_browser == Browser.CHROME:
-            from selenium.webdriver.chrome.service import Service as ChromiumService
-
-            options = Page.process_chrome_caps(caps)
-            driver = webdriver.Chrome(
-                service=ChromiumService(Page.get_chrome_driver_bin()),
-                options=options,
-            )
-        elif lowered_browser == Browser.FIREFOX:
-            from selenium.webdriver.firefox.service import Service as FirefoxService
-
-            options = Page.process_firefox_caps(caps)
-            driver = webdriver.Firefox(
-                service=FirefoxService(Page.get_firefox_driver_bin()), options=options
-            )  # type: ignore
-        elif lowered_browser == Browser.EDGE:
-            from selenium.webdriver.edge.service import Service as EdgeService
-
-            options = Page.process_edge_caps(caps)
-            driver = webdriver.Edge(
-                service=EdgeService(Page.get_edge_driver_bin()),
-                options=options,
-            )  # type: ignore
-        elif lowered_browser == Browser.SAFARI:
-            driver = webdriver.Safari()  # type: ignore
-        elif lowered_browser == Browser.REMOTE:
-            remote_caps = Page.process_remote_caps(caps)
-            driver = webdriver.Remote(
-                command_executor=caps["remote_url"], desired_capabilities=remote_caps
-            )  # type: ignore
-        else:
+        method_name = BROWSER_START_METHODS.get(lowered_browser, None)  # type: ignore
+        if method_name is None:
             raise Exception(f"Unsupported browser {browser}")
 
+        driver = getattr(Page, method_name)(caps)  # type: ignore
+
         return Page(driver)
+
+    @staticmethod
+    def start_chrome_browser(caps: dict):
+        from selenium.webdriver.chrome.service import Service as ChromiumService
+
+        options = Page.process_chrome_caps(caps)
+        return webdriver.Chrome(
+            service=ChromiumService(Page.get_chrome_driver_bin()),
+            options=options,
+        )
+
+    @staticmethod
+    def start_firefox_browser(caps: dict):
+        from selenium.webdriver.firefox.service import Service as FirefoxService
+
+        options = Page.process_firefox_caps(caps)
+        return webdriver.Firefox(
+            service=FirefoxService(Page.get_firefox_driver_bin()), options=options
+        )
+
+    @staticmethod
+    def start_edge_browser(caps: dict):
+        from selenium.webdriver.edge.service import Service as EdgeService
+
+        options = Page.process_edge_caps(caps)
+        return webdriver.Edge(
+            service=EdgeService(Page.get_edge_driver_bin()),
+            options=options,
+        )
+
+    @staticmethod
+    def start_safari_browser(_caps: dict):
+        return webdriver.Safari()
+
+    @staticmethod
+    def start_remote_browser(caps: dict):
+        remote_caps = Page.process_remote_caps(caps)
+        return webdriver.Remote(
+            command_executor=caps["remote_url"], desired_capabilities=remote_caps
+        )
 
     @staticmethod
     def process_chrome_caps(caps: dict):

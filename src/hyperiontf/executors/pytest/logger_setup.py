@@ -8,6 +8,17 @@ from hyperiontf.ui.automation_adapter_manager import AutomationAdaptersManager
 
 logger = getLogger()
 
+known_reserved_markers = [
+    "skip",
+    "skipif",
+    "xfail",
+    "parametrize",
+    "usefixtures",
+    "filterwarnings",
+    "tryfirst",
+    "trylast",
+]
+
 
 def init_test_log(node):
     logger.init_test_log(node.name)
@@ -38,13 +49,20 @@ def add_test_status(node):
 
 
 def add_test_tags(node):
+    tags = extract_tags_from_node(node)
+
+    if len(tags) > 0:
+        logger.add_meta("testTags", list(set(tags)))
+
+
+def extract_tags_from_node(node):
     tags = []
     for marker in node.own_markers:
         if marker.name == "tag" or marker.name == "tags":
             tags += marker.args
-
-    if len(tags) > 0:
-        logger.add_meta("testTags", list(set(tags)))
+        if marker not in known_reserved_markers:
+            tags.append(marker.name)
+    return tags
 
 
 def add_test_description(node):

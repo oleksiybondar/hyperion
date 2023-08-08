@@ -59,8 +59,8 @@ An integrated REST client covered by automatic logging includes a built-in JSON 
 
 - **Database Interface (DBI)**: A future database client with adapters for multiple databases and automatic logging. It will implement an MVC-like router with write protection rules, offering safe direct database access during testing.
 - **Non-functional Testing**:
-    - **Visual Testing**: Will allow the comparison of screenshots or elements on a screen to detect visual defects.
-    - **Accessibility Testing**: Will assess the application's usability by people with disabilities.
+   - **Visual Testing**: Will allow the comparison of screenshots or elements on a screen to detect visual defects.
+   - **Accessibility Testing**: Will assess the application's usability by people with disabilities.
 
 ## Getting Started
 
@@ -157,10 +157,6 @@ from hyperiontf import config
 config.update_from_cfg_file('path/to/hyperion_config.yaml')
 ```
 
-My apologies for the confusion. Let me provide you with the corrected Viewports subsection for the `README.md` file:
-
----
-
 #### Viewport-Specific Locators in Hyperion POM
 
 Modern web applications often employ responsive design to ensure that their interfaces look good and function well on a variety of devices with different screen sizes. This responsive behavior is typically achieved using CSS media queries, which apply different styles based on the viewport width. Consequently, a web page can have different layouts under different viewport sizes, which might present challenges during automated testing.
@@ -251,7 +247,10 @@ def login_page():
     yield page
     page.quit()
 
-@pytest.mark.tags('Login', 'TextFields', 'Button')
+
+@pytest.mark.Login
+@pytest.mark.TextFields 
+@pytest.mark.Button
 def test_login(login_page):
     """
     Test the login functionality. Using direct elements accessors. 
@@ -261,7 +260,9 @@ def test_login(login_page):
     login_page.login_button.click()
 
 
-@pytest.mark.tags('Login', 'TextFields', 'Button')
+@pytest.mark.Login
+@pytest.mark.TextFields 
+@pytest.mark.Button
 def test_login2(login_page):
     """
     Test the login functionality. Using page object method. 
@@ -393,6 +394,148 @@ In the code above, the `login_form` is defined as a `widget` within the `LoginPa
 This level of abstraction makes the code more manageable, especially for larger applications with complex UIs.
 
 In the next sections, we will discuss more advanced features of the Hyperion Testing Framework. Stay tuned!
+
+### Using Elements Query Language (EQL)
+
+#### Introduction
+Elements Query Language (EQL) is a powerful feature of the Hyperion Testing Framework designed to streamline and simplify the process of querying and interacting with web elements in automated tests. EQL enables writing concise and intuitive queries to select elements, especially useful in complex web interfaces.
+
+#### EQL Syntax Description
+EQL allows you to write expressions to select web elements based on different criteria. Here is a simplified description of the EQL syntax:
+
+- **Expressions**: A query in EQL is an expression, which can be either a comparison between values or a logical combination of other expressions.
+- **Comparison Expressions**: Compare elements or values using operators like `==`, `!=`, `>`, `<`, `<=`, `>=`. For example, `age > 18` checks if the `age` element's value is greater than 18.
+- **Logical Expressions**: Combine expressions with logical operators like `and` and `or`. For instance, `name == "John" and age > 30` combines two comparisons.
+- **Element Chain Query**: Specify a path to a particular element or attribute. For example, `user.name` refers to the `name` element within a `user` element.
+- **Complex Chains**: Handle more complex chains, like `user.friends[1].name`, which refers to the `name` of the second friend in the `user`'s friends list.
+- **Regular Expressions**: Supports regex for flexible text matching, such as `text ~= /Element 3/`.
+
+**Selecting Elements by Attributes or Styles**:
+- By default, EQL queries are based on the text content of elements. To select elements based on attributes or styles, you need to specify this explicitly in your query.
+- Use a colon (`:`) followed by `attribute` or `style` to target specific attributes or styles.
+
+**Approximate Match (`~=`) Operator**:
+- The `~=` operator is used for approximate matching and is specifically designed for color comparisons and regular expressions.
+- For example, use `backgroundColor:style ~= rgba(255, 0, 0, 1)` to approximately match colors.
+- Regular expression matching can be done as `text ~= /Element 3/`.
+- **Note**: Using the `~=` operator with other data types than colors or regex patterns will result in an exception.
+
+
+#### Examples and Use Cases
+
+1. **Selecting Elements by Text**:
+
+   ```python
+   # EQL: 'text == "Multiple Element 2"'
+   result = page.multiple_elements['text == "Multiple Element 2"']
+   ```
+
+2. **Using Regular Expressions**:
+
+   ```python
+   # EQL: "text ~= /Element 3/"
+   result = page.multiple_elements["text ~= /Element 3/"]
+   ```
+
+3. **Targeting Child Elements**:
+
+   ```python
+   # EQL: 'child_element.text == "Widget Child Element 2"'
+   result = page.multiple_simple_widgets['child_element.text == "Widget Child Element 2"']
+   ```
+
+4. **Example with Attribute**:
+
+   ```python
+   # EQL: 'data-value:attribute == "42"'
+   result = page.my_array['data-value:attribute == "42"']
+   ```
+
+5. **Example with Style**:
+
+   ```python
+   # EQL: 'backgoundColor:style == rgba(255, 0, 0, 1)'
+   result = page.my_colored_elements['backgroundColor:style == rgba(255, 0, 0, 1)']
+   ```
+
+
+### Wait API for `Element`/`Elements`
+
+#### Introduction
+
+Our framework introduces a unique Wait API designed to enhance the interaction with web elements during automation. This API goes beyond the traditional implicit and explicit waits found in most automation frameworks. Instead, we offer what we call "interactive waits" - a set of methods that actively trace the state of web objects to ensure actions are performed at the optimal time. This approach allows for more reliable and efficient automation scripts by reducing the chances of encountering timing-related errors.
+
+#### Difference from Implicit and Explicit Waits
+
+While implicit and explicit waits pause the execution for a set period or until a particular condition is met, respectively, our interactive waits actively monitor the state of an element or collection of elements. This dynamic approach ensures that operations like clicks or data entry are executed only when the elements are in the right state (e.g., visible, not animated, enabled), thereby enhancing the robustness of automation tasks.
+
+#### Wait Methods
+
+Our Wait API is divided into two main groups:
+
+- **Single Object Wait Methods**: Applied to individual elements, including `Element`, `Widget`, `IFrame`, etc.
+- **Array of Elements Wait Methods**: Utilized for operations on multiple elements encapsulated within an `Elements` object.
+
+##### Single Object Wait Methods
+
+1. **wait_until_visible**: Waits until the element becomes visible on the page.
+   ```python
+   element.wait_until_visible(timeout=2)
+   ```
+2. **wait_until_enabled**: Ensures the element is enabled and interactable.
+   ```python
+   element.wait_until_enabled(timeout=10)
+   ```
+3. **wait_until_animation_completed**: Waits for any ongoing animations to finish.
+   ```python
+   element.wait_until_animation_completed(timeout=15)
+   ```
+4. **wait_until_fully_interactable**: A comprehensive method that waits for the element to be visible, not animated, and enabled.
+   ```python
+   element.wait_until_fully_interactable(timeout=20)
+   ```
+
+##### Array of Elements Wait Methods
+
+1. **wait_until_items_change**: Waits until the count of elements changes from its initial value.
+   ```python
+   elements.wait_until_items_change()
+   ```
+2. **wait_until_items_increase**: Monitors for an increase in the count of elements.
+   ```python
+   elements.wait_until_items_increase(timeout=12)
+   ```
+3. **wait_until_items_decrease**: Waits for the count of elements to decrease.
+   ```python
+   elements.wait_until_items_decrease(timeout=12)
+   ```
+4. **wait_until_items_count**: Waits until the number of elements matches a specific count.
+   ```python
+   elements.wait_until_items_count(expected_count=5, timeout=15)
+   ```
+5. **wait_until_missing**: Ensures all elements are no longer present or found.
+   ```python
+   elements.wait_until_missing(timeout=10)
+   ```
+
+#### Usage Examples
+
+The interactive waits can be seamlessly integrated into your automation scripts. Here's a quick example demonstrating the use of `wait_until_fully_interactable` for a single element and `wait_until_items_increase` for multiple elements:
+
+```python
+# Single element wait
+login_button = page.login_form.login_button
+login_button.wait_until_fully_interactable(timeout=10)
+login_button.click()
+
+# Multiple elements wait
+comments = page.extra_info_bar.comments
+page.extra_info_bar.comments_form.post_comment(comment_info)
+comments.wait_until_items_increase(timeout=15)
+for comment in comments:
+    comment.message.get_text()
+```
+
 
 ### iFrames and Automatic Context Switching in Hyperion POM
 
@@ -898,10 +1041,34 @@ def test_addition_desktop():
 As you can see, the steps performed inside each test are the same, despite being on different platforms. This consistency simplifies the process of writing and maintaining tests, particularly for applications that exist on multiple platforms.
 
 
+## Expect and Verify Functionality
 
-Absolutely, I'd be happy to help you draft a summary of the Hyperion Testing Framework's capabilities. It seems the appropriate place for such a summary would be near the top of the README document, following the introduction. This would give potential users an at-a-glance understanding of what the framework offers. Here's an example of how it could look:
+### Overview
+The Hyperion Testing Framework introduces two pivotal constructs for assertions: `expect` and `verify`. These functionalities are essential for validating the state of an application against expected conditions, enhancing the robustness and clarity of tests.
 
----
+### Expect
+The `expect` function is utilized to assert conditions that are critical for the test's continuation. If an expectation is not met, the test is immediately marked as failed and terminated. This is particularly useful for conditions where the validity of subsequent test steps is compromised by the failure.
+
+### Verify
+In contrast, `verify` allows for the accumulation of test failures without halting the execution. This functionality is indispensable for tests that aim to assess multiple conditions and require a comprehensive report of all encountered failures. `verify` is especially useful in conditional branches and iterative selections for detailed debugging and understanding of test paths, enhancing the traceability of issues.
+
+#### Conditional Branches
+Utilizing `verify` within conditional branches enables detailed logging of decision-making comparisons, crucial for debugging. It helps in tracing back the cause of failures which may occur several steps away from the evaluated condition.
+
+#### Iterative Selections
+`Verify` is also beneficial in iterative selections, such as when searching for an item in an array based on custom logic. It aids in identifying and logging reasons behind the success or failure of selections, particularly useful in pinpointing issues like typographical errors in strings.
+
+### Supported Datatypes and Methods
+`Expect` and `verify` support a wide range of datatypes and comparison methods, including but not limited to:
+
+- Equality and inequality checks for basic types (e.g., integers, strings)
+- Contains checks for collections
+- Custom logic for complex objects and conditions
+
+These functionalities enable the writing of flexible and comprehensive tests across various application states and conditions.
+
+### Conclusion
+Incorporating `expect` and `verify` into test scripts significantly enhances the debugging capabilities and readability of tests, providing clear insights into the test execution path and facilitating the identification and correction of issues.
 
 ## Summary of Hyperion's Capabilities
 

@@ -31,6 +31,22 @@ class Config:
         self.desktop_capabilities = DesktopCapabilities()
         self.rest = Rest()
 
+    def _parse_config_data(self, data):
+        """
+        Parse configuration data and update the sections.
+
+        Parameters:
+            data (dict): Dictionary containing the configuration data.
+
+        This method iterates over the data and updates the corresponding sections
+        in the configuration based on the section names and their data.
+        """
+        for section_name, section_data in data.items():
+            section_name = camel_to_snake_case(section_name)
+            _section_instance = getattr(self, section_name, None)
+            if _section_instance:
+                _section_instance.from_cfg_node(section_data)
+
     def update_from_cfg_file(self, cfg_file):
         """
         Update the configuration from a cfg, JSON, or YAML file.
@@ -43,51 +59,44 @@ class Config:
         """
         _, file_extension = os.path.splitext(cfg_file)
 
-        def parse_config_data(data):
-            """
-            Parse configuration data and update the sections.
-
-            Parameters:
-                data (dict): Dictionary containing the configuration data.
-
-            This method iterates over the data and updates the corresponding sections
-            in the configuration based on the section names and their data.
-            """
-            for section_name, section_data in data.items():
-                section_name = camel_to_snake_case(section_name)
-                _section_instance = getattr(self, section_name, None)
-                if _section_instance:
-                    _section_instance.from_cfg_node(section_data)
-
         if file_extension == ".cfg":
-            import configparser
-
-            # Use configparser to read cfg file
-            config_parser = configparser.ConfigParser()
-            config_parser.read(cfg_file)
-
-            for section in config_parser.sections():
-                for key, value in config_parser[section].items():
-                    # Update the section instance with key-value pair
-                    section_instance = getattr(self, camel_to_snake_case(section), None)
-                    if section_instance:
-                        section_instance.from_cfg_node({key: value})
+            self._update_from_cfg_file(cfg_file)
         elif file_extension == ".json":
-            with open(cfg_file, "r") as json_file:
-                import json
-
-                # Load JSON data from the file
-                data = json.load(json_file)
-                # Parse the data and update the sections
-                parse_config_data(data)
+            self._update_from_json_file(cfg_file)
         elif file_extension == ".yml" or file_extension == ".yaml":
-            import yaml
+            self._update_from_yml_file(cfg_file)
 
-            with open(cfg_file, "r") as yaml_file:
-                # Load YAML data from the file
-                data = yaml.safe_load(yaml_file)
-                # Parse the data and update the sections
-                parse_config_data(data)
+    def _update_from_cfg_file(self, cfg_file):
+        import configparser
+
+        # Use configparser to read cfg file
+        config_parser = configparser.ConfigParser()
+        config_parser.read(cfg_file)
+
+        for section in config_parser.sections():
+            for key, value in config_parser[section].items():
+                # Update the section instance with key-value pair
+                section_instance = getattr(self, camel_to_snake_case(section), None)
+                if section_instance:
+                    section_instance.from_cfg_node({key: value})
+
+    def _update_from_json_file(self, cfg_file):
+        with open(cfg_file, "r") as json_file:
+            import json
+
+            # Load JSON data from the file
+            data = json.load(json_file)
+            # Parse the data and update the sections
+            self._parse_config_data(data)
+
+    def _update_from_yml_file(self, cfg_file):
+        import yaml
+
+        with open(cfg_file, "r") as yaml_file:
+            # Load YAML data from the file
+            data = yaml.safe_load(yaml_file)
+            # Parse the data and update the sections
+            self._parse_config_data(data)
 
 
 config = Config()

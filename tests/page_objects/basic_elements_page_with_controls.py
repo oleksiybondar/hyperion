@@ -1,7 +1,7 @@
 from typing import Any
 
 from hyperiontf import widget, By
-from .widgets.re_render_control_pannel import ControlPanel
+from .widgets.re_render_control_panel import ControlPanel
 from .basic_elements_page import BasicElementsSearch
 
 

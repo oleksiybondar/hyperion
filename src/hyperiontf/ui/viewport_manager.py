@@ -42,7 +42,8 @@ class ViewportManager:
     @staticmethod
     def _get_viewport_label(width: int) -> ViewportLabelType:
         """
-        Determine the viewport label based on a given width.
+        Determine the viewport label based on a given width by initiating a chain of
+        viewport size checks starting from the smallest size.
 
         Parameters:
             width (int): The input width for which the viewport label is to be determined.
@@ -50,18 +51,75 @@ class ViewportManager:
         Returns:
             ViewportLabel: The corresponding viewport label for the given width.
         """
+        return ViewportManager._viewport_xs_or_larger(width)
+
+    @staticmethod
+    def _viewport_xs_or_larger(width: int) -> ViewportLabelType:
+        """
+        Check if the width qualifies for 'XS' viewport label, otherwise delegate to
+        the next larger viewport size check.
+
+        Parameters:
+            width (int): The width to be checked against the 'XS' viewport size.
+
+        Returns:
+            ViewportLabel: The viewport label for the given width.
+        """
         if width < config.page_object.viewport_sm:
             return ViewportLabel.XS
-        elif width < config.page_object.viewport_md:
+
+        return ViewportManager._viewport_sm_or_larger(width)
+
+    @staticmethod
+    def _viewport_sm_or_larger(width: int) -> ViewportLabelType:
+        """
+        Check if the width qualifies for 'SM' viewport label, otherwise delegate to
+        the next larger viewport size check.
+
+        Parameters:
+            width (int): The width to be checked against the 'SM' viewport size.
+
+        Returns:
+            ViewportLabel: The viewport label for the given width.
+        """
+        if width < config.page_object.viewport_lg:
             return ViewportLabel.SM
-        elif width < config.page_object.viewport_lg:
-            return ViewportLabel.MD
-        elif width < config.page_object.viewport_xl:
+
+        return ViewportManager._viewport_lg_or_larger(width)
+
+    @staticmethod
+    def _viewport_lg_or_larger(width: int) -> ViewportLabelType:
+        """
+        Check if the width qualifies for 'LG' viewport label, otherwise delegate to
+        the next larger viewport size check.
+
+        Parameters:
+            width (int): The width to be checked against the 'LG' viewport size.
+
+        Returns:
+            ViewportLabel: The viewport label for the given width.
+        """
+        if width < config.page_object.viewport_xl:
             return ViewportLabel.LG
-        elif width < config.page_object.viewport_xxl:
+
+        return ViewportManager._viewport_xl_or_larger(width)
+
+    @staticmethod
+    def _viewport_xl_or_larger(width: int) -> ViewportLabelType:
+        """
+        Check if the width qualifies for 'XL' viewport label, otherwise default to
+        the largest viewport label 'XXL'.
+
+        Parameters:
+            width (int): The width to be checked against the 'XL' viewport size.
+
+        Returns:
+            ViewportLabel: The viewport label for the given width.
+        """
+        if width < config.page_object.viewport_xxl:
             return ViewportLabel.XL
-        else:
-            return ViewportLabel.XXL
+
+        return ViewportLabel.XXL
 
     def calculate_viewport(
         self, force_recalculation: bool = False

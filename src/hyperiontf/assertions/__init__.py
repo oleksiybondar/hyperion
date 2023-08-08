@@ -1,3 +1,3 @@
-from .expect import Expect as expect
+from .helpers import expect, verify
 
-__all__ = ["expect"]
+__all__ = ["expect", "verify"]
