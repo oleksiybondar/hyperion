@@ -122,10 +122,11 @@ LocatorStrategiesType = Literal[
     "android uiautomator",
     "android viewtag",
     "android viewmatcher",
-    "windows uiautomation",
+    "accessibility id",
     "script",
     "data-testid",
     "elements item",
+    "automation id",
     "unsupported",
 ]
 
@@ -149,7 +150,7 @@ class LocatorStrategies:
     ANDROID_UIAUTOMATOR: LocatorStrategiesType = "android uiautomator"
     ANDROID_VIEWTAG: LocatorStrategiesType = "android viewtag"
     ANDROID_VIEW_MATCHER: LocatorStrategiesType = "android viewmatcher"
-    WINDOWS_UI_AUTOMATION: LocatorStrategiesType = "windows uiautomation"
+    WINDOWS_ACCESSIBILITY_ID: LocatorStrategiesType = "accessibility id"
     SCRIPT: LocatorStrategiesType = "script"
     TEST_ID: LocatorStrategiesType = "data-testid"
     ELEMENTS_ITEM: LocatorStrategiesType = "elements item"
