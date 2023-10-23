@@ -104,6 +104,7 @@
 #         "platformName": "Mac",
 #         "deviceName": "Mac",
 #         "bundleId": "com.apple.calculator",
+#         "remote_url": "http://10.211.55.2:4723"
 #     }
 #     page = DesktopCalculator.launch_app(caps)
 #     actual_test_case(page)

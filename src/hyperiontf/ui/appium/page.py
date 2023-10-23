@@ -1,6 +1,7 @@
 from typing import List
 
 from appium import webdriver
+
 import copy
 
 from hyperiontf.configuration import config
@@ -44,7 +45,34 @@ class Page:
         desired_cap.pop("automation")
         automation_name = desired_cap["automationName"]
 
-        return Page(webdriver.Remote(hub_url, desired_cap), automation_name)
+        return Page(
+            webdriver.Remote(hub_url, options=Page.dict_to_options(desired_cap)),
+            automation_name,
+        )
+
+    @staticmethod
+    def dict_to_options(desired_caps):
+        automation_name = desired_caps["automationName"]
+
+        if automation_name == "ios":
+            from appium.options.ios import XCUITestOptions
+
+            options = XCUITestOptions()
+        if automation_name == "uiautomator2":
+            from appium.options.android import UiAutomator2Options
+
+            options = UiAutomator2Options()
+        if automation_name == "Mac2":
+            from appium.options.mac import Mac2Options
+
+            options = Mac2Options()
+        if automation_name == "windows":
+            from appium.options.windows import WindowsOptions
+
+            options = WindowsOptions()
+
+        options.load_capabilities(desired_caps)
+        return options
 
     @property
     @map_exception
