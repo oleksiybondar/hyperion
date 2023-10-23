@@ -173,6 +173,16 @@ class By:
         """
         return cls(LocatorStrategies.SCRIPT, script)
 
+    @classmethod
+    def accessibility_id(cls, accessibility_id: str):
+        """
+        Creates a By locator that finds elements by their Automation ID/Accessibility ID attribute.
+
+        :param accessibility_id: windows accessibility id or automation id.
+        :return: The new By locator.
+        """
+        return cls(LocatorStrategies.WINDOWS_ACCESSIBILITY_ID, accessibility_id)
+
     def from_document(self):
         """
         Specifies that the element lookup should be performed in the entire document rather than within a parent

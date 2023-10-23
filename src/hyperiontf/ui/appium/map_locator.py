@@ -31,8 +31,8 @@ def map_locator(hyperion_by):
         return AppiumBy.ANDROID_VIEWTAG
     if hyperion_by == LocatorStrategies.ANDROID_VIEW_MATCHER:
         return AppiumBy.ANDROID_VIEW_MATCHER
-    if hyperion_by == LocatorStrategies.WINDOWS_UI_AUTOMATION:
-        return AppiumBy.WINDOWS_UI_AUTOMATION
+    if hyperion_by == LocatorStrategies.WINDOWS_ACCESSIBILITY_ID:
+        return LocatorStrategies.WINDOWS_ACCESSIBILITY_ID
     # no Selenium equivalents, return as is probably artificial(in Selenium's terminology) locator, returning
     # unsupported
     return LocatorStrategies.UNSUPPORTED
