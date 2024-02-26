@@ -55,7 +55,7 @@ def test_ordering():
 
 
 @pytest.mark.color
-def test_math_operations():
+def test_math_operations_1():
     col1 = Color(255, 0, 0)
     col2 = Color(0, 255, 0)
 
@@ -68,6 +68,11 @@ def test_math_operations():
     col1 -= col2
     assert col1 == Color(255, 0, 0, 0)
 
+
+@pytest.mark.color
+def test_math_operations_2():
+    col1 = Color(255, 0, 0)
+    col2 = Color(0, 255, 0)
     assert col1 * col2 == Color(0, 0, 0, 0)
     assert col1 * 0.5 == Color(127, 0, 0, 0)
 
