@@ -84,10 +84,10 @@ class Expect:
         self.is_assertion = is_assertion
         self.logger = logger
         self.sender = sender
-        self.strategy: Union[
-            DefaultStrategy, Type[DefaultStrategy]
-        ] = STRATEGIES_MAP.get(actual_value.__class__.__name__, DefaultStrategy)(
-            actual_value
+        self.strategy: Union[DefaultStrategy, Type[DefaultStrategy]] = (
+            STRATEGIES_MAP.get(actual_value.__class__.__name__, DefaultStrategy)(
+                actual_value
+            )
         )
         self.prefix = prefix
 
