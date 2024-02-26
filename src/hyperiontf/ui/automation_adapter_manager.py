@@ -131,11 +131,11 @@ class AutomationAdaptersManager:
         logger = getLogger(LoggerSource.WEB_PAGE)
         logger.info(f"Start '{browser.capitalize()}' browser")
         if automation_type == AutomationTool.SELENIUM:
-            from hyperiontf.ui.selenium.page import Page as seleniumAPI
+            from hyperiontf.ui.adapters.selenium.page import Page as seleniumAPI
 
             adapter = seleniumAPI.start_browser(browser, final_caps)
         elif automation_type == AutomationTool.PLAYWRIGHT:
-            from hyperiontf.ui.playwright.page import Page as playwrightAPI
+            from hyperiontf.ui.adapters.playwright.page import Page as playwrightAPI
 
             adapter = playwrightAPI.start_browser(browser, final_caps)
         else:
@@ -162,6 +162,15 @@ class AutomationAdaptersManager:
                 and automation_name not in IOS_AUTOMATION_FAMILY
             ):
                 return self._start_desktop_app(caps)
+        logger = self._log_mobile_app_execution(automation_name, final_caps)
+        from hyperiontf.ui.adapters.appium.page import Page as AppiumAPI
+
+        adapter = AppiumAPI.launch_app(caps)
+        self._add_adapter(adapter, logger)
+        return adapter
+
+    @staticmethod
+    def _log_mobile_app_execution(automation_name, final_caps):
         app = final_caps.get("app", None)
         if app is None and automation_name in IOS_AUTOMATION_FAMILY:
             app = final_caps["bundleId"]
@@ -171,11 +180,7 @@ class AutomationAdaptersManager:
             app = f"{app_package}.{app_activity}"
         logger = getLogger(LoggerSource.MOBILE_SCREEN)
         logger.info(f"Start '{app}' mobile application")
-        from hyperiontf.ui.appium.page import Page as AppiumAPI
-
-        adapter = AppiumAPI.launch_app(caps)
-        self._add_adapter(adapter, logger)
-        return adapter
+        return logger
 
     def _start_desktop_app(self, caps: dict):
         """
@@ -188,7 +193,7 @@ class AutomationAdaptersManager:
         app = final_caps.get("app", None)
         logger = getLogger(LoggerSource.DESKTOP_SCREEN)
         logger.info(f"Start '{app}' desktop application")
-        from hyperiontf.ui.appium.page import Page as AppiumAPI
+        from hyperiontf.ui.adapters.appium.page import Page as AppiumAPI
 
         adapter = AppiumAPI.launch_app(caps)
         self._add_adapter(adapter, logger)

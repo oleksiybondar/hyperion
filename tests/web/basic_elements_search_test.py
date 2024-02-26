@@ -1,8 +1,8 @@
 import pytest
 from hyperiontf.executors.pytest import automatic_log_setup, fixture  # noqa: F401
-from page_objects.basic_elements_page import BasicElementsSearch
+from ..page_objects.basic_elements_page import BasicElementsSearch
 from .caps_variants import caps_variants
-from hyperiontf import expect
+from hyperiontf import expect, Color
 
 import os
 
@@ -21,7 +21,8 @@ def page(request):
     yield page
 
 
-@pytest.mark.tags("SingleElement", "text")
+@pytest.mark.SingleElement
+@pytest.mark.text
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_find_simple_element_and_assert_its_text(page):
     """
@@ -30,7 +31,8 @@ def test_find_simple_element_and_assert_its_text(page):
     page.single_element_1.assert_text("Single Element 1 (ID: single-element-1)")
 
 
-@pytest.mark.tags("SingleElement", "attribute")
+@pytest.mark.SingleElement
+@pytest.mark.attribute
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_find_simple_element_and_assert_its_attribute(page):
     """
@@ -39,19 +41,19 @@ def test_find_simple_element_and_assert_its_attribute(page):
     page.single_element_2.assert_attribute("class", "single-element unique-element-1")
 
 
-@pytest.mark.tags("SingleElement", "style")
+@pytest.mark.SingleElement
+@pytest.mark.style
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_find_simple_element_and_assert_its_style(page):
     """
     Test finding a simple element and asserting its style.
     """
-    color = page.single_element_3.get_style("background-color")
-    expect([color]).contains_at_least_one(
-        ["rgb(240, 128, 128)", "rgba(240, 128, 128, 1)"]
-    )
+    color = Color.from_string(page.single_element_3.get_style("background-color"))
+    expect(color).to_be("rgba(240, 128, 128, 1)")
 
 
-@pytest.mark.tags("MultipleElement", "text")
+@pytest.mark.MultipleElement
+@pytest.mark.text
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_find_multiple_elements_and_assert_their_texts(page):
     """
@@ -64,7 +66,9 @@ def test_find_multiple_elements_and_assert_their_texts(page):
         element.assert_text(expected_string)
 
 
-@pytest.mark.tags("SingleWidget", "SingleElement", "text")
+@pytest.mark.SingleWidget
+@pytest.mark.SingleElement
+@pytest.mark.text
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_find_widget_child_and_assert_its_text(page):
     """
@@ -73,7 +77,10 @@ def test_find_widget_child_and_assert_its_text(page):
     page.single_widget.child_element.assert_text("Widget Child Element 1")
 
 
-@pytest.mark.tags("NestedWidget", "SingleWidget", "SingleElement", "text")
+@pytest.mark.NestedWidget
+@pytest.mark.SingleWidget
+@pytest.mark.SingleElement
+@pytest.mark.text
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_find_nested_widget_child_and_assert_its_text(page):
     """
@@ -84,9 +91,11 @@ def test_find_nested_widget_child_and_assert_its_text(page):
     )
 
 
-@pytest.mark.tags(
-    "NestedWidget", "SingleWidget", "MultipleWidget", "SingleElement", "text"
-)
+@pytest.mark.NestedWidget
+@pytest.mark.SingleWidget
+@pytest.mark.MultipleWidget
+@pytest.mark.SingleElement
+@pytest.mark.text
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_find_nested_widgets_child_and_assert_its_text(page):
     """
@@ -97,7 +106,9 @@ def test_find_nested_widgets_child_and_assert_its_text(page):
         nested_widget.child_element.assert_text(expected_string)
 
 
-@pytest.mark.tags("SingleElement", "click", "text")
+@pytest.mark.SingleElement
+@pytest.mark.click
+@pytest.mark.text
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_clickable_element_text_change(page):
     """
@@ -111,7 +122,9 @@ def test_clickable_element_text_change(page):
     page.clickable_element.assert_text(updated_text)
 
 
-@pytest.mark.tags("SingleElement", "fill", "attribute")
+@pytest.mark.SingleElement
+@pytest.mark.fill
+@pytest.mark.attribute
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_input_field_set_value_and_assert_attribute(page):
     """

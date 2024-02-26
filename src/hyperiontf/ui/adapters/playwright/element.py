@@ -2,7 +2,11 @@ from .map_locator import convert_locator
 from .map_exception import map_exception
 from .assert_stale_element_reference import assert_stale_reference
 from hyperiontf.ui import By
-from hyperiontf.typing import LocatorStrategies, UnsupportedLocatorException
+from hyperiontf.typing import (
+    LocatorStrategies,
+    UnsupportedLocatorException,
+    NoSuchElementException,
+)
 from selenium.webdriver.common.by import By as SeleniumBy
 
 SPECIAL_ATTRS = ["value"]
@@ -199,6 +203,11 @@ class Element:
         if playwright_locator == LocatorStrategies.UNSUPPORTED:
             raise UnsupportedLocatorException(
                 f"Unsupported {locator.by} locator for Playwright"
+            )
+        founded_element = self.element.query_selector(playwright_locator)
+        if founded_element is None:
+            raise NoSuchElementException(
+                f"Element was not found!\n{playwright_locator}"
             )
         return Element(self.element.query_selector(playwright_locator), self)
 

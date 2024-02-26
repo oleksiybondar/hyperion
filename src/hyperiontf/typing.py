@@ -264,6 +264,58 @@ DESKTOP_OS_FAMILY = [OS.WINDOWS, OS.MAC, OS.LINUX]
 MOBILE_OS_FAMILY = [OS.ANDROID, OS.IOS]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Elements Query Language
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ASTType = Literal[
+    "logical_expression",
+    "comparison",
+    "element_chain",
+    "attribute",
+    "element",
+    "string",
+    "regex",
+    "number",
+    "bool",
+    "date",
+    "color",
+]
+
+
+class AST:
+    LOGICAL_EXPRESSION: ASTType = "logical_expression"
+    COMPARISON: ASTType = "comparison"
+    ELEMENT_CHAIN: ASTType = "element_chain"
+    ATTRIBUTE: ASTType = "attribute"
+    ELEMENT: ASTType = "element"
+    STRING: ASTType = "string"
+    REGEX: ASTType = "regex"
+    NUMBER: ASTType = "number"
+    BOOL: ASTType = "bool"
+    DATE: ASTType = "date"
+    COLOR: ASTType = "color"
+
+
+LogicalOperator = Literal["and", "or"]
+
+ComparisonOperator = Literal["==", "!=", "~=", "<", "<=", ">", ">="]
+
+
+class LogicalOp:
+    AND: LogicalOperator = "and"
+    OR: LogicalOperator = "or"
+
+
+class ComparisonOp:
+    EQUAL: ComparisonOperator = "=="
+    NOTEQUAL: ComparisonOperator = "!="
+    APPROX: ComparisonOperator = "~="
+    LT: ComparisonOperator = "<"
+    LE: ComparisonOperator = "<="
+    GT: ComparisonOperator = ">"
+    GE: ComparisonOperator = ">="
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Rest Client Typing
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -323,18 +375,34 @@ SuccessResponse = TypeVar("SuccessResponse")
 RedirectResponse = TypeVar("RedirectResponse")
 ErrorResponse = TypeVar("ErrorResponse")
 
-
 Client = TypeVar("Client")
-
 
 AnyClient = Type[Client]
 
 Request = TypeVar("Request")
 AnyRequest = Type[Request]
 
-
 # Any Response
 AnyResponse = Union[SuccessResponse, RedirectResponse, ErrorResponse]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Expect
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComparisonTypeType = Literal["assertion", "verification"]
+
+
+class ComparisonType:
+    ASSERTION: ComparisonTypeType = "assertion"
+    VERIFICATION: ComparisonTypeType = "verification"
+
+
+ExpectationStatusType = Literal["Pass", "Fail"]
+
+
+class ExpectationStatus:
+    PASS: ExpectationStatusType = "Pass"
+    FAIL: ExpectationStatusType = "Fail"
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -346,11 +414,27 @@ class HyperionException(Exception):
     pass
 
 
+class FailedExpectationException(HyperionException):
+    pass
+
+
+class TimeoutException(HyperionException):
+    pass
+
+
 class HyperionUIException(HyperionException):
     pass
 
 
 class HyperionAPIException(HyperionException):
+    pass
+
+
+class ElementQueryLanguageParseException(HyperionException):
+    pass
+
+
+class ElementQueryLanguageBadOperatorException(HyperionException):
     pass
 
 

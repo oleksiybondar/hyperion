@@ -19,6 +19,7 @@ Note:
     and decorators to enhance the creation and management of UI elements in page object classes or page object modules.
 
 """
+
 from hyperiontf.typing import AnyElement
 from ..element import Element
 from ..widget import Widget

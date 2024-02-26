@@ -7,7 +7,7 @@ def error_recovery(logger=getLogger("Element")):
         def decorator(*args, **kwargs):
             instance = args[0]
             # ensure that action can be performed
-            instance.is_interactive()
+            instance.__is_interactive__()
             try:
                 # try to execute requested action
                 return method(*args, **kwargs)
@@ -32,7 +32,7 @@ def error_recovery(logger=getLogger("Element")):
 
                         instance.find_itself()
                         # ensure that action can be performed, before re-try
-                        instance.is_interactive()
+                        instance.__is_interactive__()
                         # Retrying, without exception handling
                         return method(*args, **kwargs)
                     case "ContextSwitchingException":

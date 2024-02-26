@@ -36,7 +36,7 @@ import re
 from hyperiontf.logging import getLogger, Logger
 from hyperiontf.configuration import config
 from hyperiontf.helpers.string_helpers import method_name_to_human_readable
-from typing import Callable, Type
+from typing import Callable, Type, Any
 from hyperiontf.helpers.own_methods_helper import get_instance_unique_methods
 
 PRIVATE_METHODS_PATTERN = "^_"
@@ -144,18 +144,22 @@ def auto_decorate_class_methods_with_logging(
         sender_name = instance.__full_name__
 
     for method in get_instance_unique_methods(instance, base_class):
-        if (
-            bool(re.match(PRIVATE_METHODS_PATTERN, method))
-            and not config.page_object.log_private
-        ):
-            continue
-        undecorated_method = getattr(instance, method)
+        _wrap_method(instance, method, sender_name, logger)
 
-        if not callable(undecorated_method):
-            continue
 
-        setattr(
-            instance,
-            method,
-            AutoLoggingMethod(undecorated_method, sender_name, logger).wrapper,
-        )
+def _wrap_method(instance: Any, method: str, sender_name: str, logger: Any):
+    if (
+        bool(re.match(PRIVATE_METHODS_PATTERN, method))
+        and not config.page_object.log_private
+    ):
+        return
+    undecorated_method = getattr(instance, method)
+
+    if not callable(undecorated_method):
+        return
+
+    setattr(
+        instance,
+        method,
+        AutoLoggingMethod(undecorated_method, sender_name, logger).wrapper,
+    )

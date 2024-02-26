@@ -1,2320 +1,1728 @@
-from datetime import timedelta
-from typing import Optional, Any, List, Dict, Iterable, Sequence, Union
-import collections
-import datetime
-import time
-import difflib
-import re
-import os
+from typing import Optional, Type, Union, Any
+from hyperiontf.logging.logger import Logger
+from hyperiontf.ui.color import Color
+from .decorators import auto_log, type_check
+from hyperiontf.assertions.strategy.default_strategy import DefaultStrategy
+from hyperiontf.assertions.strategy.numeric_strategy import NumericStrategy
+from hyperiontf.assertions.strategy.string_strategy import StringStrategy
+from hyperiontf.assertions.strategy.array_strategy import ArrayStrategy
+from hyperiontf.assertions.strategy.dict_strategy import DictStrategy
+from hyperiontf.assertions.strategy.color_strategy import ColorStrategy
+from hyperiontf.assertions.strategy.filesystem_strategy import FileSystemStrategy
+from .expectation_result import ExpectationResult
 
-from hyperiontf.logging import getLogger, Logger
-from .logging_helper import expect_logging_helper
+STRATEGIES_MAP = {
+    "bool": NumericStrategy,
+    "int": NumericStrategy,
+    "float": NumericStrategy,
+    "str": StringStrategy,
+    "list": ArrayStrategy,
+    "set": ArrayStrategy,
+    "tuple": ArrayStrategy,
+    "dict": DictStrategy,
+    "Color": ColorStrategy,
+    "File": FileSystemStrategy,
+    "Dir": FileSystemStrategy,
+}
 
 
 class Expect:
     """
-    The Expect class is a custom-built expectation handler for Python.
+    A central class in the testing framework that provides a fluent interface for asserting
+    various conditions on a given value. It dynamically selects an appropriate strategy
+    based on the type of the actual value to perform type-specific or general assertions.
 
-    Despite the availability of a number of excellent testing libraries in Python such as pytest, unittest and robot,
-    there is no standard, built-in 'expect' functionality. To bridge this gap and to cater to specific needs, this
-    custom Expect class was developed.
+    This class is relatively private and is not intended for direct use in tests; instead,
+    helper methods `expect` and `verify` are provided for public use. The lowercase `expect`
+    function is an entry point that facilitates assertions, raising exceptions on failure,
+    whereas `verify` is used for non-assertive checks, logging outcomes as informational
+    without raising exceptions, making it suitable for more flexible validation scenarios.
 
-    Key Reasons for Creating the Custom Expect Class:
+    Attributes:
+        actual_value (Any): The value to be tested or verified.
+        is_assertion (bool): A flag indicating if the Expect instance is being used for
+                             assertions (True) or verifications (False).
+        logger (Optional[Logger]): Logger object for logging outcomes of the checks.
+        sender (Optional[str]): Identifier for the sender of log messages.
+        strategy (Union[DefaultStrategy, Type[DefaultStrategy]]): The strategy object
+                     determined based on the actual value's type, responsible for
+                     executing the specific comparison methods.
 
-    1. Lack of Standard Python Expect: Python does not come with a built-in 'expect' functionality.
-       While some testing libraries like pytest and robot do provide this, it doesn't cover all use-cases
-       and not always is the preferred choice due to other constraints.
+    The class originally leveraged Python's dynamic `__getattr__` feature to proxy method
+    calls to the appropriate strategy, allowing for a compact implementation. However, this
+    dynamic approach was revised in favor of explicitly defining wrapper methods for each
+    strategy. This decision, influenced by the capabilities of ChatGPT, aimed to enhance
+    the developer experience by providing clear type hints and verbose docstrings that
+    detail cross-referencing types and expected behaviors, thus making the API more
+    intuitive and the code more maintainable and extendable.
 
-    2. Custom Logging: In complex systems and test environments, logging plays a crucial role. Standard expectation
-       handling from existing libraries might not provide the level of customisation and control required over
-       logging. The Expect class addresses this by providing an extensible and customizable logging system,
-       allowing users to tailor it according to their needs.
+    The extensive logging capability of the `Expect` class and its strategies is a key
+    feature, offering detailed insights into the checks performed, especially valuable
+    in non-assertion contexts where results are logged for informational purposes,
+    regardless of the outcome. This approach ensures that users benefit from comprehensive
+    feedback on their tests' behavior and outcomes.
 
-    The Expect class provides a robust and flexible framework for managing and asserting expectations,
-    integrating seamlessly with existing code and providing detailed logging and error handling capabilities.
+    Example Usage:
+        expect(some_value).is_none()  # Checks if some_value is None, raising an exception on failure.
+        verify(another_value).is_int()  # Checks if another_value is an integer, logging the outcome.
+
+    The STRATEGIES_MAP dictionary maps types to their corresponding strategy classes,
+    allowing the Expect class to dynamically select the appropriate strategy based on
+    the actual value's type, facilitating a wide range of assertions and verifications
+    across different data types and conditions.
     """
 
-    allowed_extensions_for_file_difference = [".txt", ".json", ".xml", ".csv", ".log"]
-
-    @staticmethod
-    def add_file_comparison_format(extension: str):
-        """
-        Add a new file format for comparison in file difference method.
-
-        Args:
-            extension (str): The file extension to be added.
-
-        """
-        if extension.startswith("."):
-            Expect.allowed_extensions_for_file_difference.append(extension)
-        else:
-            Expect.allowed_extensions_for_file_difference.append("." + extension)
-
-    def __init__(self, actual_value: Any):
-        """
-        Initializes an Expect object with actual value, owner and logger.
-
-        Args:
-            actual_value: The actual value that the assertions will be tested against.
-        """
-        self._actual_value = actual_value
-        self._owner: Optional[object] = None  # Default owner is None
-        self._logger = getLogger("Expect")  # Default logger
-
-    def set_owner(self, owner: object):
-        """
-        Sets the owner for the Expect object.
-
-        Args:
-            owner: The object that owns this Expect instance.
-        """
-        self._owner = owner
-
-    def add_logger(self, logger: Logger):
-        """
-        Sets the logger for the Expect object.
-
-        Args:
-            logger: The Logger to be used for logging.
-        """
-        self._logger = logger
-
-    @property
-    def also(self):
-        """
-        Property that simply returns self, allowing for more fluent chaining of expectations.
-
-        Returns
-        -------
-        Expect
-            Returns the instance of the Expect class.
-        """
-        return self
-
-    @expect_logging_helper
-    def to_be(self, expected_value):
-        """
-        Checks if the actual value is equal to the expected value.
-
-        Args:
-            expected_value (Any): The expected value.
-
-        Returns:
-            bool: True if the actual value is equal to the expected value, False otherwise.
-        """
-        return self._actual_value == expected_value
-
-    @expect_logging_helper
-    def not_to_be(self, expected_value):
-        """
-        Checks if the actual value is not equal to the expected value.
-
-        Args:
-            expected_value (Any): The expected value.
-
-        Returns:
-            bool: True if the actual value is not equal to the expected value, False otherwise.
-        """
-        return self._actual_value != expected_value
-
-    @expect_logging_helper
-    def not_to_contain(self, expected_value: str):
-        """
-        Checks if the actual string value does not contain the expected string.
-
-        Args:
-            expected_value (str): The expected string.
-
-        Returns:
-            bool: True if the actual string does not contain the expected string, False otherwise.
-        """
-        return (
-            isinstance(self._actual_value, str)
-            and expected_value not in self._actual_value
-        )
-
-    @expect_logging_helper
-    def to_match(self, expected_pattern: str):
-        """
-        Checks if the actual string value matches the expected regex pattern.
-
-        Args:
-            expected_pattern (str): The expected regex pattern.
-
-        Returns:
-            bool: True if the actual string matches the expected pattern, False otherwise.
-        """
-        return (
-            isinstance(self._actual_value, str)
-            and re.match(expected_pattern, self._actual_value) is not None
-        )
-
-    @expect_logging_helper
-    def not_to_match(self, expected_pattern: str):
-        """
-        Checks if the actual string value does not match the expected regex pattern.
-
-        Args:
-            expected_pattern (str): The expected regex pattern.
-
-        Returns:
-            bool: True if the actual string does not match the expected pattern, False otherwise.
-        """
-        return (
-            isinstance(self._actual_value, str)
-            and re.match(expected_pattern, self._actual_value) is None
-        )
-
-    @expect_logging_helper
-    def to_contain_only_letters(self):
-        """
-        Checks if the actual string value contains only letters.
-
-        Returns:
-            bool: True if the actual string contains only letters, False otherwise.
-        """
-        return isinstance(self._actual_value, str) and self._actual_value.isalpha()
-
-    @expect_logging_helper
-    def not_to_contain_only_letters(self):
-        """
-        Checks if the actual string value does not contain only letters.
-
-        Returns:
-            bool: True if the actual string does not contain only letters, False otherwise.
-        """
-        return isinstance(self._actual_value, str) and not self._actual_value.isalpha()
-
-    @expect_logging_helper
-    def to_contain_only_digits(self):
-        """
-        Checks if the actual string value contains only digits.
-
-        Returns:
-            bool: True if the actual string contains only digits, False otherwise.
-        """
-        return isinstance(self._actual_value, str) and self._actual_value.isdigit()
-
-    @expect_logging_helper
-    def not_to_contain_only_digits(self):
-        """
-        Checks if the actual string value does not contain only digits.
-
-        Returns:
-            bool: True if the actual string does not contain only digits, False otherwise.
-        """
-        return isinstance(self._actual_value, str) and not self._actual_value.isdigit()
-
-    @expect_logging_helper
-    def to_be_lowercase(self):
-        """
-        Checks if the actual string value is lowercase.
-
-        Returns:
-            bool: True if the actual string is lowercase, False otherwise.
-        """
-        return isinstance(self._actual_value, str) and self._actual_value.islower()
-
-    @expect_logging_helper
-    def not_to_be_lowercase(self):
-        """
-        Checks if the actual string value is not lowercase.
-
-        Returns:
-            bool: True if the actual string is not lowercase, False otherwise.
-        """
-        return isinstance(self._actual_value, str) and not self._actual_value.islower()
-
-    @expect_logging_helper
-    def to_be_uppercase(self):
-        """
-        Checks if the actual string value is uppercase.
-
-        Returns:
-            bool: True if the actual string is uppercase, False otherwise.
-        """
-        return isinstance(self._actual_value, str) and self._actual_value.isupper()
-
-    @expect_logging_helper
-    def not_to_be_uppercase(self):
-        """
-        Checks if the actual string value is not uppercase.
-
-        Returns:
-            bool: True if the actual string is not uppercase, False otherwise.
-        """
-        return isinstance(self._actual_value, str) and not self._actual_value.isupper()
-
-    @expect_logging_helper
-    def to_have_length(self, expected_length: int):
-        """
-        Checks if the actual string value has the expected length.
-
-        Args:
-            expected_length (int): The expected length of the string.
-
-        Returns:
-            bool: True if the actual string has the expected length, False otherwise.
-        """
-        return (
-            isinstance(self._actual_value, str)
-            and len(self._actual_value) == expected_length
-        )
-
-    @expect_logging_helper
-    def not_to_have_length(self, expected_length: int):
-        """
-        Checks if the actual string value does not have the expected length.
-
-        Args:
-            expected_length (int): The expected length of the string.
-
-        Returns:
-            bool: True if the actual string does not have the expected length, False otherwise.
-        """
-        return (
-            isinstance(self._actual_value, str)
-            and len(self._actual_value) != expected_length
-        )
-
-    @expect_logging_helper
-    def to_be_less_than(self, expected_value: int):
-        """
-        Checks if the actual value is less than the expected value.
-
-        Args:
-            expected_value (int): The expected integer value.
-
-        Returns:
-            bool: True if the actual value is less than the expected value, False otherwise.
-        """
-        return self._actual_value < expected_value
-
-    @expect_logging_helper
-    def not_to_be_less_than(self, expected_value: int):
-        """
-        Checks if the actual value is not less than the expected value.
-
-        Args:
-            expected_value (int): The expected integer value.
-
-        Returns:
-            bool: True if the actual value is not less than the expected value, False otherwise.
-        """
-        return self._actual_value >= expected_value
-
-    @expect_logging_helper
-    def to_be_greater_than(self, expected_value: int):
-        """
-        Checks if the actual value is greater than the expected value.
-
-        Args:
-            expected_value (int): The expected integer value.
-
-        Returns:
-            bool: True if the actual value is greater than the expected value, False otherwise.
-        """
-        return self._actual_value > expected_value
-
-    @expect_logging_helper
-    def not_to_be_greater_than(self, expected_value: int):
-        """
-        Checks if the actual value is not greater than the expected value.
-
-        Args:
-            expected_value (int): The expected integer value.
-
-        Returns:
-            bool: True if the actual value is not greater than the expected value, False otherwise.
-        """
-        return self._actual_value <= expected_value
-
-    @expect_logging_helper
-    def to_be_less_than_or_equal_to(self, expected_value: int):
-        """
-        Checks if the actual value is less than or equal to the expected value.
-
-        Args:
-            expected_value (int): The expected integer value.
-
-        Returns:
-            bool: True if the actual value is less than or equal to the expected value, False otherwise.
-        """
-        return self._actual_value <= expected_value
-
-    @expect_logging_helper
-    def not_to_be_less_than_or_equal_to(self, expected_value: int):
-        """
-        Checks if the actual value is not less than or equal to the expected value.
-
-        Args:
-            expected_value (int): The expected integer value.
-
-        Returns:
-            bool: True if the actual value is not less than or equal to the expected value, False otherwise.
-        """
-        return self._actual_value > expected_value
-
-    @expect_logging_helper
-    def to_be_greater_than_or_equal_to(self, expected_value: int):
-        """
-        Checks if the actual value is greater than or equal to the expected value.
-
-        Args:
-            expected_value (int): The expected integer value.
-
-        Returns:
-            bool: True if the actual value is greater than or equal to the expected value, False otherwise.
-        """
-        return self._actual_value >= expected_value
-
-    @expect_logging_helper
-    def not_to_be_greater_than_or_equal_to(self, expected_value: int):
-        """
-        Checks if the actual value is not greater than or equal to the expected value.
-
-        Args:
-            expected_value (int): The expected integer value.
-
-        Returns:
-            bool: True if the actual value is not greater than or equal to the expected value, False otherwise.
-        """
-        return self._actual_value < expected_value
-
-    @expect_logging_helper
-    def to_be_between(self, lower_bound: int, upper_bound: int):
-        """
-        Checks if the actual value is between the lower_bound and upper_bound.
-
-        Args:
-            lower_bound (int): The lower boundary value.
-            upper_bound (int): The upper boundary value.
-
-        Returns:
-            bool: True if the actual value is between the two boundaries, False otherwise.
-        """
-        return lower_bound <= self._actual_value <= upper_bound
-
-    @expect_logging_helper
-    def not_to_be_between(self, lower_bound: int, upper_bound: int):
-        """
-        Checks if the actual value is not between the lower_bound and upper_bound.
-
-        Args:
-            lower_bound (int): The lower boundary value.
-            upper_bound (int): The upper boundary value.
-
-        Returns:
-            bool: True if the actual value is not between the two boundaries, False otherwise.
-        """
-        return not lower_bound <= self._actual_value <= upper_bound
-
-    @expect_logging_helper
-    def to_be_positive(self):
-        """
-        Checks if the actual value is a positive number.
-
-        Returns:
-            bool: True if the actual value is a positive number, False otherwise.
-        """
-        return self._actual_value > 0
-
-    @expect_logging_helper
-    def not_to_be_positive(self):
-        """
-        Checks if the actual value is not a positive number.
-
-        Returns:
-            bool: True if the actual value is not a positive number, False otherwise.
-        """
-        return self._actual_value <= 0
-
-    @expect_logging_helper
-    def to_be_negative(self):
-        """
-        Checks if the actual value is a negative number.
-
-        Returns:
-            bool: True if the actual value is a negative number, False otherwise.
-        """
-        return self._actual_value < 0
-
-    @expect_logging_helper
-    def not_to_be_negative(self):
-        """
-        Checks if the actual value is not a negative number.
-
-        Returns:
-            bool: True if the actual value is not a negative number, False otherwise.
-        """
-        return self._actual_value >= 0
-
-    @expect_logging_helper
-    def to_be_odd(self):
-        """
-        Checks if the actual value is an odd number.
-
-        Returns:
-            bool: True if the actual value is an odd number, False otherwise.
-        """
-        return self._actual_value % 2 == 1
-
-    @expect_logging_helper
-    def not_to_be_odd(self):
-        """
-        Checks if the actual value is not an odd number.
-
-        Returns:
-            bool: True if the actual value is not an odd number, False otherwise.
-        """
-        return self._actual_value % 2 == 0
-
-    @expect_logging_helper
-    def to_be_even(self):
-        """
-        Checks if the actual value is an even number.
-
-        Returns:
-            bool: True if the actual value is an even number, False otherwise.
-        """
-        return self._actual_value % 2 == 0
-
-    @expect_logging_helper
-    def not_to_be_even(self):
-        """
-        Checks if the actual value is not an even number.
-
-        Returns:
-            bool: True if the actual value is not an even number, False otherwise.
-        """
-        return self._actual_value % 2 == 1
-
-    @expect_logging_helper
-    def to_be_equal_to(self, expected_value: str):
-        """
-        Checks if the actual string is equal to the expected string.
-
-        Args:
-            expected_value (str): Expected string value.
-
-        Returns:
-            bool: True if the actual string is equal to the expected string, False otherwise.
-        """
-        return self._actual_value == expected_value
-
-    @expect_logging_helper
-    def not_to_be_equal_to(self, expected_value: str):
-        """
-        Checks if the actual string is not equal to the expected string.
-
-        Args:
-            expected_value (str): Expected string value.
-
-        Returns:
-            bool: True if the actual string is not equal to the expected string, False otherwise.
-        """
-        return self._actual_value != expected_value
-
-    @expect_logging_helper
-    def to_start_with(self, expected_value: str):
-        """
-        Checks if the actual string value starts with the expected string.
-
-        Args:
-            expected_value (str): The expected string.
-
-        Returns:
-            bool: True if the actual string starts with the expected string, False otherwise.
-        """
-        return isinstance(self._actual_value, str) and self._actual_value.startswith(
-            expected_value
-        )
-
-    @expect_logging_helper
-    def not_to_start_with(self, expected_value: str):
-        """
-        Checks if the actual string value does not start with the expected string.
-
-        Args:
-            expected_value (str): The expected string.
-
-        Returns:
-            bool: True if the actual string does not start with the expected string, False otherwise.
-        """
-        return isinstance(
-            self._actual_value, str
-        ) and not self._actual_value.startswith(expected_value)
-
-    @expect_logging_helper
-    def to_end_with(self, expected_value: str):
-        """
-        Checks if the actual string value ends with the expected string.
-
-        Args:
-            expected_value (str): The expected string.
-
-        Returns:
-            bool: True if the actual string ends with the expected string, False otherwise.
-        """
-        return isinstance(self._actual_value, str) and self._actual_value.endswith(
-            expected_value
-        )
-
-    @expect_logging_helper
-    def not_to_end_with(self, expected_value: str):
-        """
-        Checks if the actual string value does not end with the expected string.
-
-        Args:
-            expected_value (str): The expected string.
-
-        Returns:
-            bool: True if the actual string does not end with the expected string, False otherwise.
-        """
-        return isinstance(self._actual_value, str) and not self._actual_value.endswith(
-            expected_value
-        )
-
-    @expect_logging_helper
-    def to_contain(self, expected_value: str):
-        """
-        Checks if the actual string value contains the expected string.
-
-        Args:
-            expected_value (str): The expected string.
-
-        Returns:
-            bool: True if the actual string contains the expected string, False otherwise.
-        """
-        return (
-            isinstance(self._actual_value, str) and expected_value in self._actual_value
-        )
-
-    @expect_logging_helper
-    def to_be_more_than(self, expected_value: int):
-        """
-        Asserts that the actual value is more than the expected value.
-        """
-        return self._actual_value > expected_value
-
-    @expect_logging_helper
-    def not_to_be_more_than(self, expected_value: int):
-        """
-        Asserts that the actual value is not more than the expected value.
-        """
-        return not self._actual_value > expected_value
-
-    @expect_logging_helper
-    def to_be_less_or_equal_to(self, expected_value: int):
-        """
-        Asserts that the actual value is less than or equal to the expected value.
-        """
-        return self._actual_value <= expected_value
-
-    @expect_logging_helper
-    def not_to_be_less_or_equal_to(self, expected_value: int):
-        """
-        Asserts that the actual value is not less than or equal to the expected value.
-        """
-        return not self._actual_value <= expected_value
-
-    @expect_logging_helper
-    def to_be_equal_or_more_than(self, expected_value: int):
-        """
-        Asserts that the actual value is equal to or more than the expected value.
-        """
-        return self._actual_value >= expected_value
-
-    @expect_logging_helper
-    def not_to_be_equal_or_more_than(self, expected_value: int):
-        """
-        Asserts that the actual value is not equal to or more than the expected value.
-        """
-        return not self._actual_value >= expected_value
-
-    @expect_logging_helper
-    def in_range(self, lower_bound: int, upper_bound: int):
-        """
-        Asserts that the actual value is within the range of the provided lower and upper bounds.
-        """
-        return lower_bound <= self._actual_value <= upper_bound
-
-    @expect_logging_helper
-    def not_in_range(self, lower_bound: int, upper_bound: int):
-        """
-        Asserts that the actual value is not within the range of the provided lower and upper bounds.
-        """
-        return not (lower_bound <= self._actual_value <= upper_bound)
-
-    @expect_logging_helper
-    def positive(self):
-        """
-        Asserts that the actual value is positive.
-        """
-        return self._actual_value > 0
-
-    @expect_logging_helper
-    def not_positive(self):
-        """
-        Asserts that the actual value is not positive.
-        """
-        return not self._actual_value > 0
-
-    @expect_logging_helper
-    def negative(self):
-        """
-        Asserts that the actual value is negative.
-        """
-        return self._actual_value < 0
-
-    @expect_logging_helper
-    def not_negative(self):
-        """
-        Asserts that the actual value is not negative.
-        """
-        return not self._actual_value < 0
-
-    @expect_logging_helper
-    def odd(self):
-        """
-        Asserts that the actual value is odd.
-        """
-        return self._actual_value % 2 != 0
-
-    @expect_logging_helper
-    def not_odd(self):
-        """
-        Asserts that the actual value is not odd.
-        """
-        return not self._actual_value % 2 != 0
-
-    # Array Operations
-
-    @expect_logging_helper
-    def contains(self, expected_item: Union[str, Any, Dict[Any, Any]]):
-        """
-        Verifies if the actual value (string, array-like object, or dictionary-like object) contains the specified item,
-        substring, or key-value pairs.
-
-        Args:
-            expected_item (Union[str, Any, Dict[Any, Any]]): The item, substring, or dictionary containing the key-value pairs
-            that the actual value is expected to contain.
-
-        Returns:
-            bool: True if the actual value contains the specified item, substring, or key-value pairs, False otherwise.
-        """
-
-        # Check if the actual value is a dictionary
-        if isinstance(self._actual_value, dict) and isinstance(expected_item, dict):
-            return all(
-                item in self._actual_value.items() for item in expected_item.items()
+    def __init__(
+        self,
+        actual_value,
+        is_assertion,
+        sender: Optional[str] = None,
+        logger: Optional[Logger] = None,
+        prefix: Optional[str] = None,
+    ):
+        self.actual_value = actual_value
+        self.is_assertion = is_assertion
+        self.logger = logger
+        self.sender = sender
+        self.strategy: Union[DefaultStrategy, Type[DefaultStrategy]] = (
+            STRATEGIES_MAP.get(actual_value.__class__.__name__, DefaultStrategy)(
+                actual_value
             )
-
-        # Check if the actual value is a string
-        if isinstance(self._actual_value, str) and isinstance(expected_item, str):
-            return expected_item in self._actual_value
-
-        # Check if the actual value is an array-like object (excluding strings)
-        if isinstance(self._actual_value, collections.abc.Sequence) and not isinstance(
-            self._actual_value, str
-        ):
-            return expected_item in self._actual_value
-
-        # Check if the actual value is a list, tuple, or set
-        if isinstance(self._actual_value, (list, tuple, set)):
-            return expected_item in self._actual_value
-
-        return False
-
-    @expect_logging_helper
-    def not_contains_all(self, items: Union[List[Any], Sequence]):
-        """
-        Verifies if the actual value (an array-like object) does not contain all the provided items.
-
-        If items is a list, it asserts that the actual value does not contain all the items from the list.
-        If items is a sequence, it verifies that the actual array does not contain all the specified items.
-
-        Args:
-            items (Union[List[Any], Sequence]): The items to check if they are not all contained in the array.
-
-        Returns:
-            bool: True if the actual value does not contain all the items, False otherwise.
-        """
-        if isinstance(items, list) and all(
-            isinstance(i, type(self._actual_value)) for i in items
-        ):
-            return not all(item in self._actual_value for item in items)
-        elif isinstance(items, Sequence):
-            return not self.contains_all(items, not_an_assertion=True)
-        else:
-            return False
-
-    @expect_logging_helper
-    def contains_at_least_one(self, items: Sequence[Any]):
-        """
-        Asserts that the actual value (an array-like object) contains at least one of the provided items.
-
-        Args:
-            items (Sequence[Any]): The items to check if at least one of them is contained in the array.
-
-        Returns:
-            bool: True if the actual value contains at least one of the items, False otherwise.
-        """
-        if not isinstance(self._actual_value, (list, tuple, set)):
-            return False
-
-        if any(item in self._actual_value for item in items):
-            return True
-
-        return False
-
-    @expect_logging_helper
-    def to_be_ordered(self, expected_items: List[Any]):
-        """
-        Asserts that the actual value (an array-like object) is the same as the provided list of items in the same order
-
-        Args:
-            expected_items (List[Any]): The items to compare with the actual value in terms of both content and order.
-
-        Returns:
-            bool: True if the actual value matches the expected list in both content and order, False otherwise.
-        """
-        return (
-            isinstance(self._actual_value, (list, tuple, set))
-            and self._actual_value == expected_items
         )
+        self.prefix = prefix
 
-    @expect_logging_helper
-    def not_to_be_ordered(self, expected_items: List[Any]):
+    @auto_log
+    def to_be(self, expected_value: Any) -> ExpectationResult:
         """
-        Asserts that the actual value (an array-like object) is not the same as the provided list of items in terms of
-        order.
+        Asserts that the actual value is equal to the expected value. The definition of equality
+        is strategy-specific: for numeric types, it means numerical equality; for strings, it means
+        exact string match; for files, it may involve comparing file contents or checksums; and for
+        collections, it could mean structural equality.
 
-        Args:
-            expected_items (List[Any]): The items to compare with the actual value in terms of order.
-
-        Returns:
-            bool: True if the actual value does not match the expected list in terms of order, False otherwise.
-        """
-        return (
-            isinstance(self._actual_value, (list, tuple, set))
-            and self._actual_value != expected_items
-        )
-
-    @expect_logging_helper
-    def has_key(self, key: Any):
-        """
-        Asserts that the actual value (a dictionary-like object) contains the expected key.
+        This method is applicable across various types, including but not limited to numbers, strings,
+        lists, sets, tuples, dictionaries, and file system entities.
 
         Args:
-            key (Any): The key to check if it is present in the dictionary.
+            expected_value (Any): The expected value for comparison.
 
         Returns:
-            bool: True if the actual value contains the key, False otherwise.
-        """
-        return (
-            isinstance(self._actual_value, collections.abc.Mapping)
-            and key in self._actual_value
-        )
+            Expect: The Expect instance to allow for method chaining.
 
-    @expect_logging_helper
-    def has_key_value(self, expected_key: Any, expected_value: Any):
+        Note:
+            The behavior and interpretation of "equality" can vary significantly across different types.
+            Refer to the documentation of the specific strategy classes for more detailed descriptions
+            of how equality is determined for each type.
         """
-        Asserts that the actual value (a dictionary-like object) contains the expected key-value pair.
+        return self.strategy.to_be(expected_value)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[StringStrategy, ArrayStrategy])
+    def to_contain(self, expected_value: Union[str, Any]) -> ExpectationResult:
+        """
+        Asserts that the actual value contains the expected value. For strings, this means the actual
+        string contains the expected substring. For collections (e.g., lists, sets, tuples), it checks
+        if the expected item is present within the collection.
+
+        This method is applicable to strings and collection-like types, enhancing flexibility in
+        assertions related to content inclusion.
 
         Args:
-            expected_key (Any): The key to check if it is present in the dictionary.
-            expected_value (Any): The value to check if it is associated with the expected key in the dictionary.
+            expected_value (Union[str, Any]): The expected item or substring to check for presence
+                                              within the actual value.
 
         Returns:
-            bool: True if the actual value contains the expected key-value pair, False otherwise.
-        """
-        return (
-            isinstance(self._actual_value, dict)
-            and self._actual_value.get(expected_key) == expected_value
-        )
+            Expect: The Expect instance to allow for method chaining.
 
-    @expect_logging_helper
-    def not_has_key_value(self, expected_key: Any, expected_value: Any):
+        Note:
+            The interpretation of "containment" varies by the type of the actual value. For exact
+            behavior and limitations, refer to the documentation of the specific strategy classes
+            applicable to the actual value's type.
         """
-        Asserts that the actual value (a dictionary-like object) does not contain the expected key-value pair.
+        return self.strategy.to_contain(expected_value)  # type: ignore
+
+    @auto_log
+    def not_to_be(self, expected_value: Any) -> ExpectationResult:
+        """
+        Asserts that the actual value is not equal to the expected value. The interpretation of inequality
+        is strategy-specific and can range from simple value mismatches to complex structural differences
+        in collections or files.
+
+        This method is universally applicable, suitable for numbers, strings, collections (lists, sets, tuples),
+        dictionaries, and file system entities, ensuring that the actual value does not match the expected value
+        as defined by the context of the type.
 
         Args:
-            expected_key (Any): The key to check if it is not present in the dictionary.
-            expected_value (Any): The value to check if it is not associated with the expected key in the dictionary.
+            expected_value (Any): The expected value the actual value should not equal to. This could be
+                                  a simple data type, a collection, or even a file system entity depending on
+                                  the strategy in use.
 
         Returns:
-            bool: True if the actual value does not contain the expected key-value pair, False otherwise.
-        """
-        return (
-            isinstance(self._actual_value, dict)
-            and self._actual_value.get(expected_key) != expected_value
-        )
+            Expect: The Expect instance to allow for method chaining.
 
-    @expect_logging_helper
-    def has_all_keys(self, expected_keys: Iterable[Any]):
+        Note:
+            The specifics of what constitutes "not being equal" varies significantly across different data types
+            and structures. It's essential to consider the context and the type of the actual value when using
+            this assertion.
         """
-        Asserts that the actual value (a dictionary-like object) contains all the expected keys.
+        return self.strategy.not_to_be(expected_value)  # type: ignore
+
+    @auto_log
+    def is_none(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is None. This method is universally applicable across all types,
+        ensuring that the actual value is explicitly None. It is a fundamental check used to verify
+        the absence of a value or that a variable or expression evaluates to None.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, including details such as
+                               the actual value, the expected condition (being None), and whether the check
+                               passed or failed.
+
+        Note:
+            This assertion is type-agnostic and can be used directly without considerations of the actual
+            value's type, making it one of the most basic assertions available.
+        """
+        return self.strategy.is_none()  # type: ignore
+
+    @auto_log
+    def is_not_none(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is not None. This method is universally applicable across all types,
+        ensuring that the actual value exists and is not explicitly None. It is a fundamental check used to
+        verify the presence of a value or that a variable or expression evaluates to something other than None.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, including details such as
+                               the actual value, the expected condition (not being None), and whether the check
+                               passed or failed.
+
+        Note:
+            This assertion is type-agnostic and can be used directly without considerations of the actual
+            value's type, making it one of the essential assertions for validating the existence of a value.
+        """
+        return self.strategy.is_not_none()  # type: ignore
+
+    @auto_log
+    def is_a(self, cls: Type) -> ExpectationResult:
+        """
+        Asserts that the actual value is an instance of a specified class or type. This method is versatile and
+        can be applied to various data types, from primitive types like integers and strings to complex objects
+        like custom classes and data structures.
+
+        The method is particularly useful for type-safe operations, ensuring that the actual value conforms to
+        expected type constraints, thereby facilitating more robust and error-free code.
 
         Args:
-            expected_keys (Iterable[Any]): The keys that should be present in the actual value.
+            cls (Type): The class or type that the actual value is expected to be an instance of.
 
         Returns:
-            bool: True if the actual value contains all the expected keys, False otherwise.
-        """
-        return isinstance(self._actual_value, dict) and all(
-            key in self._actual_value for key in expected_keys
-        )
+            ExpectationResult: An object representing the result of the check, detailing whether the actual value
+                               is an instance of the specified class or type, along with the actual and expected values.
 
-    @expect_logging_helper
-    def not_has_all_keys(self, expected_keys: Iterable[Any]):
+        Note:
+            While this assertion is broadly applicable, the interpretation of being an instance of a class may vary
+            slightly depending on the strategy and the specific type checks involved. It's recommended to consult
+            the documentation of the specific strategy classes for more nuanced details on type compatibility and
+            instance checks.
         """
-        Asserts that the actual value (a dictionary-like object) does not contain all the expected keys.
+        return self.strategy.is_a(cls)  # type: ignore
+
+    @auto_log
+    def is_not_a(self, cls: Type) -> ExpectationResult:
+        """
+        Asserts that the actual value is not an instance of a specified class or type. This method is universally
+        applicable across all data types, allowing for checks against undesired type conformity, thus ensuring
+        that the actual value maintains expected type boundaries and constraints.
+
+        This assertion is crucial for cases where specific type exclusions are necessary, either to prevent
+        type-related errors or to enforce data integrity within a particular domain of the application.
 
         Args:
-            expected_keys (Iterable[Any]): The keys that should not be present in the actual value altogether.
+            cls (Type): The class or type that the actual value is expected not to be an instance of.
 
         Returns:
-            bool: True if the actual value does not contain all the expected keys together, False otherwise.
-        """
-        return isinstance(self._actual_value, dict) and not all(
-            key in self._actual_value for key in expected_keys
-        )
+            ExpectationResult: An object representing the result of the check, detailing whether the actual value
+                               is not an instance of the specified class or type, along with the actual and expected values.
 
-    @expect_logging_helper
-    def has_any_key(self, expected_keys: Iterable[Any]):
+        Note:
+            This assertion's applicability and importance lie in its ability to enforce type constraints and exclusions
+            across a wide range of contexts. It's a fundamental check for ensuring that variables or expressions do not
+            inadvertently become instances of unwanted types.
         """
-        Asserts that the actual value (a dictionary-like object) contains any of the expected keys.
+        return self.strategy.is_not_a(cls)  # type: ignore
+
+    @auto_log
+    def is_type_of(self, cls: Type) -> ExpectationResult:
+        """
+        Asserts that the actual value's type is exactly the specified class or type, not considering subclassing.
+        This method provides a strict type check, ensuring that the actual value matches the expected type without
+        any allowance for inheritance hierarchies. It's particularly useful in contexts where precise type control
+        is necessary, such as when working with data structures or APIs that require specific types for correctness.
 
         Args:
-            expected_keys (Iterable[Any]): The keys, any of which should be present in the actual value.
+            cls (Type): The class or type that the actual value is expected to exactly match.
 
         Returns:
-            bool: True if the actual value contains any of the expected keys, False otherwise.
-        """
-        return isinstance(self._actual_value, dict) and any(
-            key in self._actual_value for key in expected_keys
-        )
+            ExpectationResult: An object representing the result of the check, detailing whether the actual value's
+                               type exactly matches the specified class or type. The result includes the actual and
+                               expected types, and whether the strict type check passed or failed.
 
-    @expect_logging_helper
-    def not_has_any_key(self, expected_keys: Iterable[Any]):
+        Note:
+            This assertion differs from `is_a` by not accepting instances of subclasses as valid. It enforces an
+            exact type match, providing a higher degree of type specificity and control. Use this method when you
+            need to ensure that no subclass instances are mistakenly treated as acceptable.
         """
-        Asserts that the actual value (a dictionary-like object) does not contain any of the expected keys.
+        return self.strategy.is_type_of(cls)  # type: ignore
+
+    @auto_log
+    def is_not_type_of(self, cls: Type) -> ExpectationResult:
+        """
+        Asserts that the actual value's type does not exactly match the specified class or type. This method is used
+        for strict type exclusion checks, ensuring that the actual value is not of the specified type, disregarding
+        subclass relationships. It is particularly useful in scenarios where certain types must be explicitly avoided,
+        either due to their behavior, characteristics, or the requirements of a given context.
 
         Args:
-            expected_keys (Iterable[Any]): The keys, none of which should be present in the actual value.
+            cls (Type): The class or type that the actual value is expected not to match exactly.
 
         Returns:
-            bool: True if the actual value does not contain any of the expected keys, False otherwise.
-        """
-        return isinstance(self._actual_value, dict) and not any(
-            key in self._actual_value for key in expected_keys
-        )
+            ExpectationResult: An object representing the result of the check, detailing whether the actual value's
+                               type differs from the specified class or type. Includes information on the actual and
+                               expected types, and whether the strict type exclusion check passed or failed.
 
-    @expect_logging_helper
-    def is_none(self):
+        Note:
+            Unlike `is_a` or `is_type_of`, this assertion strictly ensures that the actual value is not an instance
+            of the specified type, including direct instances without considering subclass instances as equivalent.
+            It provides a mechanism for enforcing type diversity and preventing type-specific behaviors or errors.
         """
-        Verifies if the actual value is None.
+        return self.strategy.is_not_type_of(cls)  # type: ignore
 
-        Returns:
-            bool: True if the actual value is None, False otherwise.
+    @auto_log
+    def is_string(self) -> ExpectationResult:
         """
-        return self._actual_value is None
-
-    @expect_logging_helper
-    def is_not_none(self):
-        """
-        Verifies if the actual value is not None.
+        Asserts that the actual value is of type string. This method is essential for validating that the
+        data being tested is in text format, which is a common requirement in various testing scenarios,
+        including input validation, parsing, and formatting tasks.
 
         Returns:
-            bool: True if the actual value is not None, False otherwise.
-        """
-        return self._actual_value is not None
+            ExpectationResult: An object representing the result of the check, indicating whether the
+                               actual value is a string. It includes details on the check performed,
+                               the actual value, and whether the check passed or failed.
 
-    @expect_logging_helper
-    def is_of_type(self, expected_type):
+        Note:
+            This assertion is particularly useful for ensuring that variables or expressions expected
+            to produce text output indeed do so, aiding in the robustness and reliability of tests
+            focused on string handling.
         """
-        Verifies if the actual value is of the expected type.
+        return self.strategy.is_string()  # type: ignore
+
+    @auto_log
+    def is_not_string(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is not of type string. This method is used to ensure that the data
+        being tested does not conform to text format when such a format is not expected, which can be
+        crucial for type safety and correct data handling in various contexts.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether the
+                               actual value is not a string. It details the check performed, the actual
+                               value, and whether the check passed or failed.
+
+        Note:
+            Utilizing this assertion helps maintain type integrity by verifying that variables or
+            expressions that are not expected to produce string output adhere to those expectations,
+            contributing to the overall reliability of the application or testing suite.
+        """
+        return self.strategy.is_not_string()  # type: ignore
+
+    @auto_log
+    def is_int(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is of type integer. This method is vital for validating that
+        data being tested conforms to an integer format, a common requirement in various scenarios
+        where exact numeric values without decimal places are necessary.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether
+                               the actual value is an integer. It includes details on the check performed,
+                               the actual value, and whether the check passed or failed.
+
+        Note:
+            This assertion is particularly useful for ensuring that variables or expressions expected
+            to produce integer output indeed do so, aiding in the reliability of tests focused on
+            numeric handling and calculations.
+        """
+        return self.strategy.is_int()  # type: ignore
+
+    @auto_log
+    def is_not_int(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is not of type integer. This method ensures that the data
+        being tested does not conform to an integer format when such a format is not expected,
+        crucial for maintaining type safety and correct numeric handling in various contexts.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether
+                               the actual value is not an integer. It details the check performed,
+                               the actual value, and whether the check passed or failed.
+
+        Note:
+            Utilizing this assertion helps maintain numeric type integrity by verifying that variables
+            or expressions not expected to produce integer output adhere to those expectations,
+            contributing to the overall data reliability.
+        """
+        return self.strategy.is_not_int()  # type: ignore
+
+    @auto_log
+    def is_float(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is of type floating point. This method is essential for
+        validating that data being tested conforms to a float format, necessary in scenarios
+        where precision decimal values are required.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether
+                               the actual value is a floating point number. It includes details on
+                               the check performed, the actual value, and whether the check passed or failed.
+
+        Note:
+            This assertion ensures that variables or expressions expected to produce floating point
+            output do so accurately, aiding in the precision and correctness of numeric calculations
+            and validations.
+        """
+        return self.strategy.is_float()  # type: ignore
+
+    @auto_log
+    def is_not_float(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is not of type floating point. This method ensures that the
+        data being tested does not conform to a float format when such precision is not expected,
+        important for maintaining numeric precision and type safety across different parts of an
+        application or testing framework.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether
+                               the actual value is not a floating point number. It details the check
+                               performed, the actual value, and whether the check passed or failed.
+
+        Note:
+            By verifying that variables or expressions do not inadvertently produce floating point
+            output when not expected, this assertion contributes to the overall accuracy and reliability
+            of numeric data handling.
+        """
+        return self.strategy.is_not_float()  # type: ignore
+
+    @auto_log
+    def is_bool(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is of type boolean. This method is essential for validating
+        that data being tested conforms to a boolean format, necessary in scenarios where binary
+        decisions or flags are required.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether
+                               the actual value is a boolean. It includes details on the check performed,
+                               the actual value, and whether the check passed or failed.
+
+        Note:
+            This assertion is particularly useful for ensuring that variables or expressions expected
+            to result in boolean output (True or False) do so accurately, aiding in the correctness
+            of conditional logic and binary decision-making processes.
+        """
+        return self.strategy.is_bool()  # type: ignore
+
+    @auto_log
+    def is_not_bool(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is not of type boolean. This method ensures that the data
+        being tested does not conform to a boolean format when such a format is not expected,
+        important for maintaining type correctness and logical integrity in various contexts.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether
+                               the actual value is not a boolean. It details the check performed,
+                               the actual value, and whether the check passed or failed.
+
+        Note:
+            Utilizing this assertion helps maintain logical and type integrity by verifying that
+            variables or expressions not expected to produce boolean output adhere to those
+            expectations, contributing to the overall reliability of logical operations.
+        """
+        return self.strategy.is_not_bool()  # type: ignore
+
+    @auto_log
+    def is_date(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is of type date. This method is crucial for validating that
+        data being tested conforms to a date format, essential in scenarios involving scheduling,
+        timelines, or any date-specific operations.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether
+                               the actual value is a date. It includes details on the check performed,
+                               the actual value, and whether the check passed or failed.
+
+        Note:
+            This assertion ensures that variables or expressions expected to represent calendar dates
+            accurately do so, aiding in the accuracy and reliability of date-based calculations and validations.
+        """
+        return self.strategy.is_date()  # type: ignore
+
+    @auto_log
+    def is_not_date(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is not of type date. This method is used to ensure that the data
+        being tested does not conform to a date format when such specificity is not expected, crucial
+        for maintaining data type diversity and correctness in temporal contexts.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether
+                               the actual value is not a date. It details the check performed, the actual
+                               value, and whether the check passed or failed.
+
+        Note:
+            By verifying that variables or expressions do not inadvertently produce date output when not
+            expected, this assertion contributes to the overall temporal accuracy and data integrity.
+        """
+        return self.strategy.is_not_date()  # type: ignore
+
+    @auto_log
+    def is_time(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is of type time. This method is vital for validating that data
+        being tested conforms to a time format, necessary in scenarios where precise timekeeping or
+        scheduling is involved.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether
+                               the actual value is a time. It includes details on the check performed,
+                               the actual value, and whether the check passed or failed.
+
+        Note:
+            This assertion is particularly useful for ensuring that variables or expressions expected
+            to result in time output do so with precision, supporting the accuracy of time-based
+            operations and schedules.
+        """
+        return self.strategy.is_time()  # type: ignore
+
+    @auto_log
+    def is_not_time(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is not of type time. This method ensures that the data being
+        tested does not conform to a time format when such precision is not expected, important for
+        maintaining accurate and type-appropriate temporal data handling.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether
+                               the actual value is not a time. It details the check performed, the actual
+                               value, and whether the check passed or failed.
+
+        Note:
+            Utilizing this assertion helps ensure that time-based variables or expressions maintain
+            their intended precision and type, avoiding unintended time type assignments and supporting
+            the integrity of temporal data.
+        """
+        return self.strategy.is_not_time()  # type: ignore
+
+    @auto_log
+    def is_datetime(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is of type datetime. This method is crucial for validating that
+        data being tested conforms to a datetime format, essential in scenarios involving precise time
+        and date operations, scheduling, or any temporal-specific operations.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether
+                               the actual value is a datetime object. It includes details on the check
+                               performed, the actual value, and whether the check passed or failed.
+
+        Note:
+            This assertion ensures that variables or expressions expected to represent specific points
+            in time accurately do so, aiding in the reliability and precision of datetime-based calculations
+            and validations.
+        """
+        return self.strategy.is_datetime()  # type: ignore
+
+    @auto_log
+    def is_list(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is of type list. This method is essential for validating that data
+        being tested conforms to a list format, necessary in scenarios where sequence order, collection
+        operations, or list-specific manipulations are involved.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether
+                               the actual value is a list. It includes details on the check performed,
+                               the actual value, and whether the check passed or failed.
+
+        Note:
+            This assertion is particularly useful for ensuring that variables or expressions expected to
+            produce list structures do so accurately, supporting the effectiveness of list-based operations
+            and data handling.
+        """
+        return self.strategy.is_list()  # type: ignore
+
+    @auto_log
+    def is_dict(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is of type dictionary. This method is critical for validating that
+        data being tested conforms to a dictionary format, crucial in scenarios where key-value pair mappings,
+        hash tables, or associative array manipulations are involved.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether
+                               the actual value is a dictionary. It includes details on the check performed,
+                               the actual value, and whether the check passed or failed.
+
+        Note:
+            This assertion ensures that variables or expressions expected to represent dictionary
+            structures accurately do so, aiding in the precision and reliability of dictionary-based
+            operations and data management.
+        """
+        return self.strategy.is_dict()  # type: ignore
+
+    @auto_log
+    def is_not_datetime(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is not of type datetime. This method is important for scenarios where
+        datetime objects are not expected, ensuring that data does not inadvertently conform to datetime formats
+        when such precision and structure are unnecessary or could lead to errors.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether the actual value
+                               is not a datetime object. It includes details on the check performed, the actual value,
+                               and whether the check passed or failed.
+
+        Note:
+            Utilizing this assertion helps in maintaining the intended data types within an application or testing
+            environment, avoiding unexpected datetime type assignments that could affect the logic or operations
+            relying on specific type constraints.
+        """
+        return self.strategy.is_not_datetime()  # type: ignore
+
+    @auto_log
+    def is_not_list(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is not of type list. This method is useful for ensuring that data does not
+        unintentionally conform to list structures, especially in contexts where sequence or collection types are
+        not desired and could impact the processing or handling of the data incorrectly.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether the actual value
+                               is not a list. It includes details on the check performed, the actual value, and whether
+                               the check passed or failed.
+
+        Note:
+            By verifying that variables or expressions do not produce list outputs when not expected, this assertion
+            contributes to maintaining accurate and intended data structures, supporting the integrity of data handling.
+        """
+        return self.strategy.is_not_list()  # type: ignore
+
+    @auto_log
+    def is_not_dict(self) -> ExpectationResult:
+        """
+        Asserts that the actual value is not of type dictionary. This method is critical in contexts where dictionary
+        or associative array formats are not expected, ensuring that data structures do not mistakenly adopt key-value
+        pair mappings that could complicate or invalidate the intended data processing or manipulation.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether the actual value
+                               is not a dictionary. It includes details on the check performed, the actual value,
+                               and whether the check passed or failed.
+
+        Note:
+            This assertion is vital for preventing unintended dictionary type assignments, preserving the clarity and
+            correctness of data structures within applications or during testing, thereby aiding in the precision of
+            data management and operations.
+        """
+        return self.strategy.is_not_dict()  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[StringStrategy])
+    def to_start_with(self, prefix: str) -> ExpectationResult:
+        """
+        Asserts that the actual string value starts with the specified prefix. This method is essential
+        for validating string formatting, patterns, or protocols where a specific starting sequence is required.
 
         Args:
-            expected_type (type): The expected type of the actual value.
+            prefix (str): The substring that the actual value is expected to start with.
 
         Returns:
-            bool: True if the actual value is of the expected type, False otherwise.
-        """
-        return isinstance(self._actual_value, expected_type)
+            ExpectationResult: An object representing the result of the check, indicating whether the
+                               actual string starts with the specified prefix, including the actual value
+                               and whether the check passed or failed.
 
-    @expect_logging_helper
-    def is_not_of_type(self, unexpected_type):
+        Note:
+            This assertion is particularly useful in testing and validating string data for compliance with
+            expected formats, patterns, or protocols that dictate specific starting sequences.
         """
-        Verifies if the actual value is not of the unexpected type.
+        return self.strategy.to_start_with(prefix)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[StringStrategy])
+    def to_end_with(self, suffix: str) -> ExpectationResult:
+        """
+        Asserts that the actual string value ends with the specified suffix. This method is vital for checking
+        string termination patterns or suffixes, ensuring that strings conclude with expected sequences.
 
         Args:
-            unexpected_type (type): The type that the actual value should not be.
+            suffix (str): The substring that the actual value is expected to end with.
 
         Returns:
-            bool: True if the actual value is not of the unexpected type, False otherwise.
-        """
-        return not isinstance(self._actual_value, unexpected_type)
+            ExpectationResult: An object representing the result of the check, detailing whether the actual
+                               string ends with the specified suffix, the actual value, and whether the
+                               check passed or failed.
 
-    @expect_logging_helper
-    def has_size(self, expected_size):
+        Note:
+            Utilizing this assertion aids in verifying that strings adhere to required ending patterns or suffixes,
+            crucial for format validation and consistency in string data handling.
         """
-        Verifies if the actual value (expected to be a collection) has the expected size.
+        return self.strategy.to_end_with(suffix)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[StringStrategy])
+    def to_match(self, pattern: str) -> ExpectationResult:
+        """
+        Asserts that the actual string value matches a specified regular expression pattern. This method is
+        indispensable for complex string validation tasks, allowing for the verification of string formats,
+        content, and structures against sophisticated patterns.
 
         Args:
-            expected_size (int): The expected size of the collection.
+            pattern (str): The regular expression pattern the actual string is expected to match.
 
         Returns:
-            bool: True if the actual value has the expected size, False otherwise.
-        """
-        return len(self._actual_value) == expected_size
+            ExpectationResult: An object representing the result of the regex match check, including whether
+                               the actual string matches the pattern, the actual value, and whether the check
+                               passed or failed.
 
-    @expect_logging_helper
-    def is_empty(self):
+        Note:
+            This assertion enables comprehensive validation of string data against complex patterns, supporting
+            rigorous format and content checks.
         """
-        Verifies if the actual value (expected to be a collection) is empty.
+        return self.strategy.to_match(pattern)  # type: ignore
 
-        Returns:
-            bool: True if the actual value is empty, False otherwise.
+    @auto_log
+    @type_check(supported_strategies=[StringStrategy, ArrayStrategy])
+    def to_be_empty(self) -> ExpectationResult:
         """
-        return len(self._actual_value) == 0
+        Asserts that the actual string or collection (list, set, tuple) is empty or, for strings, contains only whitespace.
+        This method is critical for validating that fields meant to hold textual data or collections are either not
+        populated or contain non-meaningful data (such as whitespace for strings).
 
-    @expect_logging_helper
-    def is_truthy(self):
-        """
-        Verifies if the actual value is truthy (not None, not False, not zero, and not an empty collection).
-
-        Returns:
-            bool: True if the actual value is truthy, False otherwise.
-        """
-        return bool(self._actual_value)
-
-    @expect_logging_helper
-    def is_falsy(self):
-        """
-        Verifies if the actual value is falsy (None, False, zero, or an empty collection).
+        For strings, it checks if the string is empty or contains only whitespace. For collections like lists, sets,
+        and tuples, it verifies that the collection is empty.
 
         Returns:
-            bool: True if the actual value is falsy, False otherwise.
-        """
-        return not bool(self._actual_value)
+            ExpectationResult: An object representing the result of the check, indicating whether the actual string
+                               or collection is empty/whitespace-only, including the actual value, and whether
+                               the check passed or failed.
 
-    @expect_logging_helper
-    def is_in(self, collection):
+        Note:
+            This assertion is useful in ensuring data cleanliness and validation, particularly in scenarios where
+            empty or whitespace-only strings, or empty collections, signify specific states or conditions.
         """
-        Verifies if the actual value is present in the given collection.
+        return self.strategy.to_be_empty()  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[StringStrategy])
+    def not_to_start_with(self, prefix: str) -> ExpectationResult:
+        """
+        Asserts that the actual string value does not start with the specified prefix. This method is essential for
+        cases where beginning with a certain sequence is not desired or could indicate an error.
 
         Args:
-            collection (iterable): The collection in which to look for the actual value.
+            prefix (str): The substring that the actual value is expected not to start with.
 
         Returns:
-            bool: True if the actual value is in the collection, False otherwise.
-        """
-        return self._actual_value in collection
+            ExpectationResult: An object representing the result of the check, including details on whether the actual
+                               string does not start with the specified prefix, the actual value, and whether the check
+                               passed or failed.
 
-    @expect_logging_helper
-    def is_not_in(self, collection):
+        Note:
+            This assertion helps avoid unintended formatting or content at the start of strings, enhancing data validation.
         """
-        Verifies if the actual value is not present in the given collection.
+        return self.strategy.not_to_start_with(prefix)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[StringStrategy])
+    def not_to_end_with(self, suffix: str) -> ExpectationResult:
+        """
+        Asserts that the actual string value does not end with the specified suffix. This method is vital for scenarios
+        where terminating with a certain sequence is undesirable or incorrect.
 
         Args:
-            collection (iterable): The collection in which to look for the actual value.
+            suffix (str): The substring that the actual value is expected not to end with.
 
         Returns:
-            bool: True if the actual value is not in the collection, False otherwise.
-        """
-        return self._actual_value not in collection
+            ExpectationResult: An object representing the result of the check, indicating whether the actual string does
+                               not end with the specified suffix, including the actual value and whether the check passed or failed.
 
-    @expect_logging_helper
-    def starts_with(self, prefix: str):
+        Note:
+            Utilizing this assertion aids in ensuring strings do not mistakenly adopt specific ending sequences, supporting
+            accurate format and content control.
         """
-        Verifies if the actual string starts with the specified prefix.
+        return self.strategy.not_to_end_with(suffix)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[StringStrategy])
+    def not_to_match(self, pattern: str) -> ExpectationResult:
+        """
+        Asserts that the actual string value does not match the specified regular expression pattern. This method is
+        crucial for validating that string formats, contents, or structures do not align with unwanted patterns.
 
         Args:
-            prefix (str): The prefix that the actual string is expected to start with.
+            pattern (str): The regular expression pattern the actual string is expected not to match.
 
         Returns:
-            bool: True if the actual string starts with the prefix, False otherwise.
-        """
-        if isinstance(self._actual_value, str):
-            return self._actual_value.startswith(prefix)
-        else:
-            return False
+            ExpectationResult: An object representing the result of the check, detailing whether the actual string does
+                               not match the pattern, including the actual value and whether the check passed or failed.
 
-    @expect_logging_helper
-    def ends_with(self, suffix: str):
+        Note:
+            This assertion is key to avoiding specific, potentially problematic patterns in string data, facilitating
+            more precise and restrictive format validations.
         """
-        Verifies if the actual string ends with the specified suffix.
+        return self.strategy.not_to_match(pattern)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[StringStrategy, ArrayStrategy])
+    def not_to_be_empty(self) -> ExpectationResult:
+        """
+        Asserts that the actual string or collection (list, set, tuple) is not empty. For strings, this method checks that
+        the string is not empty nor contains only whitespace characters. For collections, it ensures that they are not empty,
+        affirming the presence of elements within the collection.
+
+        This method is crucial for scenarios where the presence of meaningful data in strings or collections is required,
+        serving as a validation step to ensure data fields are appropriately populated and do not merely contain empty or
+        whitespace-only values.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, detailing whether the actual string or
+                               collection is not empty (and not just whitespace for strings), including the actual value,
+                               and whether the check passed or failed.
+
+        Note:
+            Utilizing this assertion is essential in data validation processes where empty strings or collections could
+            signify missing, incomplete, or incorrect data. It aids in maintaining the integrity and completeness of the
+            data being handled or tested.
+        """
+        return self.strategy.not_to_be_empty()  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[StringStrategy, ArrayStrategy])
+    def to_have_length(self, expected_length: int) -> ExpectationResult:
+        """
+        Asserts that the actual string or collection (list, set, tuple) has a specific length. This method is crucial for
+        scenarios where the exact size of the data structure is a significant factor, such as validating input or output data
+        constraints, ensuring array sizes for algorithmic processing, or verifying string content length for formatting requirements.
 
         Args:
-            suffix (str): The suffix that the actual string is expected to end with.
+            expected_length (int): The expected length of the string or collection.
 
         Returns:
-            bool: True if the actual string ends with the suffix, False otherwise.
-        """
-        if isinstance(self._actual_value, str):
-            return self._actual_value.endswith(suffix)
-        else:
-            return False
+            ExpectationResult: An object representing the result of the check, indicating whether the actual string or
+                               collection matches the specified length, including details on the actual size and whether
+                               the check passed or failed.
 
-    @expect_logging_helper
-    def matches(self, pattern: str):
+        Note:
+            This assertion facilitates precise control over the size of data structures, aiding in the enforcement of
+            specific length requirements for strings and collections within applications or testing environments.
         """
-        Verifies if the actual string matches the specified regex pattern.
+        return self.strategy.to_have_length(expected_length)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[StringStrategy, ArrayStrategy])
+    def not_to_have_length(self, unexpected_length: int) -> ExpectationResult:
+        """
+        Asserts that the actual string or collection (list, set, tuple) does not have a specific length. This method is useful
+        for scenarios where certain sizes of data structures are to be avoided, such as preventing overly long input strings or
+        ensuring collections do not exceed capacity constraints.
 
         Args:
-            pattern (str): The regex pattern that the actual string is expected to match.
+            unexpected_length (int): The length that the actual string or collection is expected not to match.
 
         Returns:
-            bool: True if the actual string matches the pattern, False otherwise.
-        """
-        if isinstance(self._actual_value, str):
-            return re.match(pattern, self._actual_value) is not None
-        else:
-            return False
+            ExpectationResult: An object representing the result of the check, indicating whether the actual string or
+                               collection does not match the specified length, including details on the actual size and
+                               whether the check passed or failed.
 
-    # Implement not versions for string methods
-    @expect_logging_helper
-    def not_starts_with(self, prefix: str):
+        Note:
+            This assertion is critical for avoiding specific data structure sizes, contributing to the robustness and
+            reliability of data handling by enforcing size limitations or expectations.
         """
-        Verifies if the actual string does not start with the specified prefix.
+        return self.strategy.not_to_have_length(unexpected_length)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[StringStrategy])
+    def to_contain_in_order(self, *elements) -> ExpectationResult:
+        """
+        Asserts that the actual string or collection (list, set, tuple) contains the specified elements in order. For strings,
+        this method checks for the sequence of substrings; for collections, it verifies the order of elements. This assertion
+        is vital for validating ordered data structures where the sequence of elements or characters is crucial.
 
         Args:
-            prefix (str): The prefix that the actual string is not expected to start with.
+            *elements: The elements or substrings expected to appear in order within the actual value.
 
         Returns:
-            bool: True if the actual string does not start with the prefix, False otherwise.
-        """
-        return not self.starts_with(prefix, not_an_assertion=True)
+            ExpectationResult: An object representing the result of the check, detailing whether the actual string or
+                               collection contains the specified elements in the given order, and whether the check
+                               passed or failed.
 
-    @expect_logging_helper
-    def not_ends_with(self, suffix: str):
+        Note:
+            Utilizing this assertion supports scenarios requiring strict order adherence within strings or collections,
+            ensuring that elements appear exactly as specified, which is essential for sequence validation and integrity.
         """
-        Verifies if the actual string does not end with the specified suffix.
+        return self.strategy.to_contain_in_order(*elements)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[ArrayStrategy])
+    def to_contain_exactly(self, *expected_elements) -> ExpectationResult:
+        """
+        Asserts that the actual collection (list, set, tuple) contains exactly the specified elements, no more, no less.
+        This method ensures the precise composition of the collection, crucial for scenarios where the exact set of elements
+        is necessary for correctness, such as validating the output of operations or the state of data structures.
 
         Args:
-            suffix (str): The suffix that the actual string is not expected to end with.
+            *expected_elements: The elements expected to be exactly present in the collection.
 
         Returns:
-            bool: True if the actual string does not end with the suffix, False otherwise.
-        """
-        return not self.ends_with(suffix, not_an_assertion=True)
+            ExpectationResult: An object representing the result of the check, detailing whether the actual collection
+                               contains exactly the specified elements, including the actual elements and whether the
+                               check passed or failed.
 
-    @expect_logging_helper
-    def not_contains(self, substring: str):
+        Note:
+            This assertion is vital for verifying the exact composition of collections, supporting strict validation of
+            element presence and ensuring no unexpected elements are included or required elements are omitted.
         """
-        Verifies if the actual string does not contain the specified substring.
+        return self.strategy.to_contain_exactly(*expected_elements)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[ArrayStrategy])
+    def to_contain_any_of(self, *expected_elements) -> ExpectationResult:
+        """
+        Asserts that the actual collection (list, set, tuple) contains any of the specified elements. This method is useful
+        for cases where the presence of one or more elements from a specific set is sufficient for the collection's validity,
+        allowing for flexibility in the composition of the collection.
 
         Args:
-            substring (str): The substring that the actual string is not expected to contain.
+            *expected_elements: Elements at least one of which is expected to be found in the collection.
 
         Returns:
-            bool: True if the actual string does not contain the substring, False otherwise.
-        """
-        return not self.contains(substring, not_an_assertion=True)
+            ExpectationResult: An object representing the result of the check, detailing whether the actual collection
+                               contains any of the specified elements, including which elements were found and whether
+                               the check passed or failed.
 
-    @expect_logging_helper
-    def not_matches(self, pattern: str):
+        Note:
+            Utilizing this assertion allows for the verification of partial composition requirements, ensuring that
+            collections include one or more elements from a specified set, which can be crucial for data integrity
+            and operational correctness.
         """
-        Verifies if the actual string does not match the specified regex pattern.
+        return self.strategy.to_contain_any_of(*expected_elements)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[ArrayStrategy])
+    def not_to_contain_any_of(self, *unwanted_elements) -> ExpectationResult:
+        """
+        Asserts that the actual collection (list, set, tuple) does not contain any of the specified elements. This method
+        is crucial for ensuring that collections are free from unwanted elements, supporting scenarios where the exclusion
+        of specific elements is necessary for data purity, security, or correctness.
 
         Args:
-            pattern (str): The regex pattern that the actual string is not expected to match.
+            *unwanted_elements: Elements none of which are expected to be found in the collection.
 
         Returns:
-            bool: True if the actual string does not match the pattern, False otherwise.
-        """
-        return not self.matches(pattern, not_an_assertion=True)
+            ExpectationResult: An object representing the result of the check, detailing whether the actual collection
+                               does not contain any of the specified unwanted elements, including the actual elements
+                               and whether the check passed or failed.
 
-    @expect_logging_helper
-    def has_same_items(self, expected_value: Sequence):
+        Note:
+            This assertion aids in enforcing strict exclusion criteria for collections, ensuring that they do not
+            inadvertently contain elements that could compromise data integrity, security, or operational logic.
         """
-        Verifies if the actual array has the same items as the expected array, regardless of order.
+        return self.strategy.not_to_contain_any_of(*unwanted_elements)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[DictStrategy])
+    def to_contain_key(self, key) -> ExpectationResult:
+        """
+        Asserts that the actual dictionary contains the specified key. This method is crucial for validating
+        the structure and completeness of dictionary data, ensuring that expected keys are present.
 
         Args:
-            expected_value (Sequence): The array that the actual array is expected to have the same items as.
+            key: The key expected to be present in the dictionary.
 
         Returns:
-            bool: True if the actual array has the same items as the expected array, False otherwise.
-        """
-        if isinstance(self._actual_value, collections.abc.Sequence) and not isinstance(
-            self._actual_value, str
-        ):
-            return sorted(self._actual_value) == sorted(expected_value)
-        else:
-            return False
+            ExpectationResult: An object representing the result of the check, detailing whether the actual
+                               dictionary contains the specified key, including the actual keys and whether
+                               the check passed or failed.
 
-    @expect_logging_helper
-    def contains_all(self, items: Sequence[Any]):
+        Note:
+            This assertion is vital for verifying the presence of specific keys within dictionaries, aiding in
+            the validation of data structure integrity and the correctness of dictionary contents.
         """
-        Verifies if the actual array contains all the specified items, regardless of order.
+        return self.strategy.to_contain_key(key)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[DictStrategy])
+    def to_contain_keys(self, *keys) -> ExpectationResult:
+        """
+        Asserts that the actual dictionary contains all the specified keys. This method is used to ensure the
+        dictionary's structure includes a specific set of keys, important for data completeness and integrity.
 
         Args:
-            items (Sequence[Any]): The items that the actual array is expected to contain.
+            *keys: The keys expected to be present in the dictionary.
 
         Returns:
-            bool: True if the actual array contains all the items, False otherwise.
-        """
-        if isinstance(self._actual_value, collections.abc.Sequence) and not isinstance(
-            self._actual_value, str
-        ):
-            return all(item in self._actual_value for item in items)
+            ExpectationResult: An object representing the result of the check, indicating whether the actual
+                               dictionary contains all the specified keys, with details on the actual keys and
+                               whether the check passed or failed.
 
-        return False
-
-    @expect_logging_helper
-    def is_ordered(self, expected_value: Sequence):
+        Note:
+            Employing this assertion helps in confirming the presence of multiple specific keys within a dictionary,
+            supporting comprehensive validations of dictionary structures and their alignment with expected schemas.
         """
-        Verifies if the actual array is in the same order as the expected array.
+        return self.strategy.to_contain_keys(*keys)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[DictStrategy])
+    def to_contain_value(self, value) -> ExpectationResult:
+        """
+        Asserts that the actual dictionary contains the specified value. This method is important for confirming
+        that dictionaries hold expected values, crucial for validating the content and utility of the data structure.
 
         Args:
-            expected_value (Sequence): The array that defines the expected order of the actual array.
+            value: The value expected to be present in the dictionary.
 
         Returns:
-            bool: True if the actual array is in the same order as the expected array, False otherwise.
-        """
-        if isinstance(self._actual_value, collections.abc.Sequence) and not isinstance(
-            self._actual_value, str
-        ):
-            return self._actual_value == expected_value
-        else:
-            return False
+            ExpectationResult: An object representing the result of the check, detailing whether the actual
+                               dictionary contains the specified value, including the actual values and whether
+                               the check passed or failed.
 
-    # Implement not versions for array methods
-    @expect_logging_helper
-    def not_has_same_items(self, expected_value: Sequence):
+        Note:
+            This assertion ensures that dictionaries include specific values, aiding in the comprehensive validation
+            of data content and enhancing the integrity and usability of dictionary-based data structures.
         """
-        Verifies if the actual array does not have the same items as the expected array, regardless of order.
+        return self.strategy.to_contain_value(value)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[DictStrategy])
+    def not_to_contain_key(self, key) -> ExpectationResult:
+        """
+        Asserts that the actual dictionary does not contain the specified key. This method is crucial for ensuring
+        dictionaries do not include unintended keys, supporting data purity and structure validation.
 
         Args:
-            expected_value (Sequence): The array that the actual array is not expected to have the same items as.
+            key: The key expected not to be present in the dictionary.
 
         Returns:
-            bool: True if the actual array does not have the same items as the expected array, False otherwise.
-        """
-        return not self.has_same_items(expected_value, not_an_assertion=True)
+            ExpectationResult: An object representing the result of the check, indicating whether the actual
+                               dictionary does not contain the specified key, with details on the actual keys and
+                               whether the check passed or failed.
 
-    @expect_logging_helper
-    def not_contains_at_least_one(self, items: Sequence[Any]):
+        Note:
+            Utilizing this assertion is essential for validating that dictionaries are free from unwanted keys,
+            contributing to the accuracy and cleanliness of data structures.
         """
-        Asserts that the actual value (an array-like object) does not contain any of the provided items.
+        return self.strategy.not_to_contain_key(key)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[DictStrategy])
+    def not_to_contain_keys(self, *keys) -> ExpectationResult:
+        """
+        Asserts that the actual dictionary does not contain any of the specified keys. This method ensures that
+        dictionaries are devoid of a set of unwanted keys, vital for maintaining data integrity and structure.
 
         Args:
-            items (Sequence[Any]): The items to check if none of them are contained in the array.
+            *keys: Keys expected not to be present in the dictionary.
 
         Returns:
-            bool: True if the actual value does not contain any of the items, False otherwise.
+            ExpectationResult: An object representing the result of the check, detailing whether the actual dictionary
+                               does not contain any of the specified keys, with an overview of the actual keys and whether
+                               the check passed or failed.
+
+        Note:
+            This assertion is key to ensuring dictionaries exclude specific keys, aiding in the strict control over
+            dictionary contents and supporting the validation of data structure exclusiveness.
         """
-        if not isinstance(self._actual_value, (list, tuple, set)):
-            return False
+        return self.strategy.not_to_contain_keys(*keys)  # type: ignore
 
-        if all(item not in self._actual_value for item in items):
-            return True
-
-        return False
-
-    @expect_logging_helper
-    def not_is_ordered(self, expected_value: Sequence):
+    @auto_log
+    @type_check(supported_strategies=[DictStrategy])
+    def not_to_contain_value(self, value) -> ExpectationResult:
         """
-        Verifies if the actual array is not in the same order as the expected array.
+        Asserts that the actual dictionary does not contain the specified value. This method is used to verify that
+        dictionaries exclude specific unwanted values, important for data content validation and integrity.
 
         Args:
-            expected_value (Sequence): The array that defines the order that the actual array is not expected to have.
+            value: The value expected not to be present in the dictionary.
 
         Returns:
-            bool: True if the actual array is not in the same order as the expected array, False otherwise.
-        """
-        return not self.is_ordered(expected_value, not_an_assertion=True)
+            ExpectationResult: An object representing the result of the check, detailing whether the actual dictionary
+                               does not contain the specified value, including the actual values and whether the check
+                               passed or failed.
 
-    @expect_logging_helper
-    def has_value(self, value: Any):
+        Note:
+            Employing this assertion assists in confirming the absence of specific values within dictionaries,
+            crucial for maintaining the purity and intended utility of the data structure.
         """
-        Verifies if the actual dictionary contains the specified value.
+        return self.strategy.not_to_contain_value(value)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[DictStrategy])
+    def to_match_schema(self, schema: Union[dict, str]) -> ExpectationResult:
+        """
+        Asserts that the actual dictionary matches a specified JSON schema. This method is crucial for validating
+        complex data structures, ensuring that dictionaries conform to predefined formats, structures, and type
+        requirements as defined by the JSON schema. It is particularly useful for API response validation, configuration
+        data verification, and ensuring data integrity across various application components.
 
         Args:
-            value (Any): The value that the actual dictionary is expected to contain.
+            schema (Union[dict, str]): The JSON schema to validate against, provided either as a dictionary representing
+                                       the schema or a string path to a JSON schema file.
 
         Returns:
-            bool: True if the actual dictionary contains the value, False otherwise.
-        """
-        if isinstance(self._actual_value, collections.abc.Mapping):
-            return value in self._actual_value.values()
-        else:
-            return False
+            ExpectationResult: An object representing the result of the schema validation, detailing whether the actual
+                               dictionary matches the specified JSON schema, including the validation outcome and any
+                               schema validation errors encountered.
 
-    @expect_logging_helper
-    def has_item(self, key: Any, value: Any):
+        Note:
+            This assertion leverages the JSON Schema standard to provide comprehensive and flexible data validation,
+            supporting a wide range of use cases from simple data structure checks to complex content validation
+            scenarios. It is a powerful tool for maintaining data quality and structure conformity within applications.
         """
-        Verifies if the actual dictionary contains the specified key-value pair.
+        return self.strategy.to_match_schema(schema)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[FileSystemStrategy])
+    def to_be_file(self) -> ExpectationResult:
+        """
+        Asserts that the actual value represents a file in the filesystem. This method is essential for verifying
+        that a given path or entity corresponds to a file, not a directory or other filesystem object, which is
+        crucial for operations expecting to interact with file content.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, detailing whether the actual filesystem
+                               entity is a file, including the path checked and whether the check passed or failed.
+
+        Note:
+            Utilizing this assertion ensures that file-specific operations, such as reading or writing content, are
+            performed on valid file entities, aiding in the prevention of errors and the enforcement of filesystem
+            integrity within applications or testing environments.
+        """
+        return self.strategy.to_be_file()  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[FileSystemStrategy])
+    def to_exist(self) -> ExpectationResult:
+        """
+        Asserts that the actual filesystem entity, whether a file or directory, exists at the specified path. This method
+        is vital for confirming the presence of expected filesystem objects before proceeding with operations that require
+        their existence, such as opening files or traversing directories.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether the filesystem entity
+                               exists, including the path checked and whether the check passed or failed.
+
+        Note:
+            This assertion is fundamental to ensuring the readiness of the filesystem for operations, supporting the
+            robust handling of file and directory access, modification, and validation tasks.
+        """
+        return self.strategy.to_exist()  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[FileSystemStrategy])
+    def to_be_directory(self) -> ExpectationResult:
+        """
+        Asserts that the actual value represents a directory in the filesystem. This method is critical for validating
+        that a given path or entity corresponds to a directory, ensuring that operations expecting to interact with
+        directory structures, such as listing contents or creating subdirectories, are feasible.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, detailing whether the actual filesystem
+                               entity is a directory, including the path checked and whether the check passed or failed.
+
+        Note:
+            Employing this assertion verifies that directory-specific operations are executed on valid directory entities,
+            aiding in the management and organization of filesystem structures within applications or during testing.
+        """
+        return self.strategy.to_be_directory()  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[FileSystemStrategy])
+    def to_have_size(self, expected_size: int) -> ExpectationResult:
+        """
+        Asserts that the actual filesystem entity (file or directory) has a specific size in bytes. This method is essential
+        for validating the size of files or directories, ensuring they meet expected size constraints, whether to confirm
+        file content integrity, to ensure directories are not overly large, or to match specific application requirements.
 
         Args:
-            key (Any): The key of the key-value pair that the actual dictionary is expected to contain.
-            value (Any): The value of the key-value pair that the actual dictionary is expected to contain.
+            expected_size (int): The expected size in bytes of the file or directory.
 
         Returns:
-            bool: True if the actual dictionary contains the key-value pair, False otherwise.
-        """
-        if isinstance(self._actual_value, collections.abc.Mapping):
-            return self._actual_value.get(key) == value
-        else:
-            return False
+            ExpectationResult: An object representing the result of the check, detailing whether the actual filesystem
+                               entity matches the specified size, including the actual size and whether the check passed
+                               or failed.
 
-    @expect_logging_helper
-    def not_has_key(self, key: Any):
+        Note:
+            This assertion supports precise control over filesystem entity sizes, aiding in the verification of file and
+            directory characteristics important for storage management, content validation, and application-specific
+            constraints.
         """
-        Asserts that the actual value (a dictionary-like object) does not contain the expected key.
+        return self.strategy.to_have_size(expected_size)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[FileSystemStrategy])
+    def not_to_have_size(self, unexpected_size: int) -> ExpectationResult:
+        """
+        Asserts that the actual filesystem entity (file or directory) does not have a specific size in bytes. This method
+        is useful for scenarios where files or directories must not match a certain size, whether to avoid specific content
+        sizes, to ensure directories do not fall under specific size limitations, or to prevent size-based constraints from
+        being met.
 
         Args:
-            key (Any): The key to check if it is not present in the dictionary.
+            unexpected_size (int): The size in bytes that the file or directory is expected not to have.
 
         Returns:
-            bool: True if the actual value does not contain the key, False otherwise.
-        """
-        return (
-            isinstance(self._actual_value, collections.abc.Mapping)
-            and key not in self._actual_value
-        )
+            ExpectationResult: An object representing the result of the check, detailing whether the actual filesystem
+                               entity does not match the specified size, including the actual size and whether the check
+                               passed or failed.
 
-    @expect_logging_helper
-    def not_has_value(self, value: Any):
+        Note:
+            Utilizing this assertion ensures that filesystem entities do not inadvertently meet specific size criteria,
+            contributing to the robustness and specificity of filesystem management and data validation processes.
         """
-        Verifies if the actual dictionary does not contain the specified value.
+        return self.strategy.not_to_have_size(unexpected_size)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def to_be_odd(self) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value is odd. This method is crucial for validating that a number
+        does not divide evenly by two, indicating its odd nature, which can be important for certain mathematical,
+        algorithmic, or data processing operations where odd numbers have specific significance.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, detailing whether the actual
+                               numeric value is odd, including the actual value and whether the check passed
+                               or failed.
+
+        Note:
+            This assertion is particularly useful in scenarios where the distinction between odd and even numbers
+            impacts the logic or outcome of operations, supporting precise numeric validations.
+        """
+        return self.strategy.to_be_odd()  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def to_be_even(self) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value is even. This method validates that a number divides evenly by two,
+        categorizing it as even, which is essential for operations, calculations, or conditions where even numbers
+        are specifically required or expected.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether the actual
+                               numeric value is even, with details on the actual value and whether the check
+                               passed or failed.
+
+        Note:
+            Employing this assertion helps ensure that numeric values meet specific evenness criteria, crucial for
+            mathematical, algorithmic, or data processing tasks where even numbers play a pivotal role.
+        """
+        return self.strategy.to_be_even()  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def to_be_positive(self) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value is positive. This method is vital for confirming that a number is greater
+        than zero, relevant in contexts where positive values are necessary for correctness, such as financial calculations,
+        measurements, and various forms of data analysis.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, detailing whether the actual numeric
+                               value is positive, including the actual value and whether the check passed or failed.
+
+        Note:
+            This assertion ensures that numbers adhere to positivity requirements, supporting operations and validations
+            where negative values are not permissible or meaningful.
+        """
+        return self.strategy.to_be_positive()  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def to_be_negative(self) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value is negative. This method is crucial for ensuring that a number is less than
+        zero, important for conditions, calculations, or analyses where negative values have specific implications or are
+        expected based on the context.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether the actual numeric
+                               value is negative, with details on the actual value and whether the check passed or failed.
+
+        Note:
+            Utilizing this assertion facilitates the verification of numeric values against negativity criteria, vital
+            for scenarios where the presence of negative numbers is significant or required.
+        """
+        return self.strategy.to_be_negative()  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def to_be_in_between(
+        self, lower_bound: float, upper_bound: float
+    ) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value is within a specified range, exclusive of the boundary values. This method
+        is essential for ensuring that numbers fall within expected limits, crucial for operations or conditions that
+        require values to be constrained within specific bounds.
 
         Args:
-            value (Any): The value that the actual dictionary is not expected to contain.
+            lower_bound (float): The lower limit of the range, exclusive.
+            upper_bound (float): The upper limit of the range, exclusive.
 
         Returns:
-            bool: True if the actual dictionary does not contain the value, False otherwise.
-        """
-        return not self.has_value(value, not_an_assertion=True)
+            ExpectationResult: An object representing the result of the check, detailing whether the actual numeric
+                               value lies within the specified range, including the actual value, the specified range,
+                               and whether the check passed or failed.
 
-    @expect_logging_helper
-    def not_has_item(self, key: Any, value: Any):
+        Note:
+            This assertion facilitates precise numeric range validations, supporting scenarios where value constraints
+            within specific bounds are critical to the correctness and functionality of operations or analyses.
         """
-        Verifies if the actual dictionary does not contain the specified key-value pair.
+        return self.strategy.to_be_in_between(lower_bound, upper_bound)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def not_to_be_in_between(
+        self, lower_bound: float, upper_bound: float
+    ) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value does not lie within a specified range, exclusive of the boundary values. This method
+        is useful for scenarios where values must be outside certain limits, either below the lower bound or above the upper bound,
+        important for conditions that exclude a specific range of values.
 
         Args:
-            key (Any): The key of the key-value pair that the actual dictionary is not expected to contain.
-            value (Any): The value of the key-value pair that the actual dictionary is not expected to contain.
+            lower_bound (float): The lower limit of the range, exclusive.
+            upper_bound (float): The upper limit of the range, exclusive.
 
         Returns:
-            bool: True if the actual dictionary does not contain the key-value pair, False otherwise.
-        """
-        return not self.has_item(key, value, not_an_assertion=True)
+            ExpectationResult: An object representing the result of the check, indicating whether the actual numeric
+                               value is outside the specified range, with details on the actual value, the specified range,
+                               and whether the check passed or failed.
 
-    @expect_logging_helper
-    def to_be_before(self, other_date: datetime.datetime) -> "Expect":
+        Note:
+            Employing this assertion ensures that numeric values do not fall within undesired ranges, crucial for maintaining
+            exclusivity or specificity in numeric validations and analyses.
         """
-        Check if the actual date is before the other date.
+        return self.strategy.not_to_be_in_between(lower_bound, upper_bound)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def to_be_close_to(
+        self, expected_value: float, tolerance: float
+    ) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value is approximately equal to the expected value within a specified tolerance.
+        This method is indispensable for validating numeric values where exact matches are impractical due to precision
+        limitations or when slight deviations are acceptable.
 
         Args:
-            other_date (datetime.datetime): The date that the actual date should be before.
+            expected_value (float): The value to which the actual value is compared.
+            tolerance (float): The maximum allowed difference between the actual and expected values for the comparison to pass.
 
         Returns:
-            Expect: The Expect instance for chain calls.
-        """
-        return self._actual_value < other_date
+            ExpectationResult: An object representing the result of the comparison, detailing whether the actual numeric
+                               value is within the tolerance range of the expected value, including the actual and expected
+                               values, the tolerance, and whether the check passed or failed.
 
-    @expect_logging_helper
-    def to_be_after(self, other_date: datetime.datetime) -> "Expect":
+        Note:
+            This assertion is key for performing flexible numeric comparisons, accommodating scenarios where slight variations
+            from the expected value are permissible, supporting robustness in numeric validations.
         """
-        Check if the actual date is after the other date.
+        return self.strategy.to_be_close_to(expected_value, tolerance)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def to_be_multiple_of(self, multiplier: float) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value is a multiple of another specified value. This method is critical for verifying
+        divisibility and multiplicative relationships, important in various mathematical, financial, or logical operations
+        where specific multiples are required or expected.
 
         Args:
-            other_date (datetime.datetime): The date that the actual date should be after.
+            multiplier (float): The value of which the actual value should be a multiple.
 
         Returns:
-            Expect: The Expect instance for chain calls.
-        """
-        return self._actual_value > other_date
+            ExpectationResult: An object representing the result of the check, detailing whether the actual numeric value
+                               is a multiple of the specified value, including the actual value, the multiplier, and whether
+                               the check passed or failed.
 
-    @expect_logging_helper
-    def to_have_year(self, year: int) -> "Expect":
+        Note:
+            Utilizing this assertion helps ensure compliance with specific multiplicative requirements, aiding in the
+            validation of numerical relationships and divisibility conditions.
         """
-        Check if the actual date has the specified year.
+        return self.strategy.to_be_multiple_of(multiplier)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def to_be_in_range(
+        self, lower_bound: float, upper_bound: float
+    ) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value lies within a specified range, inclusive of the boundary values. This method
+        is essential for scenarios requiring values to be constrained within specified bounds, including the limits themselves,
+        crucial for validations where inclusivity of boundary values is necessary.
 
         Args:
-            year (int): The year that the actual date should have.
+            lower_bound (float): The inclusive lower limit of the range.
+            upper_bound (float): The inclusive upper limit of the range.
 
         Returns:
-            Expect: The Expect instance for chain calls.
-        """
-        return self._actual_value.year == year
+            ExpectationResult: An object representing the result of the check, indicating whether the actual numeric
+                               value falls within the inclusive range, with details on the actual value, the specified
+                               range, and whether the check passed or failed.
 
-    @expect_logging_helper
-    def to_have_month(self, month: int) -> "Expect":
+        Note:
+            This assertion facilitates numeric validations with inclusive boundary conditions, accommodating scenarios
+            where boundary values are considered valid and significant for the operation or condition being validated.
         """
-        Check if the actual date has the specified month.
+        return self.strategy.to_be_in_range(lower_bound, upper_bound)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def not_to_be_in_range(
+        self, lower_bound: float, upper_bound: float
+    ) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value does not lie within a specified range, inclusive of the boundary values. This method
+        is useful for conditions where values must be explicitly outside the specified limits, important for excluding a specific
+        range of values, including the boundaries, from being considered valid.
 
         Args:
-            month (int): The month that the actual date should have.
+            lower_bound (float): The inclusive lower limit of the range to be excluded.
+            upper_bound (float): The inclusive upper limit of the range to be excluded.
 
         Returns:
-            Expect: The Expect instance for chain calls.
-        """
-        return self._actual_value.month == month
+            ExpectationResult: An object representing the result of the check, detailing whether the actual numeric
+                               value falls outside the inclusive range, with an overview of the actual value, the specified
+                               range, and whether the check passed or failed.
 
-    @expect_logging_helper
-    def to_have_day(self, day: int) -> "Expect":
+        Note:
+            Employing this assertion ensures numeric values fall outside of undesired inclusive ranges, crucial for maintaining
+            exclusivity in numeric validations and analyses where specific ranges of values are not permissible.
         """
-        Check if the actual date has the specified day.
+        return self.strategy.not_to_be_in_range(lower_bound, upper_bound)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def to_be_zero(self) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value is zero. This method is crucial for validating scenarios where the
+        value is expected to result in zero, a common condition in calculations, reset operations, or when checking
+        for the absence of a quantity.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, detailing whether the actual numeric
+                               value is zero, including the actual value and whether the check passed or failed.
+
+        Note:
+            This assertion is particularly useful for confirming the neutral or null state of numeric calculations
+            or conditions, aiding in the precision and accuracy of numeric validations.
+        """
+        return self.strategy.to_be_zero()  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def not_to_be_odd(self) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value is not odd. This method is useful for ensuring that numbers are even,
+        excluding odd numbers from passing the check, important in contexts where even numbers are required or expected
+        due to their properties or the requirements of a given operation.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether the actual numeric
+                               value is not odd, with details on the actual value and whether the check passed or failed.
+
+        Note:
+            Employing this assertion helps exclude odd numbers from consideration, supporting scenarios or calculations
+            where evenness is a critical attribute of the numeric values involved.
+        """
+        return self.strategy.not_to_be_odd()  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def not_to_be_even(self) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value is not even. This method is essential for scenarios that specifically
+        require odd numbers, ensuring that even numbers do not satisfy the condition, important for operations or
+        validations where the distinct properties of odd numbers are necessary.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, detailing whether the actual numeric
+                               value is not even, including the actual value and whether the check passed or failed.
+
+        Note:
+            Utilizing this assertion facilitates the exclusion of even numbers in validations, emphasizing the
+            requirement for odd numbers due to their unique characteristics or the specific needs of the operation.
+        """
+        return self.strategy.not_to_be_even()  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def not_to_be_positive(self) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value is not positive. This method is vital for validating that numbers are
+        either negative or zero, excluding positive numbers from passing the check, crucial for contexts where non-positive
+        values are required due to the nature of the operation or the expected outcomes.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether the actual numeric
+                               value is not positive, with details on the actual value and whether the check passed or failed.
+
+        Note:
+            This assertion ensures that numeric values are suitable for conditions or operations where positivity is
+            not permissible, supporting accurate and specific numeric validations where negative or neutral values are
+            relevant.
+        """
+        return self.strategy.not_to_be_positive()  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def not_to_be_negative(self) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value is not negative, meaning it is zero or positive. This method is crucial
+        for scenarios requiring non-negative numbers, ensuring values are suitable for operations or contexts where
+        negatives are not permissible.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, detailing whether the actual numeric
+                               value is not negative, including the actual value and whether the check passed or failed.
+
+        Note:
+            Employing this assertion aids in confirming suitability for contexts demanding non-negative numbers,
+            enhancing validations where negativity would be incorrect or undesirable.
+        """
+        return self.strategy.not_to_be_negative()  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def not_to_be_close_to(
+        self, expected_value: float, tolerance: float
+    ) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value is not approximately equal to the expected value within a specified tolerance.
+        This method is vital for scenarios where numeric values must distinctly differ from a reference value beyond a minimal
+        margin, crucial for avoiding near-matches that could lead to incorrect assumptions or outcomes.
 
         Args:
-            day (int): The day that the actual date should have.
+            expected_value (float): The value that the actual value should not approximate.
+            tolerance (float): The tolerance within which the actual value should not fall around the expected value.
 
         Returns:
-            Expect: The Expect instance for chain calls.
-        """
-        return self._actual_value.day == day
+            ExpectationResult: An object representing the result of the check, indicating whether the actual numeric
+                               value differs from the expected value by more than the specified tolerance, including
+                               the actual and expected values, the tolerance, and whether the check passed or failed.
 
-    @expect_logging_helper
-    def to_have_hour(self, hour: int) -> "Expect":
+        Note:
+            This assertion is key for ensuring clear differentiation from specific numeric benchmarks, supporting
+            precise control over acceptable value ranges and distinctions in numeric validations.
         """
-        Check if the actual date has the specified hour.
+        return self.strategy.not_to_be_close_to(expected_value, tolerance)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def not_to_be_multiple_of(self, multiplier: float) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value is not a multiple of another specified value. This method ensures
+        that the actual value does not divide evenly by the multiplier, important for validating numerical properties
+        or requirements where being a multiple would be incorrect or problematic.
 
         Args:
-            hour (int): The hour that the actual date should have.
+            multiplier (float): The number that the actual value should not be a multiple of.
 
         Returns:
-            Expect: The Expect instance for chain calls.
-        """
-        return self._actual_value.hour == hour
+            ExpectationResult: An object representing the result of the check, detailing whether the actual numeric
+                               value is not a multiple of the specified number, including the actual value, the
+                               multiplier, and whether the check passed or failed.
 
-    @expect_logging_helper
-    def to_have_minute(self, minute: int) -> "Expect":
+        Note:
+            Utilizing this assertion facilitates numeric validations where specific multiplicative relationships
+            are to be avoided, enhancing the specificity and accuracy of numerical checks.
         """
-        Check if the actual date has the specified minute.
+        return self.strategy.not_to_be_multiple_of(multiplier)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy, ColorStrategy])
+    def to_be_greater_than(
+        self, expected_value: Union[bool, int, float, Color, str]
+    ) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value or color's grayscale value is greater than the specified comparison value or
+        color's grayscale value. This method is versatile, supporting comparisons against both numeric values and colors,
+        where color values can be specified as a Color object or a string in RGB, RGBA, or HEX formats. For color comparisons,
+        the grayscale value of the color is used to determine "greater than" relationships.
 
         Args:
-            minute (int): The minute that the actual date should have.
+            expected_value (Union[bool, int, float, Color, str]): The numeric value or color (as a Color object or a color
+                                                                  string in RGB, RGBA, HEX formats) that the actual value
+                                                                  is expected to exceed. Color strings will be auto-parsed.
 
         Returns:
-            Expect: The Expect instance for chain calls.
-        """
-        return self._actual_value.minute == minute
+            ExpectationResult: An object representing the result of the comparison, detailing whether the actual numeric
+                               value or color's grayscale value exceeds the specified comparison value or color's grayscale
+                               value, including the actual and comparison values, and whether the check passed or failed.
 
-    @expect_logging_helper
-    def to_have_second(self, second: int) -> "Expect":
+        Note:
+            This assertion is particularly useful for scenarios requiring validation of numerical thresholds or color
+            intensity comparisons. It accommodates a broad range of validation tasks, from simple numerical comparisons
+            to complex visual properties assessments, by interpreting color comparisons through grayscale values, ensuring
+            a consistent basis for comparison across different representations.
         """
-        Check if the actual date has the specified second.
+        return self.strategy.to_be_greater_than(expected_value)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy, ColorStrategy])
+    def to_be_less_than(
+        self, expected_value: Union[bool, int, float, Color, str]
+    ) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value or color's grayscale value is less than the specified comparison value or
+        color's grayscale value. This method supports comparisons against both numeric values and colors, where color values
+        can be specified as a Color object or a string in RGB, RGBA, or HEX formats. For color comparisons, the grayscale
+        value of the color is used to determine "less than" relationships.
 
         Args:
-            second (int): The second that the actual date should have.
+            expected_value (Union[bool, int, float, Color, str]): The numeric value or color (as a Color object or a color
+                                                                  string in RGB, RGBA, HEX formats) that the actual value
+                                                                  is expected to be less than. Color strings will be auto-parsed.
 
         Returns:
-            Expect: The Expect instance for chain calls.
-        """
-        return self._actual_value.second == second
+            ExpectationResult: An object representing the result of the comparison, detailing whether the actual numeric
+                               value or color's grayscale value is less than the specified comparison value or color's
+                               grayscale value, including the actual and comparison values, and whether the check passed
+                               or failed.
 
-    @expect_logging_helper
-    def not_to_be_before(
+        Note:
+            This assertion is critical for validating that values fall below specified numerical thresholds or color
+            intensities, accommodating a wide range of comparisons from numerical values to complex visual properties,
+            ensuring comparisons are grounded in grayscale values for color.
+        """
+        return self.strategy.to_be_less_than(expected_value)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy, ColorStrategy])
+    def to_be_greater_than_or_equal_to(
+        self, expected_value: Union[bool, int, float, Color, str]
+    ) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value or color's grayscale value is greater than or equal to the specified comparison
+        value or color's grayscale value. This method enables comparisons with numeric values and colors, including color
+        values specified as a Color object or a string. Grayscale values are used for color comparisons to establish "greater
+        than or equal to" relationships.
+
+        Args:
+            expected_value (Union[bool, int, float, Color, str]): The numeric value or color to compare against, where
+                                                                  colors can be provided as Color objects or strings in
+                                                                  RGB, RGBA, HEX formats and will be auto-parsed.
+
+        Returns:
+            ExpectationResult: An object detailing the comparison's outcome, showing whether the actual value meets or
+                               exceeds the specified value or color's grayscale value, along with the comparison metrics
+                               and the check's result.
+
+        Note:
+            Ideal for scenarios requiring minimum threshold validations or color intensity checks, this method's
+            flexibility supports a broad spectrum of validation tasks, leveraging grayscale values for color comparisons.
+        """
+        return self.strategy.to_be_greater_than_or_equal_to(expected_value)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy, ColorStrategy])
+    def to_be_less_than_or_equal_to(
+        self, expected_value: Union[bool, int, float, Color, str]
+    ) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value or color's grayscale value is less than or equal to the specified comparison
+        value or color's grayscale value. This method is adaptable for comparisons against both numeric values and colors,
+        where color values can be specified as a Color object or a string in RGB, RGBA, or HEX formats. For color comparisons,
+        the grayscale value of the color is used to determine "less than or equal to" relationships, ensuring a fair and
+        consistent basis for comparison.
+
+        Args:
+            expected_value (Union[bool, int, float, Color, str]): The numeric value or color (as a Color object or a color
+                                                                  string in RGB, RGBA, HEX formats) that the actual value
+                                                                  is expected to be less than or equal to. Color strings
+                                                                  will be auto-parsed into Color objects for comparison.
+
+        Returns:
+            ExpectationResult: An object representing the result of the comparison, detailing whether the actual numeric
+                               value or color's grayscale value is less than or equal to the specified comparison value
+                               or color's grayscale value, including the actual and comparison values, and whether the
+                               check passed or failed.
+
+        Note:
+            This assertion is particularly valuable in scenarios requiring validation against upper limits or ensuring
+            color intensities do not exceed specified levels. It accommodates a broad range of validation tasks by
+            interpreting color comparisons through grayscale values, facilitating consistent and meaningful comparisons
+            across different representations and formats.
+        """
+        return self.strategy.to_be_less_than_or_equal_to(expected_value)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[NumericStrategy])
+    def to_be_divisible_by(self, divisor: float) -> ExpectationResult:
+        """
+        Asserts that the actual numeric value is divisible by the specified divisor. This method is crucial for validating
+        mathematical properties of numbers, ensuring that the actual value can be evenly divided by another number, which
+        is significant for operations, algorithms, or conditions predicated on divisibility.
+
+        Args:
+            divisor (float): The number by which the actual numeric value should be divisible.
+
+        Returns:
+            ExpectationResult: An object representing the result of the divisibility check, detailing whether the actual
+                               numeric value is divisible by the specified divisor, including the actual value, the divisor,
+                               and whether the check passed or failed.
+
+        Note:
+            This assertion is particularly useful in scenarios where divisibility is a key factor in the logic or outcome
+            of operations, supporting precise validations of numerical relationships and ensuring compliance with specific
+            mathematical conditions.
+        """
+        return self.strategy.to_be_divisible_by(divisor)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[ColorStrategy])
+    def to_be_approximately_equal(
         self,
-        other_datetime: datetime.datetime,
-        not_an_assertion: Optional[bool] = False,
-    ):
+        expected_value: Union[Color, str],
+        percentage_threshold: int = 5,
+        alpha_threshold: float = 0.1,
+    ) -> ExpectationResult:
         """
-        Checks if the actual value is not before the expected datetime.
+        Asserts that the actual Color object is approximately equal to another specified Color object or a color defined
+        by a string (in RGB, RGBA, or HEX format), within defined thresholds for grayscale percentage difference and alpha
+        component difference. This method is essential for validating color similarities where exact matches are not
+        required, accommodating minor variances in color representation or perception.
 
         Args:
-            other_datetime (datetime): The datetime to compare with the actual value.
-            not_an_assertion (bool, optional): Whether this is not an assertion (default: False).
+            expected_value (Union[Color, str]): The expected Color object or color string (RGB, RGBA, HEX) to compare
+                                                against the actual Color object.
+            percentage_threshold (int): The maximum allowed percentage difference in grayscale values between the actual
+                                        and expected Color objects to still consider them approximately equal.
+            alpha_threshold (float): The maximum allowed difference in the alpha component (transparency) between the
+                                     actual and expected Color objects to still consider them approximately equal.
 
         Returns:
-            Expect: The Expect instance with the result of the check.
-        """
-        return self._actual_value >= other_datetime
-
-    @expect_logging_helper
-    def not_to_be_after(
-        self,
-        other_datetime: datetime.datetime,
-        not_an_assertion: Optional[bool] = False,
-    ):
-        """
-        Checks if the actual value is not after the expected datetime.
-
-        Args:
-            other_datetime (datetime): The datetime to compare with the actual value.
-            not_an_assertion (bool, optional): Whether this is not an assertion (default: False).
-
-        Returns:
-            Expect: The Expect instance with the result of the check.
-        """
-        return self._actual_value <= other_datetime
-
-    @expect_logging_helper
-    def not_to_be_on_or_before(
-        self,
-        other_datetime: datetime.datetime,
-        not_an_assertion: Optional[bool] = False,
-    ):
-        """
-        Checks if the actual value is not on or before the expected datetime.
-
-        Args:
-            other_datetime (datetime): The datetime to compare with the actual value.
-            not_an_assertion (bool, optional): Whether this is not an assertion (default: False).
-
-        Returns:
-            Expect: The Expect instance with the result of the check.
-        """
-        return self._actual_value > other_datetime
-
-    @expect_logging_helper
-    def not_to_be_on_or_after(
-        self,
-        other_datetime: datetime.datetime,
-        not_an_assertion: Optional[bool] = False,
-    ):
-        """
-        Checks if the actual value is not on or after the expected datetime.
-
-        Args:
-            other_datetime (datetime): The datetime to compare with the actual value.
-            not_an_assertion (bool, optional): Whether this is not an assertion (default: False).
-
-        Returns:
-            Expect: The Expect instance with the result of the check.
-        """
-        return self._actual_value < other_datetime
-
-    @expect_logging_helper
-    def not_to_be_within_delta(
-        self,
-        other_datetime: Union[datetime.datetime, float, int],
-        delta: Union[timedelta, float, int],
-    ):
-        """
-        Checks if the actual value is not within a certain delta of an expected value.
-
-        Args:
-            other_datetime (Union[datetime, float, int]): The datetime, float or integer to compare with the actual value.
-            delta (Union[timedelta, float, int]): The timedelta, float or integer to use for the comparison.
-
-        Returns:
-            Expect: The Expect instance with the result of the check.
-        """
-        if isinstance(other_datetime, datetime.datetime) and isinstance(
-            delta, timedelta
-        ):
-            lower_bound = other_datetime - delta
-            upper_bound = other_datetime + delta
-            return not lower_bound <= self._actual_value <= upper_bound
-        else:
-            difference = abs(self._actual_value - other_datetime)
-            return difference > delta
-
-    @expect_logging_helper
-    def to_be_within_delta(self, expected_value, delta):
-        """
-        Checks if the actual value is within a certain delta of an expected value.
-
-        Args:
-            expected_value (Union[int, float, datetime]): The expected value.
-            delta (Union[int, float, timedelta]): The allowed difference.
-
-        Returns:
-            bool: True if the actual value is within the delta of the expected value, False otherwise.
-        """
-        if isinstance(self._actual_value, datetime):
-            return abs(self._actual_value - expected_value) <= delta
-        return abs(self._actual_value - expected_value) <= delta
-
-    @expect_logging_helper
-    def to_be_in_range_with_delta(self, start_value, end_value, delta):
-        """
-        Checks if the actual value is within a certain range plus-minus a delta.
-
-        Args:
-            start_value (Union[int, float, datetime]): The start of the range.
-            end_value (Union[int, float, datetime]): The end of the range.
-            delta (Union[int, float, timedelta]): The allowed difference.
-
-        Returns:
-            bool: True if the actual value is within the range plus-minus the delta, False otherwise.
-        """
-        return start_value - delta <= self._actual_value <= end_value + delta
-
-    @expect_logging_helper
-    def not_to_be_in_range_with_delta(self, start_value, end_value, delta):
-        """
-        Checks if the actual value is not within a certain range plus-minus a delta.
-
-        Args:
-            start_value (Union[int, float, datetime]): The start of the range.
-            end_value (Union[int, float, datetime]): The end of the range.
-            delta (Union[int, float, timedelta]): The allowed difference.
-
-        Returns:
-            bool: True if the actual value is not within the range plus-minus the delta, False otherwise.
-        """
-        return not self.to_be_in_range_with_delta(start_value, end_value, delta)
-
-    @expect_logging_helper
-    def to_be_equal_with_threshold(self, expected_value, threshold):
-        """
-        Checks if the actual value is equal to an expected value within a certain threshold.
-
-        Args:
-            expected_value (Union[int, float, datetime]): The expected value.
-            threshold (Union[int, float, timedelta]): The allowed difference.
-
-        Returns:
-            bool: True if the actual value is equal to the expected value within the threshold, False otherwise.
-        """
-        return abs(self._actual_value - expected_value) <= threshold
-
-    @expect_logging_helper
-    def not_to_be_equal_with_threshold(self, expected_value, threshold):
-        """
-        Checks if the actual value is not equal to an expected value within a certain threshold.
-
-        Args:
-            expected_value (Union[int, float, datetime]): The expected value.
-            threshold (Union[int, float, timedelta]): The allowed difference.
-
-        Returns:
-            bool: True if the actual value is not equal to the expected value within the threshold, False otherwise.
-        """
-        return not self.to_be_equal_with_threshold(expected_value, threshold)
-
-    @expect_logging_helper
-    def to_be_file(self):
-        """
-        Checks if the actual value is a file.
-
-        Returns:
-            bool: True if the actual value is a file, False otherwise.
-        """
-        return os.path.isfile(self._actual_value)
-
-    @expect_logging_helper
-    def not_to_be_file(self):
-        """
-        Checks if the actual value is not a file.
-
-        Returns:
-            bool: True if the actual value is not a file, False otherwise.
-        """
-        return not self.to_be_file()
-
-    @expect_logging_helper
-    def to_be_directory(self):
-        """
-        Checks if the actual value is a directory.
-
-        Returns:
-            bool: True if the actual value is a directory, False otherwise.
-        """
-        return os.path.isdir(self._actual_value)
-
-    @expect_logging_helper
-    def not_to_be_directory(self):
-        """
-        Checks if the actual value is not a directory.
-
-        Returns:
-            bool: True if the actual value is not a directory, False otherwise.
-        """
-        return not self.to_be_directory()
-
-    @expect_logging_helper
-    def to_exist(self):
-        """
-        Checks if the actual value exists.
-
-        Returns:
-            bool: True if the actual value exists, False otherwise.
-        """
-        return os.path.exists(self._actual_value)
-
-    @expect_logging_helper
-    def not_to_exist(self):
-        """
-        Checks if the actual value does not exist.
-
-        Returns:
-            bool: True if the actual value does not exist, False otherwise.
-        """
-        return not self.to_exist()
-
-    @expect_logging_helper
-    def to_be_readable(self):
-        """
-        Checks if the actual value is readable.
-
-        Returns:
-            bool: True if the actual value is readable, False otherwise.
-        """
-        return os.access(self._actual_value, os.R_OK)
-
-    @expect_logging_helper
-    def not_to_be_readable(self):
-        """
-        Checks if the actual value is not readable.
-
-        Returns:
-            bool: True if the actual value is not readable, False otherwise.
-        """
-        return not self.to_be_readable()
-
-    @expect_logging_helper
-    def to_be_writable(self):
-        """
-        Checks if the actual value is writable.
-
-        Returns:
-            bool: True if the actual value is writable, False otherwise.
-        """
-        return os.access(self._actual_value, os.W_OK)
-
-    @expect_logging_helper
-    def not_to_be_writable(self):
-        """
-        Checks if the actual value is not writable.
-
-        Returns:
-            bool: True if the actual value is not writable, False otherwise.
-        """
-        return not self.to_be_writable()
-
-    @expect_logging_helper
-    def to_have_extension(self, expected_extension):
-        """
-        Checks if the actual value has a specific extension.
-
-        Args:
-            expected_extension (str): The expected extension.
-
-        Returns:
-            bool: True if the actual value has the expected extension, False otherwise.
-        """
-        _, extension = os.path.splitext(self._actual_value)
-        return extension.lower() == expected_extension.lower()
-
-    @expect_logging_helper
-    def not_to_have_extension(self, expected_extension):
-        """
-        Checks if the actual value does not have a specific extension.
-
-        Args:
-            expected_extension (str): The expected extension.
-
-        Returns:
-            bool: True if the actual value does not have the expected extension, False otherwise.
-        """
-        return not self.to_have_extension(expected_extension)
-
-    @expect_logging_helper
-    def size_to_be_within_range(self, min_size, max_size):
-        """
-        Checks if the size of the actual value is within a certain range.
-
-        Args:
-            min_size (int): The minimum size.
-            max_size (int): The maximum size.
-
-        Returns:
-            bool: True if the size of the actual value is within the specified range, False otherwise.
-        """
-        size = os.path.getsize(self._actual_value)
-        return min_size <= size <= max_size
-
-    @expect_logging_helper
-    def size_not_to_be_within_range(self, min_size, max_size):
-        """
-        Checks if the size of the actual value is not within a certain range.
-
-        Args:
-            min_size (int): The minimum size.
-            max_size (int): The maximum size.
-
-        Returns:
-            bool: True if the size of the actual value is not within the specified range, False otherwise.
-        """
-        return not self.size_to_be_within_range(min_size, max_size)
-
-    @expect_logging_helper
-    def to_have_permission(self, permission):
-        """
-        Checks if the actual value has a specific permission.
-
-        Args:
-            permission (str): The expected permission. This can be 'r' for readable, 'w' for writable, and 'x' for
-            executable.
-
-        Returns:
-            bool: True if the actual value has the expected permission, False otherwise.
-        """
-        permissions = {"r": os.R_OK, "w": os.W_OK, "x": os.X_OK}
-        return os.access(self._actual_value, permissions[permission.lower()])
-
-    @expect_logging_helper
-    def not_to_have_permission(self, permission):
-        """
-        Checks if the actual value does not have a specific permission.
-
-        Args:
-            permission (str): The expected permission. This can be 'r' for readable, 'w' for writable, and 'x' for
-            executable.
-
-        Returns:
-            bool: True if the actual value does not have the expected permission, False otherwise.
-        """
-        return not self.to_have_permission(permission)
-
-    @expect_logging_helper
-    def to_be_of_size(self, size):
-        """
-        Checks if the actual value has a specific size.
-
-        Args:
-            size (int): The expected size in bytes.
-
-        Returns:
-            bool: True if the actual value has the expected size, False otherwise.
-        """
-        return os.path.getsize(self._actual_value) == size
-
-    @expect_logging_helper
-    def not_to_be_of_size(self, size):
-        """
-        Checks if the actual value does not have a specific size.
-
-        Args:
-            size (int): The expected size in bytes.
-
-        Returns:
-            bool: True if the actual value does not have the expected size, False otherwise.
-        """
-        return not self.to_be_of_size(size)
-
-    @expect_logging_helper
-    def to_be_empty(self):
-        """
-        Checks if the actual value is an empty directory or an empty file.
-
-        Returns:
-            bool: True if the actual value is an empty directory or an empty file, False otherwise.
-        """
-        if os.path.isdir(self._actual_value):
-            return not os.listdir(self._actual_value)
-        elif os.path.isfile(self._actual_value):
-            return os.path.getsize(self._actual_value) == 0
-        else:
-            return False
-
-    @expect_logging_helper
-    def not_to_be_empty(self):
-        """
-        Checks if the actual value is not an empty directory.
-
-        Returns:
-            bool: True if the actual value is not an empty directory, False otherwise.
-        """
-        return not self.to_be_empty(not_an_assertion=True)
-
-    @expect_logging_helper
-    def to_be_modified_within(self, seconds):
-        """
-        Checks if the actual value was modified within a certain time.
-
-        Args:
-            seconds (int): The expected time in seconds.
-
-        Returns:
-            bool: True if the actual value was modified within the expected time, False otherwise.
-        """
-        return time.time() - os.path.getmtime(self._actual_value) <= seconds
-
-    @expect_logging_helper
-    def not_to_be_modified_within(self, seconds):
-        """
-        Checks if the actual value was not modified within a certain time.
-
-        Args:
-            seconds (int): The expected time in seconds.
-
-        Returns:
-            bool: True if the actual value was not modified within the expected time, False otherwise.
-        """
-        return not self.to_be_modified_within(seconds)
-
-    @expect_logging_helper
-    def to_be_symlink(self):
-        """
-        Checks if the actual value is a symlink.
-
-        Returns:
-            bool: True if the actual value is a symlink, False otherwise.
-        """
-        return os.path.islink(self._actual_value)
-
-    @expect_logging_helper
-    def not_to_be_symlink(self):
-        """
-        Checks if the actual value is not a symlink.
-
-        Returns:
-            bool: True if the actual value is not a symlink, False otherwise.
-        """
-        return not self.to_be_symlink()
-
-    @expect_logging_helper
-    def to_be_absolute_path(self):
-        """
-        Checks if the actual value is an absolute path.
-
-        Returns:
-            bool: True if the actual value is an absolute path, False otherwise.
-        """
-        return os.path.isabs(self._actual_value)
-
-    @expect_logging_helper
-    def not_to_be_absolute_path(self):
-        """
-        Checks if the actual value is not an absolute path.
-
-        Returns:
-            bool: True if the actual value is not an absolute path, False otherwise.
-        """
-        return not self.to_be_absolute_path()
-
-    @expect_logging_helper
-    def to_be_identical_with(self, comparison_value):
-        """
-        Check whether the `_actual_value` is identical with the provided comparison_value.
-
-        This method treats files and strings. If the actual value or the comparison value is a path to a file,
-        it reads the file content and makes the comparison.
-
-        :param comparison_value: The value to be compared with. It could be a string or a path to a text file.
-        :return: True if the actual value is identical with the comparison_value, False otherwise.
-        """
-        actual = self._actual_value
-        if os.path.isfile(self._actual_value):
-            with open(self._actual_value, "r") as f:
-                actual = f.read()
-
-        if os.path.isfile(comparison_value):
-            with open(comparison_value, "r") as f:
-                comparison_value = f.read()
-
-        return actual == comparison_value
-
-    @expect_logging_helper
-    def not_to_be_identical_with(self, comparison_value):
-        """
-        Check whether the `_actual_value` is not identical with the provided comparison_value.
-
-        This method treats files and strings. If the actual value or the comparison value is a path to a file,
-        it reads the file content and makes the comparison.
-
-        :param comparison_value: The value to be compared with. It could be a string or a path to a text file.
-        :return: True if the actual value is not identical with the comparison_value, False otherwise.
-        """
-        return not self.to_be_identical_with(comparison_value)
-
-    def _log_results(
-        self,
-        result: bool,
-        method: str,
-        e_args: tuple,
-        e_kwargs: dict,
-        is_assertion: bool,
-    ):
-        """
-        Logs the result of the test.
-
-        Args:
-            result (bool): The result of the test.
-            method (str): The name of the method that performed the test.
-            e_args (tuple): The positional arguments that were passed to the method.
-            e_kwargs (dict): The keyword arguments that were passed to the method.
-            is_assertion (bool): Whether this is an assertion (True) or a verification (False).
-        """
-        message = self._build_message(result, method, is_assertion, e_args, e_kwargs)
-
-        extra = {"assertion": result} if is_assertion else {}
-
-        if result:
-            return self._logger.info(message, extra=extra)
-
-        if is_assertion:
-            self._logger.critical(message, extra=extra)
-            raise Exception(message)
-
-        # finally simply log verification
-        self._logger.info(message)
-
-    def _build_message(self, result, method_name, is_assertion, e_args, e_kwargs):
-        """
-        Builds a log message based on the test result and other information.
-
-        Args:
-            result (bool): The result of the test.
-            method_name (str): The name of the method that performed the test.
-            is_assertion (bool): Whether this is an assertion (True) or a verification (False).
-            e_args (tuple): The positional arguments that were passed to the method.
-            e_kwargs (dict): The keyword arguments that were passed to the method.
-
-        Returns:
-            str: The log message.
-        """
-        readable_name = method_name.replace("_", " ")
-        action = "Assertion" if is_assertion else "Verification"
-        status = "Pass" if result else "Fail"
-        if self._owner:
-            message = (
-                f"[{self.owner.__full_name__}] {action} {readable_name}: {status}."
-                f"\nActual value: \n{self._actual_value}"
-            )
-        else:
-            message = f"{action} {readable_name}: {status}. \nActual value: \n{self._actual_value}"
-
-        if result:
-            return message
-
-        message += self._build_expected_value_using_expectation_args(
-            method_name, e_kwargs
-        )
-
-        if not self._has_diff():
-            return message
-
-        return message + self._build_diff(e_args, e_kwargs)
-
-    def _build_expected_value_using_expectation_args(self, method_name, e_kwargs):
-        """
-        Constructs the expected value portion of the message based on the method name and provided arguments.
-
-        It dynamically determines which helper function to call for building the message
-        based on the data type of the expected value or the presence of "file" in the method name.
-
-        Parameters:
-            method_name (str): The name of the method called for expectation.
-            e_kwargs (dict): The keyword arguments passed to the method.
-
-        Returns:
-            str: The expected value message for the assertion or verification.
-
-        Raises:
-            Exception: If unable to build the expected value message for provided arguments.
-        """
-        # Evaluate the method_name and data type of e_args to determine which helper method to call
-        if method_name.lower().find("file") != -1:
-            return self._build_file_expected(method_name, e_kwargs)
-        elif isinstance(e_kwargs["expected_value"], str):
-            return self._build_string_expected(method_name, e_kwargs)
-        elif isinstance(e_kwargs["expected_value"], (int, float)):
-            return self._build_numeric_expected(method_name, e_kwargs)
-        elif isinstance(e_kwargs["expected_value"], list):
-            return self._build_list_expected(method_name, e_kwargs)
-        elif isinstance(e_kwargs["expected_value"], dict):
-            return self._build_dict_expected(method_name, e_kwargs)
-        elif isinstance(e_kwargs["expected_value"], datetime.datetime):
-            return self._build_datetime_expected(method_name, e_kwargs)
-        else:
-            raise Exception(
-                "Unable to build expected value message for provided expectation args."
-            )
-
-    @staticmethod
-    def _build_string_expected(method_name, kwargs):
-        """
-        Constructs the expected value message for string based assertions or verifications.
-
-        Parameters:
-            method_name (str): The name of the method called for expectation.
-            kwargs (dict): The keyword arguments passed to the method.
-
-        Returns:
-            str: The expected value message for the string assertion or verification.
-        """
-        if method_name in [
-            "to_be",
-            "not_to_be",
-            "starts_with",
-            "not_starts_with",
-            "ends_with",
-            "not_ends_with",
-            "contains",
-            "not_contains",
-        ]:
-            return f"\nExpected value: \n{kwargs['expected_value']}"
-        elif method_name in ["match", "not_match"]:
-            return f"\nExpected pattern: \n{kwargs['pattern']}"
-        else:
-            return f"\nExpected value: \n{kwargs['expected_value']}"
-
-    @staticmethod
-    def _build_numeric_expected(method_name, kwargs):
-        """
-        Build and return the expected value string for numeric methods based on
-        the method name and kwargs.
-        """
-        if method_name in ["to_be", "not_to_be"]:
-            return f"\nExpected value: \n{kwargs.get('expected_value', '')}"
-        if method_name in [
-            "greater_than",
-            "not_greater_than",
-            "less_than",
-            "not_less_than",
-        ]:
-            return f"\nExpected value: \n{kwargs.get('comparison_value', '')}"
-        if method_name in ["in_range", "not_in_range"]:
-            return f"\nExpected range: \n{kwargs.get('start', '')} - {kwargs.get('end', '')}"
-        if method_name in ["is_positive", "is_not_positive"]:
-            return f"\nExpectation: Value should be {'positive' if method_name == 'is_positive' else 'non-positive'}"
-        if method_name in ["is_negative", "is_not_negative"]:
-            return f"\nExpectation: Value should be {'negative' if method_name == 'is_negative' else 'non-negative'}"
-        if method_name in ["is_odd", "is_not_odd"]:
-            return f"\nExpectation: Value should be {'odd' if method_name == 'is_odd' else 'even'}"
-        if method_name in ["is_even", "is_not_even"]:
-            return f"\nExpectation: Value should be {'even' if method_name == 'is_even' else 'odd'}"
-        return f'\nExpected value: \n{kwargs.get("expected_value", "")}'
-
-    @staticmethod
-    def _build_list_expected(method_name, kwargs):
-        """
-        Build and return the expected value string for list methods based on
-        the method name and kwargs.
-        """
-        if method_name in ["to_be", "not_to_be"]:
-            return f"\nExpected value: \n{kwargs.get('expected_value', '')}"
-        if method_name in ["contains", "not_contains"]:
-            return f"\nExpected items: \n{kwargs.get('items', '')}"
-        if method_name in ["contain_only", "not_contain_only"]:
-            return f"\nExpected items only: \n{kwargs.get('items', '')}"
-        return f'\nExpected value: \n{kwargs.get("expected_value", "")}'
-
-    @staticmethod
-    def _build_dict_expected(method_name, kwargs):
-        """
-        Build and return the expected value string for dictionary methods based
-        on the method name and kwargs.
-        """
-        if method_name in ["to_be", "not_to_be"]:
-            return f"\nExpected value: \n{kwargs.get('expected_value', '')}"
-        if method_name in ["contains_keys", "not_contains_keys"]:
-            return f"\nExpected keys: \n{kwargs.get('keys', '')}"
-        if method_name in ["contains_items", "not_contains_items"]:
-            return f"\nExpected items: \n{kwargs.get('items', '')}"
-        if method_name in ["contains_values", "not_contains_values"]:
-            return f"\nExpected values: \n{kwargs.get('values', '')}"
-        return f'\nExpected value: \n{kwargs.get("expected_value", "")}'
-
-    @staticmethod
-    def _build_datetime_expected(method_name, kwargs):
-        """
-        Build and return the expected value string for datetime methods based
-        on the method name and kwargs.
-        """
-        if method_name in ["to_be", "not_to_be"]:
-            return f"\nExpected value: \n{kwargs.get('expected_value', '')}"
-        if method_name in ["to_be_within_range", "not_to_be_within_range"]:
-            return f"\nExpected range: \n{kwargs.get('start', '')} - {kwargs.get('end', '')}"
-        if method_name in [
-            "to_be_before",
-            "not_to_be_before",
-            "to_be_after",
-            "not_to_be_after",
-        ]:
-            return f"\nExpected date: \n{kwargs.get('date', '')}"
-        return f'\nExpected value: \n{kwargs.get("expected_value", "")}'
-
-    @staticmethod
-    def _build_file_expected(method_name, kwargs):
-        """
-        Build and return the expected value string for file methods based
-        on the method name and kwargs.
-        """
-        expected_file = kwargs.get("file_path", "")
-        file_type = "binary" if kwargs.get("binary", False) else "text"
-        encoding = kwargs.get("encoding", "utf-8")
-
-        if method_name in ["to_be", "not_to_be"]:
-            return f"\nExpected file: \nPath: {expected_file}\nType: {file_type}\nEncoding: {encoding}"
-
-        # Any other method-specific message builders would go here...
-
-        # Default case:
-        return f"\nExpected file: \nPath: {expected_file}\nType: {file_type}\nEncoding: {encoding}"
-
-    def _has_diff(self):
-        return isinstance(
-            self._actual_value, (str, list, dict, int, float, datetime.datetime)
-        )
-
-    def _build_diff(self, e_args, e_kwargs):
-        """
-        Build the difference string based on the type of the actual value.
-
-        Args:
-            e_args: The expected arguments passed to the method.
-            e_kwargs: The keyword arguments passed to the method.
-
-        Returns:
-            A string detailing the difference.
-        """
-
-        # Handle case of 0 or 2+ arguments
-        if len(e_args) != 1:
-            return ""
-
-        expected_value = e_args[0]
-
-        if isinstance(self._actual_value, str):
-            diff = difflib.ndiff(self._actual_value, expected_value)
-            return "\nString difference:\n" + "\n".join(diff)
-
-        if isinstance(self._actual_value, list):
-            return self._list_difference(expected_value)
-
-        if isinstance(self._actual_value, dict):
-            return self._dict_difference(expected_value)
-
-        if isinstance(self._actual_value, (int, float)):
-            return self._numeric_difference(expected_value)
-
-        if isinstance(self._actual_value, datetime.datetime):
-            return self._datetime_difference(expected_value)
-
-        # Placeholder for handling files
-        if isinstance(self._actual_value, str) and "file" in self._method_name:
-            return self._file_difference(expected_value)
-
-        # When we don't know how to generate a diff, return an empty string.
-        return ""
-
-    def _list_difference(self, expected_value):
-        """
-        Build the difference string for lists.
-
-        Args:
-            expected_value: The expected value to compare with.
-
-        Returns:
-            A string detailing the difference.
-        """
-        extra_items = [i for i in self._actual_value if i not in expected_value]
-        missing_items = [i for i in expected_value if i not in self._actual_value]
-
-        diff_message = ""
-        if extra_items:
-            diff_message += "\nExtra items in actual value: " + ", ".join(
-                map(str, extra_items)
-            )
-        if missing_items:
-            diff_message += "\nItems missing in actual value: " + ", ".join(
-                map(str, missing_items)
-            )
-
-        return diff_message
-
-    def _dict_difference(self, expected_value):
-        """
-        Build the difference string for dictionaries.
-
-        Args:
-            expected_value: The expected value to compare with.
-
-        Returns:
-            A string detailing the difference.
-        """
-        extra_keys = set(self._actual_value.keys()) - set(expected_value.keys())
-        missing_keys = set(expected_value.keys()) - set(self._actual_value.keys())
-
-        diff_message = ""
-        if extra_keys:
-            diff_message += "\nExtra keys in actual value: " + ", ".join(extra_keys)
-        if missing_keys:
-            diff_message += "\nKeys missing in actual value: " + ", ".join(missing_keys)
-
-        for key in self._actual_value:
-            if key in expected_value and self._actual_value[key] != expected_value[key]:
-                diff_message += (
-                    f"\nFor key '{key}': actual value is '{self._actual_value[key]}', expected value is"
-                    f" '{expected_value[key]}'"
-                )
-
-        return diff_message
-
-    def _datetime_difference(self, expected_datetime: datetime.datetime):
-        """
-        Calculates the difference between the expected and actual datetime.
-
-        Args:
-            expected_datetime (datetime.datetime): The datetime to compare against.
-
-        Returns:
-            str: The difference between the two datetime in a human-readable format.
-        """
-        if not isinstance(self._actual_value, datetime.datetime):
-            return ""
-
-        difference = abs(self._actual_value - expected_datetime)
-        return f"\nDatetime difference: {str(difference)}"
-
-    def _numeric_difference(self, expected_value: Union[int, float]):
-        """
-        Calculates the difference between the expected and actual numeric value.
-
-        Args:
-            expected_value (Union[int, float]): The value to compare against.
-
-        Returns:
-            str: The difference between the two numeric values in a human-readable format.
-        """
-        if not isinstance(self._actual_value, (int, float)):
-            return ""
-
-        difference = abs(self._actual_value - expected_value)
-        return f"\nNumeric difference: {str(difference)}"
-
-    def _file_difference(self, expected_file_path):
-        """
-        Compare two text files and generate a git-like diff.
-
-        Args:
-            expected_file_path: The path of the expected file.
-
-        Returns:
-            A string detailing the differences.
-        """
-        # Checking if the actual value is a valid file path
-        if not os.path.isfile(self._actual_value):
-            return f"File does not exist: {self._actual_value}"
-
-        # Checking if the expected value is a valid file path
-        if not os.path.isfile(expected_file_path):
-            return f"File does not exist: {expected_file_path}"
-
-        # Checking file extensions
-        _, actual_extension = os.path.splitext(self._actual_value)
-        _, expected_extension = os.path.splitext(expected_file_path)
-
-        if (
-            actual_extension not in self.allowed_extensions_for_file_difference
-            or expected_extension not in self.allowed_extensions_for_file_difference
-        ):
-            return f"File extension not supported for diff: {actual_extension} or {expected_extension}"
-
-        # Reading files
-        with open(self._actual_value, "r") as file:
-            actual_content = file.readlines()
-
-        with open(expected_file_path, "r") as file:
-            expected_content = file.readlines()
-
-        # Comparing files
-        diff = difflib.unified_diff(actual_content, expected_content)
-
-        # Filtering only lines with differences and joining them into a single string
-        diff_lines = [
-            line for line in diff if line.startswith("+") or line.startswith("-")
-        ]
-        diff_string = "".join(diff_lines)
-
-        return f"\nFile difference:\n{diff_string}"
+            ExpectationResult: An object representing the result of the color comparison, detailing whether the actual
+                               Color object is within the specified thresholds of the expected color, including the actual
+                               and expected colors, the thresholds used for comparison, and whether the check passed or failed.
+
+        Note:
+            This assertion supports nuanced color comparisons, acknowledging slight variations in color and transparency
+            that may be acceptable in many applications. It allows for flexible validation of color properties, ensuring
+            that colors are similar to an acceptable degree based on the provided thresholds.
+        """
+        return self.strategy.to_be_approximately_equal(  # type: ignore
+            expected_value, percentage_threshold, alpha_threshold
+        )  # type: ignore

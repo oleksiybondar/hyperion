@@ -7,6 +7,7 @@ class-level attribute that tracks the level of nested logging, allowing for inde
 hierarchical relationships.
 
 """
+
 from hyperiontf.helpers.decorators.singleton import Singleton
 
 

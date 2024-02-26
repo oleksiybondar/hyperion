@@ -8,10 +8,9 @@ from hyperiontf.typing import LoggerSource, HTTPMethodType
 from hyperiontf.typing import AuthType, TokenType, ContentType, HTTPHeader
 from hyperiontf.typing import AnyResponse, AnyRequest
 from hyperiontf.typing import ConnectionErrorException
-from typing import Optional, Union, Any
+from typing import Optional, Union, Any, Tuple, Dict
 from urllib.parse import urlparse, urlunparse
 from .response import Response
-import json
 
 logger = getLogger(LoggerSource.REST_CLIENT)
 
@@ -87,74 +86,121 @@ class Request:
         :param request_timeout: The timeout for completing this request.
         :type request_timeout: int
         """
-        # Implementation...
         self.client = client
         self.method = method
         self.payload = payload
         self.parent_request = parent_request
 
-        if url:
-            # Parse url
-            url_parts = urlparse(url)
-            self.scheme = url_parts.scheme
-            self.netloc = url_parts.netloc
-            self.path = url_parts.path
-            self.params = url_parts.params
-            self.query = url_parts.query
-            self.fragment = url_parts.fragment
-        else:
-            self.scheme = scheme or self.client.scheme
-            self.netloc = netloc or self.client.netloc
-            self.path = path or self.client.path
-            self.params = params or self.client.params
-            self.query = query or self.client.query
-            self.fragment = fragment or self.client.fragment
+        # URL Parsing
+        self.__init_url__(client, url, scheme, netloc, path, params, query, fragment)
 
-        self.headers = (
-            {**self.client.headers, **headers}
-            if headers
-            else self.client.headers.copy()
+        # Headers, Cookies, Auth Merging
+        self.headers = self._merge(client, "headers", headers)
+        self.cookies = self._merge(client, "cookies", cookies)
+        self.auth = self._merge(client, "auth", auth)
+
+        # Default Values
+        self.follow_redirects = self._get_default(
+            follow_redirects, client, "follow_redirects"
         )
-        self.cookies = (
-            {**self.client.cookies, **cookies}
-            if cookies
-            else self.client.cookies.copy()
+        self.log_redirects = self._get_default(log_redirects, client, "log_redirects")
+        self.post_redirect_get = self._get_default(
+            post_redirect_get, client, "post_redirect_get"
         )
-        self.auth = {**self.client.auth, **auth} if auth else self.client.auth.copy()
-        self.follow_redirects = (
-            follow_redirects
-            if follow_redirects is not None
-            else self.client.follow_redirects
+        self.accept_errors = self._get_default(accept_errors, client, "accept_errors")
+        self.redirections_limit = self._get_default(
+            redirections_limit, client, "redirections_limit"
         )
-        self.log_redirects = (
-            log_redirects if log_redirects is not None else self.client.log_redirects
+        self.connection_timeout = self._get_default(
+            connection_timeout, client, "connection_timeout"
         )
-        self.post_redirect_get = (
-            post_redirect_get
-            if post_redirect_get is not None
-            else self.client.post_redirect_get
-        )
-        self.accept_errors = (
-            accept_errors if accept_errors is not None else self.client.accept_errors
-        )
-        self.redirections_limit = (
-            redirections_limit
-            if redirections_limit is not None
-            else self.client.redirections_limit
-        )
-        self.connection_timeout = (
-            connection_timeout
-            if connection_timeout is not None
-            else self.client.connection_timeout
-        )
-        self.request_timeout = (
-            request_timeout
-            if request_timeout is not None
-            else self.client.request_timeout
+        self.request_timeout = self._get_default(
+            request_timeout, client, "request_timeout"
         )
 
         self.start_time: Optional[float] = None
         self.end_time: Optional[float] = None
+
+    def __init_url__(self, client, url, scheme, netloc, path, params, query, fragment):
+        if url:
+            parts = urlparse(url)
+            (
+                self.scheme,
+                self.netloc,
+                self.path,
+                self.params,
+                self.query,
+                self.fragment,
+            ) = parts
+        else:
+            self.__init_parsed_url__(
+                client,
+                scheme=scheme,
+                netloc=netloc,
+                path=path,
+                params=params,
+                query=query,
+                fragment=fragment,
+            )
+
+    def __init_parsed_url__(self, client, **kwargs):
+        """
+        Initialize URL components, choosing between provided values and client's defaults.
+
+        :param client: The client object providing default values.
+        :param kwargs: Keyword arguments corresponding to URL components.
+        """
+        for attr in ["scheme", "netloc", "path", "params", "query", "fragment"]:
+            setattr(self, attr, kwargs.get(attr) or getattr(client, attr))
+
+    @staticmethod
+    def _get_default(provided_value, client, attr_name):
+        """
+        Returns the provided value if it is not None, otherwise returns the client's default value.
+
+        :param provided_value: The value provided to the constructor.
+        :param client: The client object.
+        :param attr_name: The attribute name in the client to use as the default.
+        :return: The appropriate value.
+        """
+        return (
+            provided_value if provided_value is not None else getattr(client, attr_name)
+        )
+
+    @staticmethod
+    def _merge(client, attr_name, override_value):
+        """
+        Merges the given override value with the client's default value for the specified attribute.
+
+        :param client: The client object.
+        :param attr_name: The attribute name in the client to merge.
+        :param override_value: The overriding value to merge with the client's attribute.
+        :return: The merged result.
+        """
+        default_value = getattr(client, attr_name, {})
+        if override_value is None:
+            return default_value.copy()
+        if isinstance(override_value, dict):
+            return {**default_value, **override_value}
+        return override_value
+
+    @staticmethod
+    def _parse_url(url: str) -> Tuple[Optional[str], ...]:
+        """
+        Parses the URL and extracts its components.
+
+        :param url: The URL to parse.
+        :return: Tuple of URL components (scheme, netloc, path, params, query, fragment).
+        """
+        url_parts = urlparse(url)
+        return (
+            url_parts.scheme,
+            url_parts.netloc,
+            url_parts.path,
+            url_parts.params,
+            url_parts.query,
+            url_parts.fragment,
+        )
 
     def execute(self) -> AnyResponse:
         """
@@ -303,16 +349,25 @@ class Request:
 
         files = self._extract_files_from_payload()
 
+        if isinstance(self.payload, (dict, list)):
+            self._process_payload_as_json(request_params)
+        elif files:
+            request_params["files"] = files
+        else:
+            self._process_payload_as_form_encoded(request_params)
+
+    def _process_payload_as_json(self, request_params):
         # Check if content type needs to be updated
         if HTTPHeader.CONTENT_TYPE not in self.headers:
-            if isinstance(self.payload, (dict, list)):
-                self.headers[HTTPHeader.CONTENT_TYPE] = ContentType.JSON
-                request_params["data"] = json.dumps(self.payload)
-            elif files:
-                request_params["files"] = files
-            else:
-                self.headers[HTTPHeader.CONTENT_TYPE] = ContentType.FORM_URLENCODED
-                request_params["data"] = self.payload
+            self.headers[HTTPHeader.CONTENT_TYPE] = ContentType.JSON
+        request_params["json"] = self.payload
+
+    def _process_payload_as_form_encoded(self, request_params):
+        # Check if content type needs to be updated
+        # Check if content type needs to be updated
+        if HTTPHeader.CONTENT_TYPE not in self.headers:
+            self.headers[HTTPHeader.CONTENT_TYPE] = ContentType.FORM_URLENCODED
+        request_params["data"] = self.payload
 
     def _extract_files_from_payload(self) -> Optional[dict]:
         """
@@ -324,23 +379,26 @@ class Request:
         if not self.payload:
             return None
 
-        files = {}
+        files: Dict[str, str] = {}
 
         if isinstance(self.payload, dict):
             for key, value in self.payload.items():
-                if isinstance(value, dict) and "file" in value:
-                    # File-like object found in the payload
-                    file_name = value.get("file_name", None)
-                    file_type = value.get("file_type", None)
-                    if file_name and file_type:
-                        files[key] = (file_name, value["file"], file_type)
-                    else:
-                        files[key] = value["file"]
-
-                    # Remove the file from the payload
-                    self.payload[key] = value.get("file_name", "")
+                self._extract_file_from_payload(key, value, files)
 
         return files
+
+    def _extract_file_from_payload(self, key, value, files):
+        if isinstance(value, dict) and "file" in value:
+            # File-like object found in the payload
+            file_name = value.get("file_name", None)
+            file_type = value.get("file_type", None)
+            if file_name and file_type:
+                files[key] = (file_name, value["file"], file_type)
+            else:
+                files[key] = value["file"]
+
+            # Remove the file from the payload
+            self.payload[key] = value.get("file_name", "")
 
     def _update_request_params_with_cookies_and_headers(self, request_params: dict):
         """
@@ -399,28 +457,42 @@ class Request:
         curl_command = f"curl -X {request_params['method']} '{request_params['url']}'"
 
         if "headers" in request_params:
-            for key, value in request_params["headers"].items():
-                curl_command += f" -H '{key}: {value}'"
+            curl_command += Request._headers_to_curl(request_params)
 
         if "data" in request_params:
-            data = request_params["data"]
-            if isinstance(data, dict) or isinstance(data, list):
-                # For JSON data, format it as a single line and use single quotes
-                data = str(data).replace("'", r"'\''")
-                curl_command += f" -d '{data}'"
-            else:
-                # For other data types, use double quotes
-                curl_command += f' -d "{data}"'
+            curl_command += Request._data_to_curl(request_params)
 
         if "files" in request_params:
-            files = request_params["files"]
-            for key, value in files.items():
-                if isinstance(value, str):
-                    # File path provided, use it directly
-                    curl_command += f" -F '{key}=@{value}'"
-                elif isinstance(value, tuple):
-                    # File content provided as tuple (filename, content)
-                    filename, content = value
-                    curl_command += f" -F '{key}=@{filename};type={content}'"
+            curl_command += Request._files_to_curl(request_params)
 
         return curl_command
+
+    @staticmethod
+    def _headers_to_curl(request_params: dict):
+        curl_headers = ""
+        for key, value in request_params["headers"].items():
+            curl_headers += f" -H '{key}: {value}'"
+        return curl_headers
+
+    @staticmethod
+    def _data_to_curl(request_params: dict):
+        data = request_params["data"]
+        if isinstance(data, dict) or isinstance(data, list):
+            # For JSON data, format it as a single line and use single quotes
+            data = str(data).replace("'", r"'\''")
+            return f" -d '{data}'"
+        else:
+            # For other data types, use double quotes
+            return f' -d "{data}"'
+
+    @staticmethod
+    def _files_to_curl(request_params: dict):
+        files = request_params["files"]
+        for key, value in files.items():
+            if isinstance(value, str):
+                # File path provided, use it directly
+                return f" -F '{key}=@{value}'"
+            elif isinstance(value, tuple):
+                # File content provided as tuple (filename, content)
+                filename, content = value
+                return f" -F '{key}=@{filename};type={content}'"

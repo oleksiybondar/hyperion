@@ -53,26 +53,15 @@ class Client:
         :param connection_timeout: The timeout for establishing a connection.
         :param request_timeout: The timeout for completing a request.
         """
-        if url:
-            # Parse base_url
-            url_parts = urlparse(url)
-            self.scheme = url_parts.scheme
-            self.netloc = url_parts.netloc
-            self.path = url_parts.path
-            self.params = url_parts.params
-            self.query = url_parts.query
-            self.fragment = url_parts.fragment
-        else:
-            self.scheme = scheme or "http"
-            self.netloc = netloc or ""
-            self.path = path or ""
-            self.params = params or ""
-            self.query = query or ""
-            self.fragment = fragment or ""
+        self.scheme, self.netloc, self.path, self.params, self.query, self.fragment = (
+            self._parse_url(url)
+            if url
+            else (scheme, netloc, path, params, query, fragment)
+        )
 
-        self.headers = headers if headers else {}
-        self.cookies = cookies if cookies else {}
-        self.auth = auth if auth else {}
+        self.headers = headers or {}
+        self.cookies = cookies or {}
+        self.auth = auth or {}
         self.follow_redirects = follow_redirects
         self.log_redirects = log_redirects
         self.post_redirect_get = post_redirect_get
@@ -83,6 +72,24 @@ class Client:
 
         self.session = requests.Session()
         self.session.max_redirects = redirections_limit
+
+    @staticmethod
+    def _parse_url(url: str):
+        """
+        Parses the URL and extracts its components.
+
+        :param url: The URL to parse.
+        :return: Tuple of URL components (scheme, netloc, path, params, query, fragment).
+        """
+        url_parts = urlparse(url)
+        return (
+            url_parts.scheme,
+            url_parts.netloc,
+            url_parts.path,
+            url_parts.params,
+            url_parts.query,
+            url_parts.fragment,
+        )
 
     def get(
         self,

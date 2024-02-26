@@ -47,3 +47,11 @@ class WebView(LocatableElement):
     def __resolve__(self):
         self.context_manager.set_webview_context()
         self.content_manager.resolve_content(self)
+
+    def __resolve_eql_chain__(self, chain):
+        child_element = getattr(self, chain[0]["name"], None)
+
+        if child_element is None:
+            return None
+
+        return child_element.__resolve_eql_chain__(chain[1:])

@@ -1,0 +1,115 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page with delayed actions</title>
+    <style>
+        body { padding-bottom: 100px; }
+        #work-area { padding: 20px; }
+        .element, .array-element, #dynamic-element { margin: 10px 0; padding: 10px; background-color: #e9e9e9; }
+        #control-panel { position: fixed; bottom: 0; left: 0; width: 100%; background: #f2f2f2; padding: 10px; text-align: center; box-shadow: 0 0 10px rgba(0,0,0,.1); }
+        button { padding: 5px 10px; margin: 0 5px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="work-area">
+    <button id="static-button" disabled>Static Button</button>
+    <div id="always-visible">Always Visible Element</div>
+    <div class="array-elements">
+        <div class="array-element">Array Element 1</div>
+        <div class="array-element">Array Element 2</div>
+    </div>
+    <div id="disappearing-element" class="hidden">Disappearing Element</div>
+</div>
+
+<div id="control-panel">
+    <button onclick="addElement()" id="add-element-button">Add new element (3s delay)</button>
+    <button onclick="toggleButtonState()" id="state-toggle-button">Toggle Button State (3s delay)</button>
+    <button onclick="toggleVisibility()" id="visibility-toggle-button">Toggle Visibility (3s delay)</button>
+    <button onclick="removeElement()" id="remove-element-button">Remove Element from DOM (3s delay)</button>
+    <button onclick="addElementToArray()" id="add-array-element-button">Add Element to Array (3s delay)</button>
+    <button onclick="removeElementFromArray()" id="remove-array-element-button">Remove Element from Array (3s delay)</button>
+    <button onclick="removeAllFromArray()" id="remove-array-elements-button">Remove All Array Items (3s delay)</button>
+    <button onclick="addAnimatedElement()" id="animation-button">Add Animated Element (3s delay)</button>
+</div>
+
+<script>
+  function addElement() {
+    setTimeout(() => {
+      const container = document.getElementById('work-area');
+      const newElement = document.createElement('button');
+      newElement.id = 'new-element';
+      newElement.innerText = 'new button';
+      container.appendChild(newElement)
+    }, 3000);
+  }
+
+  function toggleButtonState() {
+    setTimeout(() => {
+      const btn = document.getElementById('static-button');
+      btn.disabled = !btn.disabled;
+    }, 3000);
+  }
+
+  function toggleVisibility() {
+    setTimeout(() => {
+      const el = document.getElementById('disappearing-element');
+      el.classList.toggle('hidden');
+    }, 3000);
+  }
+
+  function removeElement() {
+    setTimeout(() => {
+      const el = document.getElementById('always-visible');
+      el.parentNode.removeChild(el);
+    }, 3000);
+  }
+
+  function addElementToArray() {
+    setTimeout(() => {
+      const container = document.querySelector('.array-elements');
+      const newElement = document.createElement('div');
+      newElement.className = 'array-element';
+      newElement.textContent = 'New Array Element';
+      container.appendChild(newElement);
+    }, 3000);
+  }
+
+  function removeElementFromArray() {
+    setTimeout(() => {
+      const elements = document.querySelectorAll('.array-element');
+      if (elements.length > 0) {
+        elements[elements.length - 1].remove();
+      }
+    }, 3000);
+  }
+
+  function removeAllFromArray() {
+    setTimeout(() => {
+      const elements = document.querySelectorAll('.array-element');
+      elements.forEach(el => el.remove());
+    }, 3000);
+  }
+
+  function addAnimatedElement() {
+      const workArea = document.getElementById('work-area');
+      const newElement = document.createElement('div');
+      newElement.id = 'dynamic-element';
+      newElement.style.transition = 'all 5s';
+      newElement.textContent = 'Animated Element';
+      workArea.appendChild(newElement);
+
+      // Trigger animation
+      requestAnimationFrame(() => {
+        newElement.style.transform = 'translateX(100px)';
+        newElement.style.opacity = '0.5';
+      });
+  }
+</script>
+
+</body>
+</html>
