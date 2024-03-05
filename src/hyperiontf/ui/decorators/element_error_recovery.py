@@ -17,7 +17,19 @@ def error_recovery(logger=getLogger("Element")):
                 )
                 # TODO: process more exception
                 match uie.__class__.__name__:
-                    case "StaleElementReferenceException":
+                    case "StaleElementReferenceException" | "NoSuchElementException":
+                        # This handles an edge case where a NoSuchElementException is raised for elements in a
+                        # different context or when they are not accurately mapped at the adapter end due to changes
+                        # in the messaging patterns of newer versions. Under these circumstances, if the target
+                        # element was not previously found (indicating that it truly does not exist rather than being
+                        # a stale reference issue), a NoSuchElementException is raised. This logic helps
+                        # differentiate between genuine absence and context-related or mapping errors.
+                        if (
+                            uie.__class__.__name__ == "NoSuchElementException"
+                            and not instance.__is_present__()
+                        ):
+                            raise uie
+
                         # try search element again, if parent element is stale then it will be retried as well as part
                         # of find_itself sequence, given that StaleElementReferenceError occurs during element search
                         # then the same command will be chained to its parent until all chain is resolved or no more
@@ -38,6 +50,7 @@ def error_recovery(logger=getLogger("Element")):
                     case "ContextSwitchingException":
                         instance.document_holder.__resolve__()
                         return decorator(*args, **kwargs)
+
                     case _:
                         # re-raise exception as it's not something we can handle here
                         raise uie
