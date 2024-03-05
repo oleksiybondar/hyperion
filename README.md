@@ -129,7 +129,7 @@ config.web_capabilities.headless = False
 from hyperiontf import config
 
 config.mobile_capabilities.automation = 'appium'
-config.mobile_capabilities.automation_name = 'appium'
+config.mobile_capabilities.automation_name = 'Mac2'
 config.mobile_capabilities.platform_name = 'iOS'
 config.mobile_capabilities.device_name = 'iPhone 14'
 config.mobile_capabilities.platform_version = '16.2'
@@ -273,6 +273,90 @@ def test_login2(login_page):
 In this example, pytest is used as the testing framework. The Hyperion Testing Framework pytest helper `automatic_log_setup` enables automatic logging for each test, and `fixture` is a special decorator that wraps pytest fixtures for logging purposes.
 
 This basic usage example demonstrates how to define a page object, interact with UI elements, and define a pytest test case using Hyperion Testing Framework. The framework has many advanced features, such as automatic stale element recovery and context switching, which you can utilize to create more robust and maintainable tests. For complex scenarios, be sure to refer to the advanced usage guide and the comprehensive test examples provided.
+
+## Capabilities Configuration
+
+The framework utilizes a capabilities dictionary to configure and initiate the appropriate automation environment. Below are the key components of the capabilities dictionary and examples of how to use them with different automation tools.
+
+### Key Components:
+
+- `automation`: Specifies the automation tool to be used (e.g., Selenium, Appium). It is a mandatory key that directs the framework to the correct tool.
+- `browser`: Defines which browser to launch for browser-based automation. This key is used for local browser executions and should be omitted for non-browser or remote automation scenarios.
+- `automation_name`: An Appium-specific key that details the automation technology, like XCUITest for iOS. Relevant only when using Appium.
+- `remote_url`: Required for remote executions and service-based tools like Appium and WinAppDriver. It specifies the URL of the remote server.
+
+### Examples:
+
+#### Selenium Firefox Automation
+
+```json
+{
+  "automation": "selenium",
+  "browser": "firefox"
+}
+```
+
+#### Playwright Automation
+
+```json
+{
+  "automation": "playwright",
+  "browser": "webkit"
+}
+```
+
+#### Appium iOS Automation
+
+```json
+{
+  "automation": "appium",
+  "automation_name": "xcuitest",
+  "app": "path_to_my_app",
+  "remote_url": "https://127.0.0.1:4723"
+}
+```
+
+#### Windows Application Driver Desktop Automation
+
+```json
+{
+  "automation": "windows application driver",
+  "app": "Root",
+  "remote_url": "https://127.0.0.1:4723"
+}
+```
+
+### Framework-Specific vs. Tool-Specific Capabilities:
+
+- The framework processes its specific keys (`automation`, `browser`, `automation_name`, `remote_url`) to configure the test environment.
+- All other capabilities are passed directly to the respective automation tool. Users can include any tool-specific capabilities as they would normally do when using the tool directly.
+
+By maintaining a consistent capabilities structure across different tools, the framework provides a streamlined approach to automation, enabling easy switching and configuration alignment across various environments.
+
+### Detailed Explanation of `browser`, `browserName`, and `remote_url`:
+
+- `browser`: This key is crucial for local browser automation, specifying which browser the framework should automate. When working locally, this key directly indicates the driver that should be instantiated, for example, ChromeDriver for Chrome, GeckoDriver for Firefox, etc.
+
+- `browserName` vs `browser`:
+   - In the context of remote execution, like with Selenium GRID, the `browser` key should be set to "remote". Additionally, the `browserName` capability becomes essential, specifying which browser the remote server should use for the test session. This distinction helps in differentiating between local and remote execution contexts.
+   - For local execution, only the `browser` key is used. For remote execution, `browser` is set to "remote", and `browserName` specifies the actual browser type (e.g., "chrome", "firefox").
+
+- `remote_url`: This key specifies the URL of the Selenium GRID or any remote server where the browser or mobile automation should be executed. When your tests are intended to run on a remote server, this URL directs the framework where to send commands. The framework will establish a connection to the remote server at this URL and execute the specified automation commands there.
+
+#### Using `remote_url` with Selenium GRID:
+
+When automating browsers in a distributed test execution environment like Selenium GRID, you define your capabilities with `browser` set to "remote" and provide the `remote_url` pointing to your GRID hub. Additionally, you need to specify `browserName` to indicate which browser type the GRID should initiate on its nodes.
+
+For example, to run tests on Chrome in a remote GRID environment:
+
+```json
+{
+  "automation": "selenium",
+  "browser": "remote",
+  "remote_url": "http://your-grid-hub-url:4444/wd/hub",
+  "browserName": "chrome"
+}
+```
 
 ## Advanced Usage
 
