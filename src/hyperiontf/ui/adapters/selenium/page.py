@@ -182,7 +182,7 @@ class Page:
         firefox_options = FirefoxOptions()
 
         # Set headless mode if specified
-        if "headless" in caps:
+        if "headless" in caps and caps["headless"]:
             firefox_options.headless = True
 
         return firefox_options
@@ -198,7 +198,7 @@ class Page:
     @staticmethod
     def process_chrome_family_caps(caps, options):
         # Set headless mode if specified
-        if "headless" in caps:
+        if "headless" in caps and caps["headless"]:
             options.add_argument("--headless")
 
         # Set mobile emulation if specified
