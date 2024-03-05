@@ -10,6 +10,7 @@ LOCATOR_MAPPINGS = {
     LocatorStrategies.TAG_NAME: SeleniumBy.TAG_NAME,
     LocatorStrategies.LINK_TEXT: SeleniumBy.LINK_TEXT,
     LocatorStrategies.PARTIAL_LINK_TEXT: SeleniumBy.PARTIAL_LINK_TEXT,
+    LocatorStrategies.WINDOWS_ACCESSIBILITY_ID: LocatorStrategies.WINDOWS_ACCESSIBILITY_ID,
 }
 
 

@@ -82,8 +82,25 @@ class ViewportManager:
         Returns:
             ViewportLabel: The viewport label for the given width.
         """
-        if width < config.page_object.viewport_lg:
+        if width < config.page_object.viewport_md:
             return ViewportLabel.SM
+
+        return ViewportManager._viewport_md_or_larger(width)
+
+    @staticmethod
+    def _viewport_md_or_larger(width: int) -> ViewportLabelType:
+        """
+        Check if the width qualifies for 'MD' viewport label, otherwise delegate to
+        the next larger viewport size check.
+
+        Parameters:
+            width (int): The width to be checked against the 'SM' viewport size.
+
+        Returns:
+            ViewportLabel: The viewport label for the given width.
+        """
+        if width < config.page_object.viewport_lg:
+            return ViewportLabel.MD
 
         return ViewportManager._viewport_lg_or_larger(width)
 

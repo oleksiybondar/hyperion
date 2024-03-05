@@ -30,6 +30,11 @@ class IFrame(LocatableElement):
         if self.element_adapter is NoSuchElementException:
             return False
 
+        # edge case for Playwright, when by some reason exception is not risen ,the adapter instance is created with an
+        # empty element
+        if self.element_adapter.element is None:
+            return False
+
         return True
 
     def __resolve_eql_chain__(self, chain):

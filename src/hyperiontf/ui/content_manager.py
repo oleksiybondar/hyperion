@@ -5,6 +5,7 @@ from hyperiontf.typing import (
     ContentSwitchingException,
     StaleElementReferenceException,
     DEFAULT_CONTENT,
+    NoSuchElementException,
 )
 from hyperiontf.typing import AnyContentContainer
 from .iframe import IFrame
@@ -99,6 +100,15 @@ class ContentManager:
             self._resolve_content_switching_error(target, e)
         except StaleElementReferenceException as e:
             self._resolve_stale_error(target, e)
+        except NoSuchElementException as e:
+            # An edge case occurs when a NoSuchElementException is raised for elements in a different context, or
+            # they are not correctly mapped on the adapter end due to changes in message patterns in newer versions.
+            # In such cases, attempt to resolve it as if it were a stale element, provided that the target element
+            # was previously found. This ensures that we are not dealing with a genuine NoSuchElementException.
+            if target.__is_present__():
+                self._resolve_stale_error(target, e)
+            else:
+                raise e
 
     def _resolve_content_switching_error(self, target, exception):
         self._logger.debug(
