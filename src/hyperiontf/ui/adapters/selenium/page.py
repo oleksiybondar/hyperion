@@ -26,6 +26,7 @@ BROWSER_START_METHODS = {
     Browser.EDGE: "start_edge_browser",
     Browser.SAFARI: "start_safari_browser",
     Browser.REMOTE: "start_remote_browser",
+    Browser.WIN_APP_DRIVER: "start_windows_application_driver",
 }
 
 
@@ -133,10 +134,38 @@ class Page:
 
     @staticmethod
     def start_remote_browser(caps: dict):
-        remote_caps = Page.process_remote_caps(caps)
-        return webdriver.Remote(
-            command_executor=caps["remote_url"], desired_capabilities=remote_caps
-        )
+        options = Page.process_remote_caps(caps)
+        return webdriver.Remote(command_executor=caps["remote_url"], options=options)
+
+    @staticmethod
+    def start_windows_application_driver(caps: dict):
+        """
+        Initializes and returns a WinAppDriver instance with the provided capabilities.
+
+        This method serves as a factory to create and configure an instance of WinAppDriver,
+        facilitating the interaction with Windows applications through the specified capabilities.
+        It abstracts the instantiation process, directly using the WinAppDriver class defined earlier,
+        accommodating the necessary capabilities formatting required by WinAppDriver.
+
+        Args:
+            caps (dict): A dictionary containing all the desired capabilities and the remote URL.
+                         It should include the 'remote_url' key for the WinAppDriver server and may
+                         contain other keys for desired capabilities.
+
+        Returns:
+            WinAppDriver: An instance of the WinAppDriver class ready to interact with the specified Windows application.
+
+        Usage Example:
+            caps = {
+                "remote_url": "http://127.0.0.1:4723",
+                "app": "Root"
+            }
+            driver = YourFrameworkClass.start_windows_application_driver(caps)
+        """
+        from .win_app_driver import WinAppDriver
+
+        options = Page.process_windows_application_driver_caps(caps)
+        return WinAppDriver(command_executor=caps["remote_url"], options=options)
 
     @staticmethod
     def process_chrome_caps(caps: dict):
@@ -198,6 +227,39 @@ class Page:
             return Page.process_edge_caps(caps).to_capabilities()
         elif remote_browser == Browser.SAFARI:
             return {}
+
+    @staticmethod
+    def process_windows_application_driver_caps(caps):
+        """
+        Processes the provided capabilities dictionary to create and configure an ArgOptions instance.
+
+        This method prepares the ArgOptions instance specifically for the WinAppDriver by setting
+        a modified '_caps' attribute, ensuring that the 'desiredCapabilities' are formatted
+        according to WinAppDriver's expectations. It extracts all capabilities except the 'remote_url'
+        and repackages them into the necessary structure.
+
+        Args:
+            caps (dict): The capabilities dictionary provided by the user, which should include
+                         any desired capabilities for the WinAppDriver session and exclude the 'remote_url'.
+
+        Returns:
+            ArgOptions: The ArgOptions instance configured with the necessary capabilities for WinAppDriver.
+
+        Usage Example:
+            caps = {
+                "remote_url": "http://127.0.0.1:4723",
+                "app": "Root"
+            }
+            options = YourFrameworkClass.process_windows_application_driver_caps(caps)
+        """
+        from selenium.webdriver.common.options import ArgOptions
+
+        options = ArgOptions()
+        desired_capabilities = {
+            key: value for key, value in caps.items() if key != "remote_url"
+        }
+        setattr(options, "_caps", {"desiredCapabilities": desired_capabilities})
+        return options
 
     @map_exception
     def open(self, url: str):

@@ -13,6 +13,7 @@ BrowserType = Literal[
     "chromium",
     "webkit",
     "remote",
+    "windows application driver",
 ]
 
 
@@ -25,6 +26,7 @@ class Browser:
     CHROMIUM: BrowserType = "chromium"
     WEBKIT: BrowserType = "webkit"
     REMOTE: BrowserType = "remote"
+    WIN_APP_DRIVER: BrowserType = "windows application driver"
 
 
 # Browser families
@@ -32,7 +34,7 @@ CHROME_FAMILY = [Browser.CHROME, Browser.CHROMIUM, Browser.ELECTRON]
 FIREFOX_FAMILY = [Browser.FIREFOX]
 EDGE_FAMILY = [Browser.EDGE]
 SAFARI_FAMILY = [Browser.SAFARI, Browser.WEBKIT]
-REMOTE_FAMILY = [Browser.REMOTE]
+REMOTE_FAMILY = [Browser.REMOTE, Browser.WIN_APP_DRIVER]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Automation types section
@@ -46,6 +48,7 @@ AutomationToolType = Literal[
     "autoit",
     "xdotool",
     "pyautogui",
+    "windows application driver",
 ]
 
 
@@ -56,6 +59,7 @@ class AutomationTool:
     AUTOIT: AutomationToolType = "autoit"
     XDOTOOL: AutomationToolType = "xdotool"
     PYAUTOGUI: AutomationToolType = "pyautogui"
+    WIN_APP_DRIVER: AutomationToolType = "windows application driver"
 
 
 PlatformType = Literal[
