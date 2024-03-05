@@ -55,7 +55,7 @@ class Formatter(logging.Formatter):
         """
         return {
             "lvl": record.levelno,
-            "msg": record.msg,
+            "msg": record.getMessage(),
             "name": record.name,
             "time": self._format_time_with_milliseconds(record.created),
             "depth": self._depth_manager.log_depth,
