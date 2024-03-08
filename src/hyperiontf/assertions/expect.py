@@ -1,6 +1,7 @@
 from typing import Optional, Type, Union, Any
 from hyperiontf.logging.logger import Logger
 from hyperiontf.ui.color import Color
+from hyperiontf.image_processing.image import Image
 from .decorators import auto_log, type_check
 from hyperiontf.assertions.strategy.default_strategy import DefaultStrategy
 from hyperiontf.assertions.strategy.numeric_strategy import NumericStrategy
@@ -9,6 +10,7 @@ from hyperiontf.assertions.strategy.array_strategy import ArrayStrategy
 from hyperiontf.assertions.strategy.dict_strategy import DictStrategy
 from hyperiontf.assertions.strategy.color_strategy import ColorStrategy
 from hyperiontf.assertions.strategy.filesystem_strategy import FileSystemStrategy
+from hyperiontf.assertions.strategy.image_strategy import ImageStrategy
 from .expectation_result import ExpectationResult
 
 STRATEGIES_MAP = {
@@ -23,6 +25,7 @@ STRATEGIES_MAP = {
     "Color": ColorStrategy,
     "File": FileSystemStrategy,
     "Dir": FileSystemStrategy,
+    "Image": ImageStrategy,
 }
 
 
@@ -92,7 +95,7 @@ class Expect:
         self.prefix = prefix
 
     @auto_log
-    def to_be(self, expected_value: Any) -> ExpectationResult:
+    def to_be(self, expected_value: Any) -> Type[ExpectationResult]:
         """
         Asserts that the actual value is equal to the expected value. The definition of equality
         is strategy-specific: for numeric types, it means numerical equality; for strings, it means
@@ -141,7 +144,7 @@ class Expect:
         return self.strategy.to_contain(expected_value)  # type: ignore
 
     @auto_log
-    def not_to_be(self, expected_value: Any) -> ExpectationResult:
+    def not_to_be(self, expected_value: Any) -> Type[ExpectationResult]:
         """
         Asserts that the actual value is not equal to the expected value. The interpretation of inequality
         is strategy-specific and can range from simple value mismatches to complex structural differences
@@ -1726,3 +1729,35 @@ class Expect:
         return self.strategy.to_be_approximately_equal(  # type: ignore
             expected_value, percentage_threshold, alpha_threshold
         )  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[ImageStrategy])
+    def to_be_similar(
+        self, expected_value: Union[str, Image], mismatch_threshold: int = 10
+    ) -> Image:
+        """
+        Asserts that the actual image is similar to the expected image, considering a specified mismatch threshold.
+
+        This method allows for a more flexible comparison than pixel-perfect methods. If `mismatch_threshold` is zero,
+        the comparison is pixel-perfect. For values greater than zero, the images can differ up to the specified threshold
+        of mismatch percentage. During the comparison, the images may be resized to common dimensions to accurately assess
+        their similarity. The similarity is quantified as a match score, which reflects the percentage of similarity between
+        the images.
+
+        If the match score does not reach 100% (implying perfect similarity), a difference image object is generated to
+        visualize the discrepancies. The comparison considers the images to be similar if the match score is above the
+        threshold defined by 100% minus the mismatch threshold.
+
+        Args:
+            expected_value (Image): The expected image to compare against the actual image.
+            mismatch_threshold (int): The acceptable percentage of mismatch between the images,
+                                      with 0 indicating a pixel-perfect comparison.
+                                      default: 10%, e.g. should match at least 90%
+
+        Returns:
+            ImageExpectationResult: An object containing the result of the comparison, the match score, and
+                                    potentially a difference image object if the match is not perfect. The result
+                                    indicates whether the actual image is considered similar to the expected image
+                                    within the defined tolerance.
+        """
+        return self.strategy.to_be_similar(expected_value, mismatch_threshold)  # type: ignore

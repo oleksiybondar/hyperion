@@ -215,7 +215,7 @@ class ExpectationResult:
         Returns:
             str: A concise, user-friendly description of the comparison.
         """
-        return f"[{self.sender}] {self.prefix} {self.action} {self.expectation_type} {self.status}.\n{self.comparison_info}"
+        return f"[{self.sender}] {self.prefix or ''} {self.action} {self.expectation_type} {self.status}.\n{self.comparison_info}"
 
     def __repr__(self):
         """
