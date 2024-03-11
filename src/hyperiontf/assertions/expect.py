@@ -12,6 +12,7 @@ from hyperiontf.assertions.strategy.color_strategy import ColorStrategy
 from hyperiontf.assertions.strategy.filesystem_strategy import FileSystemStrategy
 from hyperiontf.assertions.strategy.image_strategy import ImageStrategy
 from .expectation_result import ExpectationResult
+from .image_expectation_result import ImageExpectationResult
 
 STRATEGIES_MAP = {
     "bool": NumericStrategy,
@@ -1733,31 +1734,116 @@ class Expect:
     @auto_log
     @type_check(supported_strategies=[ImageStrategy])
     def to_be_similar(
-        self, expected_value: Union[str, Image], mismatch_threshold: int = 10
-    ) -> Image:
+        self,
+        expected_value: Union[str, Image],
+        mismatch_threshold: float = 10,
+        compare_regions: Optional[list] = None,
+        exclude_regions: Optional[list] = None,
+    ) -> ImageExpectationResult:
         """
-        Asserts that the actual image is similar to the expected image, considering a specified mismatch threshold.
+        Asserts that the actual image is similar to the expected image within a defined mismatch threshold,
+        optionally considering or ignoring specific regions for a more targeted comparison.
 
-        This method allows for a more flexible comparison than pixel-perfect methods. If `mismatch_threshold` is zero,
-        the comparison is pixel-perfect. For values greater than zero, the images can differ up to the specified threshold
-        of mismatch percentage. During the comparison, the images may be resized to common dimensions to accurately assess
-        their similarity. The similarity is quantified as a match score, which reflects the percentage of similarity between
-        the images.
+        This method compares the actual image to the expected image, allowing for a specified degree of variation
+        between them as defined by the mismatch_threshold. The comparison can be fine-tuned by specifying regions
+        of the image to specifically compare or exclude from the comparison. The comparison algorithm assesses
+        similarity on a pixel-by-pixel basis, adjusted for the designated threshold and regional focus.
 
-        If the match score does not reach 100% (implying perfect similarity), a difference image object is generated to
-        visualize the discrepancies. The comparison considers the images to be similar if the match score is above the
-        threshold defined by 100% minus the mismatch threshold.
+        The mismatch_threshold parameter defines the acceptable percentage difference between the images, allowing
+        for minor variations due to compression artifacts, rendering differences, or other acceptable noise. The
+        method supports selective focus through compare_regions and selective ignorance via exclude_regions, enabling
+        nuanced comparison scenarios where full image matching is unnecessary or impractical.
 
         Args:
-            expected_value (Image): The expected image to compare against the actual image.
-            mismatch_threshold (int): The acceptable percentage of mismatch between the images,
-                                      with 0 indicating a pixel-perfect comparison.
-                                      default: 10%, e.g. should match at least 90%
+            expected_value (Image): The expected image to compare against the actual image. It should be an instance
+                                    of the Image class, encapsulating the image data along with any relevant metadata.
+            mismatch_threshold (float): The permissible percentage difference between the images, representing the
+                                        tolerance for discrepancies to still consider the images as similar.
+            compare_regions (Optional[list]): Optional list of regions to specifically include in the comparison, with
+                                              each region defined as a dictionary containing 'x', 'y', 'width', and 'height'.
+            exclude_regions (Optional[list]): Optional list of regions to exclude from the comparison, with each region
+                                              similarly defined as a dictionary.
 
         Returns:
-            ImageExpectationResult: An object containing the result of the comparison, the match score, and
-                                    potentially a difference image object if the match is not perfect. The result
-                                    indicates whether the actual image is considered similar to the expected image
-                                    within the defined tolerance.
+            ImageExpectationResult: An object encapsulating the comparison result, indicating whether the actual image
+                                    is considered similar to the expected image within the threshold and any specified
+                                    regional focus. The result includes a similarity score and may include a difference
+                                    image for visualization.
         """
-        return self.strategy.to_be_similar(expected_value, mismatch_threshold)  # type: ignore
+        return self.strategy.to_be_similar(expected_value, mismatch_threshold, compare_regions, exclude_regions)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[ImageStrategy])
+    def to_match_in_specified_regions(
+        self,
+        expected_value: Image,
+        compare_regions: list,
+        mismatch_threshold: float = 0,
+    ) -> ImageExpectationResult:
+        """
+        Asserts that selected regions within the actual image match corresponding regions in the expected image,
+        within an optional mismatch threshold. This method allows focused comparison on parts of the images that
+        are of particular interest, potentially ignoring the rest of the image content.
+
+        The compare_regions argument should be a list of dictionaries, each defining a region with 'x', 'y', 'width',
+        and 'height' keys. The comparison assesses each specified region independently, comparing the actual image's
+        region against the corresponding region in the expected image. If a mismatch_threshold is provided, minor
+        differences between the compared regions up to the specified threshold are tolerated.
+
+        This method is especially useful for scenarios where only certain parts of the image are relevant for
+        comparison, allowing testers to specify exactly which regions should match between the actual and expected
+        images, thus providing granular control over the comparison process.
+
+        Args:
+            expected_value (Image): The expected image to compare against the actual image. It should be an instance
+                                    of the Image class, containing the image data along with any relevant metadata.
+            compare_regions (list): A list of dictionaries, each specifying a rectangular region in the images to
+                                    compare. Each dictionary should have 'x', 'y', 'width', and 'height' keys.
+            mismatch_threshold (float, optional): An optional threshold for allowed mismatch percentage within the
+                                                  specified regions, defaulting to 0 for an exact match requirement.
+
+        Returns:
+            ImageExpectationResult: An object encapsulating the comparison result, indicating whether the specified
+                                    regions of the actual image match those in the expected image within the given
+                                    tolerance. Includes detailed results for each region compared, and a comprehensive
+                                    match assessment.
+        """
+        return self.strategy.to_match_in_specified_regions(expected_value, compare_regions, mismatch_threshold)  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[ImageStrategy])
+    def to_match_excluding_regions(
+        self,
+        expected_value: Image,
+        exclude_regions: list,
+        mismatch_threshold: float = 0,
+    ) -> ImageExpectationResult:
+        """
+        Asserts that the actual image matches the expected image, excluding the differences in specified regions,
+        within a permissible mismatch threshold. This method allows exclusion of certain image areas from the
+        comparison, focusing the match assessment on the remaining regions.
+
+        The exclude_regions argument should be a list of dictionaries, each dictating a region to be excluded with
+        'x', 'y', 'width', and 'height' keys. These regions are ignored during the comparison, enabling testers to
+        isolate and exclude areas with known or irrelevant differences. The mismatch_threshold parameter allows
+        a defined tolerance level for the matching process in the non-excluded areas of the images.
+
+        This functionality is particularly valuable when certain image sections are dynamic or irrelevant to the
+        test's intent, enabling precise and focused image analysis that disregards these areas.
+
+        Args:
+            expected_value (Image): The expected image to compare against the actual image, encapsulating the image
+                                    data along with any pertinent metadata.
+            exclude_regions (list): A list of dictionaries, each specifying a rectangular region in the images to
+                                    be excluded from the comparison. Each dictionary should define 'x', 'y', 'width',
+                                    and 'height' keys.
+            mismatch_threshold (float, optional): An optional threshold defining the allowed percentage of mismatch
+                                                 in the non-excluded areas, with 0 requiring exact match.
+
+        Returns:
+            ImageExpectationResult: An object detailing the comparison results, indicating whether the non-excluded
+                                    regions of the actual image match the expected image within the set mismatch
+                                    tolerance. The result object provides an aggregate assessment and may include
+                                    detailed analysis or visualization data.
+        """
+        return self.strategy.to_match_excluding_regions(expected_value, exclude_regions, mismatch_threshold)  # type: ignore

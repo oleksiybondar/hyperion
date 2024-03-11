@@ -6,6 +6,7 @@ from hyperiontf.configuration.sections import (
     PageObject,
     DesktopCapabilities,
     WebCapabilities,
+    Visual,
 )
 from hyperiontf.configuration.sections import Rest, MobileCapabilities
 
@@ -30,6 +31,7 @@ class Config:
         self.mobile_capabilities = MobileCapabilities()
         self.desktop_capabilities = DesktopCapabilities()
         self.rest = Rest()
+        self.visual = Visual()
 
     def _parse_config_data(self, data):
         """

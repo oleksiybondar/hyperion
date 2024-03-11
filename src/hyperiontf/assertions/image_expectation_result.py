@@ -73,20 +73,23 @@ class ImageExpectationResult(ExpectationResult):
 
     @property
     def _short_comparison_info(self):
-        info = "Images match."
-        info += f" Match score: {self.image_processing_data.get('match_score')},"
-        info += f" Scaled: {self.image_processing_data.get('scaled')},"
-        info += f" Final image ratio: {self.actual_value.aspect_ratio},"
-        info += f" Size: {self.actual_value.width}x{self.actual_value.height}"
+        info = "Comparison info."
+        info += f"\nMatch score: {self.image_processing_data.get('match_score')},"
+        info += f"\nImages scaled: {self.image_processing_data.get('scaled')},"
+        info += f"\nPixel perfect verification: {self.image_processing_data.get('pixel_perfect')},"
+        info += f"\nPartial verification: {self.image_processing_data.get('partial')},"
+        info += f"\nSource images proportional: {self.image_processing_data.get('proportional')},"
         return info
 
     @property
     def _full_comparison_info(self):
-        info = f"Actual value ratio and dimensions: {self.actual_value.aspect_ratio}, {self.actual_value.width}x{self.actual_value.height}"
-        info += f"\nExpected value: {self.expected_value.aspect_ratio}, {self.expected_value.width}x{self.expected_value.height}"
-        info += f"\nComparison image dimensions: {self.image_processing_data.get('actual_value_width')}x{self.image_processing_data.get('actual_value_height')}"
-        info += f"\nMatch score: {self.image_processing_data.get('match_score')}"
-        info += f"\nScaled: {self.image_processing_data.get('scaled')}"
-        info += f"\nProportional: {self.image_processing_data.get('proportional')}"
-        info += f"\nRatio: {self.image_processing_data.get('ratio')}"
+        info = self._short_comparison_info
+        info += f"\nActual image dimensions: {self.actual_value.aspect_ratio},"
+        info += f"{self.actual_value.width}x{self.actual_value.height}"
+        info += f"\nExpected image dimensions: {self.expected_value.aspect_ratio},"
+        info += f"{self.expected_value.width}x{self.expected_value.height}"
+        info += (
+            f"\nComparison image dimensions: {self.image_processing_data.get('ratio')},"
+        )
+        info += f" {self.image_processing_data.get('width')}x{self.image_processing_data.get('height')}"
         return info

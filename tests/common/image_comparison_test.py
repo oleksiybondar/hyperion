@@ -39,6 +39,51 @@ variants = [
         "result": False,
         "args": [1],
     },
+    {
+        "method": "to_match_in_specified_regions",
+        "actual": base,
+        "expected": modified,
+        "result": False,
+        "args": [
+            [
+                {"x": 15, "y": 195, "width": 65, "height": 65},
+            ],  # include regions
+            10,  # mismatch threshold, there are still minor discrepancies due to antialiasing
+        ],
+    },
+    {
+        "method": "to_match_excluding_regions",
+        "actual": base,
+        "expected": modified,
+        "result": True,
+        "args": [
+            [
+                {"x": 15, "y": 95, "width": 160, "height": 320},
+                {"x": 185, "y": 50, "width": 135, "height": 390},
+                {"x": 325, "y": 93, "width": 130, "height": 310},
+            ],  # exclude regions
+            0.5,
+            # mismatch threshold, there are still minor discrepancies due to antialiasing withing rest of the picture
+        ],
+    },
+    {
+        "method": "to_be_similar",
+        "actual": base,
+        "expected": modified,
+        "result": True,
+        "args": [
+            10,  # mismatch threshold
+            [
+                {"x": 15, "y": 195, "width": 65, "height": 65},
+                {"x": 185, "y": 50, "width": 125, "height": 125},
+                {"x": 325, "y": 178, "width": 110, "height": 110},
+            ],  # include regions
+            [
+                {"x": 43, "y": 203, "width": 10, "height": 50},
+                {"x": 212, "y": 98, "width": 43, "height": 30},
+            ],  # exclude regions
+        ],
+    },
 ]
 
 

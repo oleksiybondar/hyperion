@@ -320,6 +320,21 @@ class ComparisonOp:
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Visual Section
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+VisualModeType = Literal[
+    "collect",
+    "compare",
+]
+
+
+class VisualMode:
+    COLLECT: VisualModeType = "collect"
+    COMPARE: VisualModeType = "compare"
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Rest Client Typing
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

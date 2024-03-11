@@ -5,6 +5,7 @@ from .web_capabilities import WebCapabilities
 from .mobile_capabilities import MobileCapabilities
 from .desktop_capabilities import DesktopCapabilities
 from .rest import Rest
+from .visual import Visual
 
 __all__ = [
     "Logger",
@@ -14,4 +15,5 @@ __all__ = [
     "MobileCapabilities",
     "DesktopCapabilities",
     "Rest",
+    "Visual",
 ]
