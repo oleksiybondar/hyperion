@@ -15,6 +15,8 @@ from hyperiontf.typing import LocatorStrategies
 
 import base64
 
+from .win_app_driver import WinAppDriver
+
 logger = getLogger()
 
 if config.logger.intercept_selenium_logs:
@@ -357,8 +359,40 @@ class Page:
     def page_source(self):
         return self.driver.page_source
 
+    @property
+    @map_exception
+    def size(self):
+        return self.driver.get_window_size()
+
+    @property
+    @map_exception
+    def location(self):
+        return self.driver.get_window_position()
+
+    @property
+    @map_exception
+    def rect(self):
+        return self.driver.get_window_rect()
+
+    @map_exception
+    def set_window_size(self, width, height):
+        self.driver.set_window_size(width, height)
+
+    @map_exception
+    def set_window_location(self, x, y):
+        self.driver.set_window_position(x, y)
+
+    @map_exception
+    def set_window_rect(self, x, y, width, height):
+        self.driver.set_window_rect(x, y, width, height)
+
     def dump(self):
         attachments = []
+        if isinstance(self.driver, WinAppDriver):
+            source_code_content_type = "xml"
+        else:
+            source_code_content_type = "html"
+
         for index, window in enumerate(self.window_handles):
             self.switch_to_window(window)
 
@@ -372,7 +406,7 @@ class Page:
             )
 
             base_64_src_url = (
-                f"data:text/html;base64,"
+                f"data:text/{source_code_content_type};base64,"
                 f"{base64.b64encode(self.page_source.encode('utf-8')).decode('utf-8')}"
             )
             attachments.append(

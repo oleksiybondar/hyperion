@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test page for visual testing</title>
+    <style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
+
+    #work-area {
+        height: calc(100% - 50px); /* Adjust the 50px if the control panel's height changes */
+        overflow: auto;
+    }
+
+    #control-area {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        height: 50px; /* Set the height of the control panel */
+        background-color: #f2f2f2; /* Light grey background for the control panel */
+    }
+
+    #interference {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 50px; /* Same offset as the control panel's height */
+        pointer-events: none; /* Allows click events to pass through */
+        z-index: 2; /* Above the work area but below the control area */
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        grid-template-rows: repeat(5, 1fr);
+
+    }
+
+    .full-size {
+        width: 100%;
+        height: 100%;
+    }
+
+    .cell, .dice-cell {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+
+    .dice {
+        grid-area: 2 / 2 / 5 / 5;
+    }
+
+    .dice-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+    }
+
+    .red {
+        background-color: red;
+    }
+
+    .yellow {
+        background-color: yellow;
+    }
+
+    .green {
+        background-color: green;
+    }
+
+    .blue {
+        background-color: blue;
+    }
+
+    .lightblue {
+        background-color: lightblue;
+    }
+
+    .dice-cell.active .circle::after {
+        content: '';
+        background-color: blue;
+        border-radius: 50%;
+        /* Use 50% of the cell's height for both width and height to make a circle */
+        width: 50px;
+        height: 50px;
+        display: block;
+    }
+
+    .purple {
+        background-color: purple;
+    }
+
+    .orange {
+        background-color: orangered;
+    }
+
+    .black {
+        background-color: black;
+    }
+
+    .shape-change {
+        margin: 5px;
+        border-radius: 50%;
+    }
+
+    /* Basic styles for interference objects */
+    .interference-object {
+        position: absolute;
+        transition: all 0.3s ease;
+    }
+
+    /* Hidden class for toggling visibility */
+    .hidden {
+        display: none;
+    }
+
+    /* Define new, non-contrasting color classes */
+    .color8 { background-color: #778899; } /* Light Slate Gray */
+    .color9 { background-color: #B0C4DE; } /* Light Steel Blue */
+    .color10 { background-color: #4682B4; } /* Steel Blue */
+    .color11 { background-color: #6A5ACD; } /* Slate Blue */
+    .color12 { background-color: #708090; } /* Slate Gray */
+    .color13 { background-color: #66CDAA; } /* Medium Aquamarine */
+    .color14 { background-color: #8FBC8F; } /* Dark Sea Green */
+
+    /* Shape and size classes remain the same */
+    .shape-circle { border-radius: 50%; }
+    .size1 { width: 10px; height: 10px; }
+    .size2 { width: 20px; height: 20px; }
+    .size3 { width: 30px; height: 30px; }
+    .size4 { width: 40px; height: 40px; }
+    .size5 { width: 50px; height: 50px; }
+    </style>
+
+</head>
+<body>
+<div id="work-area">
+    <div class="grid full-size">
+        <div class="cell red r0 c0"></div>
+        <div class="cell blue r0 c1"></div>
+        <div class="cell red r0 c2"></div>
+        <div class="cell lightblue r0 c3"></div>
+        <div class="cell red r0 c4"></div>
+
+        <div class="cell red r1 c0"></div>
+        <div class="cell yellow dice center full-size dice-grid">
+
+                <!-- Nested 3x3 grid for the dice -->
+            <div class="dice-cell r0 c0 active"><span class="circle"></span></div>
+                <div class="dice-cell r0 c1"><span class="circle"></span></div>
+                <div class="dice-cell r0 c2 active"><span class="circle"></span></div>
+                <div class="dice-cell r1 c0"><span class="circle"></span></div>
+                <div class="dice-cell r1 c1 active"><span class="circle"></span></div>
+                <div class="dice-cell r1 c2"><span class="circle"></span></div>
+                <div class="dice-cell r2 c0 active"><span class="circle"></span></div>
+                <div class="dice-cell r2 c1"><span class="circle"></span></div>
+                <div class="dice-cell r2 c2 active"><span class="circle"></span></div>
+        </div>
+        <div class="cell orange r1 c2"></div>
+
+        <div class="cell green r2 c0"></div>
+        <div class="cell red r2 c4"></div>
+        <div class="cell red r3 c0"></div>
+        <div class="cell black r3 c4"></div>
+        <div class="cell red r4 c0"></div>
+        <div class="cell red r4 c1"></div>
+        <div class="cell purple r4 c2"></div>
+        <div class="cell red r4 c3"></div>
+        <div class="cell red r4 c4"></div>
+    </div>
+</div>
+
+
+<div id="control-area">
+        <button id="dice1" onclick="dice1()">Set dice to 1</button>
+        <button id="dice2" onclick="dice2()">Set dice to 2</button>
+        <button id="dice3" onclick="dice3()">Set dice to 3</button>
+        <button id="dice4" onclick="dice4()">Set dice to 4</button>
+        <button id="dice5" onclick="dice5()">Set dice to 5</button>
+        <button id="dice6" onclick="dice6()">Set dice to 6</button>
+        <button id="sizeBlue" onclick="resizeBlue()">Resize blue</button>
+        <button id="splitPurple" onclick="splitPurple()">Split purple</button>
+        <button id="changeShapes" onclick="changeShapes()">Change shapes</button>
+        <button id="toggleInterference" onclick="toggleInterference()">Toggle interference</button>
+    </div>
+    <div id="interference">
+
+    </div>
+
+<script>
+  const dice = document.querySelector('.dice');
+  const diceCells = dice.querySelectorAll('.dice-cell');
+  function disableDice(){
+    diceCells.forEach((cell) => {cell.classList.remove('active')})
+  }
+
+  function dice6(){
+    disableDice();
+    diceCells[0].classList.add('active');
+    diceCells[1].classList.add('active');
+    diceCells[2].classList.add('active');
+    diceCells[6].classList.add('active');
+    diceCells[7].classList.add('active');
+    diceCells[8].classList.add('active');
+  }
+
+  function dice5(){
+    disableDice();
+    diceCells[0].classList.add('active');
+    diceCells[2].classList.add('active');
+    diceCells[4].classList.add('active');
+    diceCells[6].classList.add('active');
+    diceCells[8].classList.add('active');
+  }
+
+  function dice3(){
+    disableDice();
+    diceCells[0].classList.add('active');
+    diceCells[4].classList.add('active');
+    diceCells[8].classList.add('active');
+  }
+
+  function dice4(){
+    disableDice();
+    diceCells[0].classList.add('active');
+    diceCells[2].classList.add('active');
+    diceCells[6].classList.add('active');
+    diceCells[8].classList.add('active');
+  }
+
+  function dice2(){
+    disableDice();
+    diceCells[0].classList.add('active');
+    diceCells[8].classList.add('active');
+  }
+
+  function dice1(){
+    disableDice();
+    diceCells[4].classList.add('active');
+  }
+
+  function resizeBlue(){
+    const left = document.querySelector('.cell.r0.c0');
+    const right = document.querySelector('.cell.r0.c2');
+    left.classList.toggle('red');
+    left.classList.toggle('blue');
+    right.classList.toggle('red');
+    right.classList.toggle('blue');
+  }
+
+  function splitPurple(){
+    const left = document.querySelector('.cell.r4.c0');
+    const mid = document.querySelector('.cell.r4.c2');
+    const right = document.querySelector('.cell.r4.c4');
+    left.classList.toggle('red');
+    left.classList.toggle('purple');
+    mid.classList.toggle('red');
+    mid.classList.toggle('purple');
+    right.classList.toggle('red');
+    right.classList.toggle('purple');
+  }
+
+  function changeShapes(){
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach(cell => {
+      cell.classList.toggle('shape-change');
+    })
+  }
+
+  function createInterferences() {
+    const interferenceContainer = document.getElementById('interference');
+    const count = Math.random() * (100 - 30) + 30
+    for (let i = 0; i < count; i++) {
+      const div = document.createElement('div');
+      const sizeClass = `size${Math.ceil(Math.random() * 5)}`;
+      div.className = `interference-object hidden shape-${Math.random() > 0.5 ? 'circle' : 'square'} color${Math.floor(Math.random() * 7 + 8)} ${sizeClass}`;
+
+      // Randomly position within the work-area, considering the size to prevent overflow
+      let maxSize = 0;
+      switch(sizeClass) {
+        case 'size1': maxSize = 10; break;
+        case 'size2': maxSize = 20; break;
+        case 'size3': maxSize = 30; break;
+        case 'size4': maxSize = 40; break;
+        case 'size5': maxSize = 50; break;
+        default: maxSize = 50;
+      }
+
+      const maxTop = 100 - (maxSize / interferenceContainer.offsetHeight * 100);
+      const maxLeft = 100 - (maxSize / interferenceContainer.offsetWidth * 100);
+
+      div.style.top = `${Math.random() * maxTop}%`;
+      div.style.left = `${Math.random() * maxLeft}%`;
+
+      interferenceContainer.appendChild(div);
+    }
+  }
+
+  function toggleInterference() {
+    document.querySelectorAll('.interference-object').forEach(obj => obj.classList.toggle('hidden'));
+  }
+
+  // Create interferences initially
+  createInterferences();
+</script>
+</body>
+</html>

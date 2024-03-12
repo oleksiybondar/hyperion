@@ -1,3 +1,5 @@
+import base64
+
 from .map_locator import convert_locator
 from .map_exception import map_exception
 from .assert_stale_element_reference import assert_stale_reference
@@ -360,14 +362,14 @@ class Element:
     def get_iframe_content(self):
         return self.element.content_frame()
 
+    @property
     @map_exception
     @assert_stale_reference
     def screenshot_as_base64(self):
-        # async API, avoiding it as we work in sync mode
-        return ""
+        screenshot_as_bytes = self.element.screenshot()
+        return base64.b64encode(screenshot_as_bytes).decode("utf-8")
 
     @map_exception
     @assert_stale_reference
     def screenshot(self, path):
-        # async API, avoiding it as we work in sync mode
-        pass
+        self.element.screenshot(path=path)

@@ -1115,7 +1115,7 @@ class Expect:
         return self.strategy.to_be_file()  # type: ignore
 
     @auto_log
-    @type_check(supported_strategies=[FileSystemStrategy])
+    @type_check(supported_strategies=[FileSystemStrategy, ImageStrategy])
     def to_exist(self) -> ExpectationResult:
         """
         Asserts that the actual filesystem entity, whether a file or directory, exists at the specified path. This method
@@ -1131,6 +1131,22 @@ class Expect:
             robust handling of file and directory access, modification, and validation tasks.
         """
         return self.strategy.to_exist()  # type: ignore
+
+    @auto_log
+    @type_check(supported_strategies=[FileSystemStrategy, ImageStrategy])
+    def not_to_exist(self) -> ExpectationResult:
+        """
+        Asserts that the actual filesystem entity, whether a file or directory, does not exists at the specified path.
+
+        Returns:
+            ExpectationResult: An object representing the result of the check, indicating whether the filesystem entity
+                               does not exists, including the path checked and whether the check passed or failed.
+
+        Note:
+            This assertion is fundamental to ensuring the readiness of the filesystem for operations, supporting the
+            robust handling of file and directory access, modification, and validation tasks.
+        """
+        return self.strategy.not_to_exist()  # type: ignore
 
     @auto_log
     @type_check(supported_strategies=[FileSystemStrategy])

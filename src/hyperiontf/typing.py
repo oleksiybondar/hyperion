@@ -83,6 +83,7 @@ DESKTOP_FAMILY = [
     AutomationTool.AUTOIT,
     AutomationTool.XDOTOOL,
     AutomationTool.PYAUTOGUI,
+    AutomationTool.WIN_APP_DRIVER,
 ]
 
 

@@ -7,6 +7,7 @@ import numpy as np
 import base64
 
 from hyperiontf.assertions.image_expectation_result import ImageExpectationResult
+from ..expectation_result import ExpectationResult
 from ...helpers.numeric_helpers import greatest_common_divisor
 
 RED = [0, 0, 255]
@@ -541,6 +542,40 @@ class ImageStrategy(DefaultStrategy):
             result=comparison_info.get("result", False),
         )
 
+    def to_exist(self) -> ExpectationResult:
+        """
+        Asserts that the file or directory exists.
+
+        Returns:
+            ExpectationResult: The result of the assertion.
+        """
+        result = self.actual_value.exists()
+        message = "Expected to exist."
+        return ExpectationResult(
+            result=result,
+            actual_value=str(self.actual_value),
+            expected_value=None,
+            method="to_exist",
+            human_readable_description=message,
+        )
+
+    def not_to_exist(self) -> ExpectationResult:
+        """
+        Asserts that the file or directory does not exist.
+
+        Returns:
+            ExpectationResult: The result of the assertion.
+        """
+        result = not self.actual_value.exists()
+        message = "Expected not to exist."
+        return ExpectationResult(
+            result=result,
+            actual_value=str(self.actual_value),
+            expected_value=None,
+            method="not_to_exist",
+            human_readable_description=message,
+        )
+
     def _compare(self, mismatch_threshold: float = 10.0) -> dict:
         """
         Compares the actual image with the expected image based on the given mismatch threshold.
@@ -862,6 +897,7 @@ class ImageStrategy(DefaultStrategy):
         """
         self._expected_value = expected_value
         self._copy_images_before_processing()
+        self._remove_alpha_channels()
         self._calculate_scale_factor()
         self._resize_working_images()
         self._compare_regions = compare_regions
@@ -1079,6 +1115,7 @@ class ImageStrategy(DefaultStrategy):
             self.actual_value.aspect_ratio != self._expected_value.aspect_ratio
             or self.actual_value.height != self._expected_value.height
             or self.actual_value.width != self._expected_value.width
+            or self.actual_value.has_alpha != self._expected_value.has_alpha
         ):
             return False
 
@@ -1165,3 +1202,16 @@ class ImageStrategy(DefaultStrategy):
                     end_point = (current_pos - line_spacing, y_end)
                     cv2.line(diff_image, start_point, end_point, BLACK, 1)
                     current_pos += line_spacing
+
+    def _remove_alpha_channels(self):
+        # Check if the actual image has an alpha channel and remove it
+        if self._actual_working.shape[2] == 4:
+            self._actual_working = cv2.cvtColor(
+                self._actual_working, cv2.COLOR_BGRA2BGR
+            )
+
+        # Check if the expected image has an alpha channel and remove it
+        if self._expected_working.shape[2] == 4:
+            self._expected_working = cv2.cvtColor(
+                self._expected_working, cv2.COLOR_BGRA2BGR
+            )

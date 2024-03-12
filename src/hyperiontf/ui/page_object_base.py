@@ -22,6 +22,10 @@ class BasePageObject:
         self.__full_name__ = self.__class__.__name__
         self.logger = logger
 
+    @property
+    def root(self):
+        return self
+
     def quit(self):
         self.logger.info(f"[{self.__full_name__}] Quitting the browser")
         self.automation_adapter.quit()

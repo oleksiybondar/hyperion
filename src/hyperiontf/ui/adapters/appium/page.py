@@ -186,3 +186,30 @@ class Page:
         )
 
         return attachments
+
+    @property
+    @map_exception
+    def size(self):
+        return self.driver.get_window_size()
+
+    @property
+    @map_exception
+    def location(self):
+        return self.driver.get_window_position()
+
+    @property
+    @map_exception
+    def rect(self):
+        return self.driver.get_window_rect()
+
+    @map_exception
+    def set_window_size(self, width, height):
+        self.driver.set_window_size(width, height)
+
+    @map_exception
+    def set_window_location(self, x, y):
+        self.driver.set_window_position(x, y)
+
+    @map_exception
+    def set_window_rect(self, x, y, width, height):
+        self.driver.set_window_rect(x, y, width, height)

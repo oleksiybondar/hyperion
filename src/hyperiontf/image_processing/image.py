@@ -133,6 +133,10 @@ class Image(File):
         return self.image.shape[0] if self.image is not None else None
 
     @property
+    def has_alpha(self):
+        return self.image.shape[2] == 4
+
+    @property
     def aspect_ratio(self):
         """
         Gets the aspect ratio of the image.

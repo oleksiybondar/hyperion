@@ -4,35 +4,28 @@ from selenium.webdriver.remote.command import Command
 
 class WinAppDriver(Remote):
     """
-    A customized Selenium Remote WebDriver class designed specifically
-    for interfacing with Microsoft's WinAppDriver. This class addresses
-    the compatibility issue between WinAppDriver v1.2.1 and Selenium 4
-    concerning the desired capabilities format.
+    A customized Selenium Remote WebDriver class designed specifically for interfacing with
+    Microsoft's WinAppDriver. This class addresses compatibility issues between WinAppDriver v1.2.1
+    and Selenium 4, focusing on both the desired capabilities format and element identifier differences.
 
-    As WinAppDriver v1.2.1 expects capabilities in the deprecated
-    'desiredCapabilities' format, this class provides a workaround by
-    allowing these capabilities to be passed directly, bypassing the
-    newer capabilities structure expected by Selenium 4's standard Remote
-    class.
+    The main enhancements include:
+    1. Adjusting the capabilities format to adhere to WinAppDriver v1.2.1 expectations, which relies
+       on the deprecated 'desiredCapabilities' structure.
+    2. Extending the response processing logic to handle WinAppDriver-specific element identifiers,
+       ensuring that element references ("ELEMENT" keys) are properly recognized and processed.
 
-    Note: This class is specifically tailored for the scenario where direct
-    usage of Selenium 4's Remote class is not feasible with WinAppDriver
-    v1.2.1 due to the capabilities format discrepancy. Future versions of
-    WinAppDriver may address this issue, potentially rendering this class
-    unnecessary. It's advised to check WinAppDriver's release notes for
-    compatibility updates with Selenium 4.
+    These modifications ensure that the WebDriver client can communicate effectively with WinAppDriver,
+    maintaining compatibility without requiring alterations to existing Selenium-based test scripts.
+
+    Note: This class is specifically tailored for scenarios where the direct usage of Selenium 4's
+    Remote class is not feasible with WinAppDriver v1.2.1 due to discrepancies in capabilities format
+    and element identification. It is recommended to monitor WinAppDriver's updates for any changes
+    that might affect this custom implementation.
 
     Usage:
-        This class should be used in place of Selenium's Remote class when
-        initiating a session with WinAppDriver. The custom start_session
-        method ensures that the capabilities are processed in a manner
-        compatible with WinAppDriver's expectations.
-
-        By directly setting the '_caps' attribute in the ArgOptions instance,
-        we bypass the normal capabilities processing of Selenium 4. This ensures
-        that the options.to_capabilities() method returns the exact dictionary
-        necessary for WinAppDriver, which is particularly crucial given its
-        current handling of capabilities.
+        Similar to the standard Remote class, with the addition that this class should be utilized
+        when interacting with WinAppDriver. The customized start_session method and enhanced
+        _unwrap_value processing cater to WinAppDriver's unique requirements.
 
     Example:
         caps = {'desiredCapabilities': {'app': 'Root'}}
@@ -47,9 +40,10 @@ class WinAppDriver(Remote):
 
     Methods:
         start_session(capabilities: dict) -> None:
-            Initiates a new session with WinAppDriver using the specified
-            capabilities. Overrides the start_session method in Selenium's
-            Remote class to accommodate WinAppDriver's capabilities format.
+            Initiates a new session with WinAppDriver using the specified capabilities.
+
+        _unwrap_value(value: dict or list) -> dict or list:
+            Enhances value unwrapping to accommodate WinAppDriver-specific element identifiers.
     """
 
     def start_session(self, capabilities: dict) -> None:
@@ -61,3 +55,33 @@ class WinAppDriver(Remote):
         response = self.execute(Command.NEW_SESSION, capabilities)
         self.session_id = response.get("sessionId")
         self.caps = response
+
+    def _unwrap_value(self, value):
+        """
+        Extends the base _unwrap_value method to handle potential WinAppDriver-specific element identifiers.
+
+        This method retains the original logic of unwrapping values but adds a check for the "ELEMENT" key
+        within the result, addressing a WinAppDriver-specific response scenario. If the superclass method
+        has already processed the value successfully without identifying an "ELEMENT" key, this method will
+        simply return that result. However, if the "ELEMENT" key is detected within the resultant dictionary,
+        it suggests that the response is specific to WinAppDriver, and a WebElement instance is created and
+        returned using this key.
+
+        The enhancement ensures compatibility with responses where WinAppDriver uniquely identifies elements,
+        seamlessly integrating this with the standard WebDriver protocol.
+
+        :param value: The original value to be unwrapped, potentially containing nested element identifiers.
+        :type value: dict or list
+
+        :return: The unwrapped value, with any WinAppDriver-specific element identifiers processed accordingly.
+        :rtype: The same type as the input 'value' (dict, list, or the base type if neither).
+
+        Note: This method should not be invoked directly; it is internally utilized by the WinAppDriver class
+        to process and normalize responses.
+        """
+        result = super()._unwrap_value(value)
+
+        if isinstance(result, dict) and "ELEMENT" in result:
+            return self.create_web_element(result["ELEMENT"])
+
+        return result
