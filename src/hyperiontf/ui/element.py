@@ -1,15 +1,31 @@
 import time
-from typing import Optional, Union, List, Any
+from typing import Optional, Union, List, Type
 
 from hyperiontf.logging import getLogger
 from hyperiontf.typing import NoSuchElementException
 from hyperiontf.ui.decorators.element_error_recovery import error_recovery
 
 from .locatable import LocatableElement
-from hyperiontf.assertions.expect import Expect
 from hyperiontf.assertions.expectation_result import ExpectationResult
 from hyperiontf.helpers.decorators.wait import wait
 from hyperiontf.helpers.rect_helpers import are_rectangles_equal
+from hyperiontf.image_processing.image import Image
+from hyperiontf.ui.helpers.prepare_expect_object import prepare_expect_object
+
+from hyperiontf.configuration import config
+from hyperiontf.typing import VisualModeType
+from hyperiontf.assertions.image_expectation_result import ImageExpectationResult
+
+from hyperiontf.ui.helpers.visual import (
+    verify_visual_match,
+    verify_visual_exclusion_match,
+    verify_visual_match_in_regions,
+)
+from hyperiontf.ui.helpers.visual import (
+    assert_visual_match,
+    assert_visual_match_in_regions,
+    assert_visual_exclusion_match,
+)
 
 logger = getLogger("Element")
 
@@ -324,7 +340,7 @@ class Element(LocatableElement):
         return rect
 
     @error_recovery(logger=logger)
-    def make_screenshot(self, filepath: Optional[str] = None):
+    def make_screenshot(self, filepath: Optional[str] = None) -> Image:
         """
         Takes a screenshot of the element.
 
@@ -335,12 +351,7 @@ class Element(LocatableElement):
         Returns:
             Union[str, None]: The base64 encoded string of the screenshot if no filepath is provided, otherwise None.
         """
-        if filepath:
-            return self.element_adapter.screenshot(
-                filepath
-            )  # Replace with the actual path
-        else:
-            return self.element_adapter.scrrenshot_as_base64
+        return Image(path=filepath, img_data=self.element_adapter.screenshot_as_base64)
 
     def screenshot(
         self,
@@ -354,17 +365,20 @@ class Element(LocatableElement):
             message (Optional[str]): The message to accompany the screenshot in the log.
             title (Optional[str]): The title for the screenshot attachment in the log.
         """
-        base_64_img_URL = f"data:text/html;{self.make_screenshot()}"
         logger.info(
             message,
             extra={
                 "attachments": [
-                    {"title": title, "type": "image", "url": base_64_img_URL}
+                    {
+                        "title": title,
+                        "type": "image",
+                        "url": self.make_screenshot().to_base64(),
+                    }
                 ]
             },
         )
 
-    def assert_text(self, expected_text) -> ExpectationResult:
+    def assert_text(self, expected_text) -> Type[ExpectationResult]:
         """
         Asserts that the element's text matches the expected text. This method simplifies the syntax
         by directly integrating the assertion with the element's text retrieval, reducing code verbosity
@@ -385,12 +399,12 @@ class Element(LocatableElement):
             FailedExpectationException: If the actual text of the element does not match the expected text.
         """
         actual_value = self.get_text(log=False)
-        expect = self._prepare_expect_object(
-            actual_value, True, "Asserting element's text."
+        expect = prepare_expect_object(
+            self, actual_value, True, "Asserting element's text.", logger
         )
         return expect.to_be(expected_text)
 
-    def assert_attribute(self, attr_name, expected_text) -> ExpectationResult:
+    def assert_attribute(self, attr_name, expected_text) -> Type[ExpectationResult]:
         """
         Asserts that a specific attribute of the element has the expected value. Similar to `assert_text`,
         this method leverages the framework's assertion API to minimize verbosity by combining attribute retrieval
@@ -410,12 +424,16 @@ class Element(LocatableElement):
             FailedExpectationException: If the actual value of the specified attribute does not match the expected value.
         """
         actual_value = self.get_attribute(attr_name, log=False)
-        expect = self._prepare_expect_object(
-            actual_value, True, f"Asserting element's '{attr_name}' attribute"
+        expect = prepare_expect_object(
+            self,
+            actual_value,
+            True,
+            f"Asserting element's '{attr_name}' attribute",
+            logger,
         )
         return expect.to_be(expected_text)
 
-    def assert_style(self, attr_name, expected_text) -> ExpectationResult:
+    def assert_style(self, attr_name, expected_text) -> Type[ExpectationResult]:
         """
         Asserts that the element's style for a given property matches the expected value. This convenience method
         reduces code complexity by encapsulating both the retrieval of the style property and the assertion logic
@@ -435,12 +453,16 @@ class Element(LocatableElement):
             FailedExpectationException: If the element's style value does not meet the expected condition.
         """
         actual_value = self.get_style(attr_name, log=False)
-        expect = self._prepare_expect_object(
-            actual_value, True, f"Asserting element's '{attr_name}' style value."
+        expect = prepare_expect_object(
+            self,
+            actual_value,
+            True,
+            f"Asserting element's '{attr_name}' style value.",
+            logger,
         )
         return expect.to_be(expected_text)
 
-    def verify_text(self, expected_text) -> ExpectationResult:
+    def verify_text(self, expected_text) -> Type[ExpectationResult]:
         """
         Verifies that the element's text matches the expected text without stopping test execution on failure.
         This method provides a non-blocking approach to check element states, logging all outcomes for traceability.
@@ -456,12 +478,12 @@ class Element(LocatableElement):
                                 success (True) or failure (False), with detailed logging for both outcomes.
         """
         actual_value = self.get_text(log=False)
-        verify = self._prepare_expect_object(
-            actual_value, False, "Verifying element's text."
+        verify = prepare_expect_object(
+            self, actual_value, False, "Verifying element's text.", logger
         )
         return verify.to_be(expected_text)
 
-    def verify_attribute(self, attr_name, expected_text) -> ExpectationResult:
+    def verify_attribute(self, attr_name, expected_text) -> Type[ExpectationResult]:
         """
         Verifies the value of a specific attribute of the element matches the expected value, logging the outcome
         without halting the test on failure. This method simplifies checking attribute values by combining retrieval
@@ -479,12 +501,16 @@ class Element(LocatableElement):
 
         """
         actual_value = self.get_attribute(attr_name, log=False)
-        verify = self._prepare_expect_object(
-            actual_value, False, f"Verifying element's '{attr_name}' attribute"
+        verify = prepare_expect_object(
+            self,
+            actual_value,
+            False,
+            f"Verifying element's '{attr_name}' attribute",
+            logger,
         )
         return verify.to_be(expected_text)
 
-    def verify_style(self, attr_name, expected_text) -> ExpectationResult:
+    def verify_style(self, attr_name, expected_text) -> Type[ExpectationResult]:
         """
         Verifies the element's style for a given property matches the expected value, providing extensive logging
         for both success and failure without stopping the test. This method reduces verbosity by encapsulating the
@@ -503,12 +529,16 @@ class Element(LocatableElement):
 
         """
         actual_value = self.get_style(attr_name, log=False)
-        verify = self._prepare_expect_object(
-            actual_value, False, f"Verifying element's '{attr_name}' style value."
+        verify = prepare_expect_object(
+            self,
+            actual_value,
+            False,
+            f"Verifying element's '{attr_name}' style value.",
+            logger,
         )
         return verify.to_be(expected_text)
 
-    def assert_visible(self) -> ExpectationResult:
+    def assert_visible(self) -> Type[ExpectationResult]:
         """
         Asserts that the element is visible on the page. It utilizes a private method to check visibility
         without additional logging, integrating seamlessly with the framework's assertion API for clarity
@@ -525,12 +555,12 @@ class Element(LocatableElement):
             AssertionError: If the element is not visible.
         """
         actual_value = self._get_is_displayed(log=False)
-        expect = self._prepare_expect_object(
-            actual_value, True, "Asserting element's visibility."
+        expect = prepare_expect_object(
+            self, actual_value, True, "Asserting element's visibility.", logger
         )
         return expect.to_be(True)
 
-    def verify_visible(self) -> ExpectationResult:
+    def verify_visible(self) -> Type[ExpectationResult]:
         """
         Verifies that the element is visible on the page without stopping test execution on failure.
         This method enhances script readability and test flow by providing a non-blocking verification
@@ -541,12 +571,12 @@ class Element(LocatableElement):
                                 success (True) or failure (False), with detailed logging for both outcomes.
         """
         actual_value = self._get_is_displayed(log=False)
-        verify = self._prepare_expect_object(
-            actual_value, False, "Verifying element's visibility."
+        verify = prepare_expect_object(
+            self, actual_value, False, "Verifying element's visibility.", logger
         )
         return verify.to_be(True)
 
-    def assert_hidden(self) -> ExpectationResult:
+    def assert_hidden(self) -> Type[ExpectationResult]:
         """
         Asserts that the element is hidden (not displayed) on the page. This method uses a private method
         to check the element's hidden state without additional logging, ensuring test script clarity and
@@ -560,12 +590,12 @@ class Element(LocatableElement):
             AssertionError: If the element is visible instead of hidden.
         """
         actual_value = self._get_is_displayed(log=False)
-        expect = self._prepare_expect_object(
-            actual_value, True, "Asserting element's hidden state."
+        expect = prepare_expect_object(
+            self, actual_value, True, "Asserting element's hidden state.", logger
         )
         return expect.to_be(False)
 
-    def verify_hidden(self) -> ExpectationResult:
+    def verify_hidden(self) -> Type[ExpectationResult]:
         """
         Verifies that the element is hidden (not displayed) on the page, providing a flexible verification
         method that logs outcomes without interrupting test execution on failure.
@@ -575,12 +605,12 @@ class Element(LocatableElement):
                                 provided for both success and failure cases.
         """
         actual_value = self._get_is_displayed(log=False)
-        verify = self._prepare_expect_object(
-            actual_value, False, "Verifying element's hidden state."
+        verify = prepare_expect_object(
+            self, actual_value, False, "Verifying element's hidden state.", logger
         )
         return verify.to_be(False)
 
-    def assert_enabled(self) -> ExpectationResult:
+    def assert_enabled(self) -> Type[ExpectationResult]:
         """
         Asserts that the element is enabled and interactive. It utilizes a private method to check the
         enabled state without additional logging, streamlining integration with the framework's assertion API.
@@ -596,12 +626,12 @@ class Element(LocatableElement):
             AssertionError: If the element is not enabled.
         """
         actual_value = self._get_is_enabled(log=False)
-        expect = self._prepare_expect_object(
-            actual_value, True, "Asserting element's enabled state."
+        expect = prepare_expect_object(
+            self, actual_value, True, "Asserting element's enabled state.", logger
         )
         return expect.to_be(True)
 
-    def verify_enabled(self) -> ExpectationResult:
+    def verify_enabled(self) -> Type[ExpectationResult]:
         """
         Verifies that the element is enabled without stopping test execution on failure. This method provides
         a non-blocking approach to check the element's enabled state, enhancing test flow with detailed logging.
@@ -611,12 +641,12 @@ class Element(LocatableElement):
                                 success (True) or failure (False), with detailed logging for both outcomes.
         """
         actual_value = self._get_is_enabled(log=False)
-        verify = self._prepare_expect_object(
-            actual_value, False, "Verifying element's enabled state."
+        verify = prepare_expect_object(
+            self, actual_value, False, "Verifying element's enabled state.", logger
         )
         return verify.to_be(True)
 
-    def assert_disabled(self) -> ExpectationResult:
+    def assert_disabled(self) -> Type[ExpectationResult]:
         """
         Asserts that the element is disabled. This method uses a private method to check the element's disabled
         state without additional logging, ensuring clarity and ease of maintenance in test scripts.
@@ -629,12 +659,12 @@ class Element(LocatableElement):
             AssertionError: If the element is enabled instead of disabled.
         """
         actual_value = self._get_is_enabled(log=False)
-        expect = self._prepare_expect_object(
-            actual_value, True, "Asserting element's disabled state."
+        expect = prepare_expect_object(
+            self, actual_value, True, "Asserting element's disabled state.", logger
         )
         return expect.to_be(False)
 
-    def verify_disabled(self) -> ExpectationResult:
+    def verify_disabled(self) -> Type[ExpectationResult]:
         """
         Verifies that the element is disabled, logging the outcome without interrupting test execution on failure.
         This method offers a flexible verification approach with comprehensive outcome logging for better traceability.
@@ -644,12 +674,12 @@ class Element(LocatableElement):
                                 provided for both success and failure cases.
         """
         actual_value = self._get_is_enabled(log=False)
-        verify = self._prepare_expect_object(
-            actual_value, False, "Verifying element's disabled state."
+        verify = prepare_expect_object(
+            self, actual_value, False, "Verifying element's disabled state.", logger
         )
         return verify.to_be(False)
 
-    def assert_selected(self) -> ExpectationResult:
+    def assert_selected(self) -> Type[ExpectationResult]:
         """
         Asserts that the element is selected (e.g., for checkboxes or radio buttons). It uses a private method
         to check the selected state without additional logging, integrating seamlessly with the framework's
@@ -666,12 +696,12 @@ class Element(LocatableElement):
             AssertionError: If the element is not selected.
         """
         actual_value = self._get_is_selected(log=False)
-        expect = self._prepare_expect_object(
-            actual_value, True, "Asserting element's selected state."
+        expect = prepare_expect_object(
+            self, actual_value, True, "Asserting element's selected state.", logger
         )
         return expect.to_be(True)
 
-    def verify_selected(self) -> ExpectationResult:
+    def verify_selected(self) -> Type[ExpectationResult]:
         """
         Verifies that the element is selected without stopping test execution on failure. This method offers
         a non-blocking approach to verify the element's selected state, enhancing test flow with detailed logging.
@@ -681,41 +711,157 @@ class Element(LocatableElement):
                                 success (True) or failure (False), with detailed logging for both outcomes.
         """
         actual_value = self._get_is_selected(log=False)
-        verify = self._prepare_expect_object(
-            actual_value, False, "Verifying element's selected state."
+        verify = prepare_expect_object(
+            self, actual_value, False, "Verifying element's selected state.", logger
         )
         return verify.to_be(True)
 
-    def _prepare_expect_object(
-        self, actual_value: Any, is_assertion: bool, prefix: str
-    ):
+    def verify_visual_match(
+        self,
+        expected_value: Union[Image, str],
+        mismatch_threshold: float = config.visual.default_mismatch_threshold,
+        compare_regions: Optional[list] = None,
+        exclude_regions: Optional[list] = None,
+        mode: VisualModeType = config.visual.mode,
+    ) -> ImageExpectationResult:
         """
-        Prepares an Expect object configured for either assertion or verification against an element's properties.
-        This method centralizes the creation of Expect objects, setting them up with the necessary context for
-        performing comparisons, logging outcomes, and controlling test flow based on the operation type (assertion
-        or verification).
+        Verifies that the current visual state matches the expected visual reference within the defined mismatch threshold.
+        This method supports optional focusing on specific regions for comparison or exclusion, depending on the test's needs.
 
-        The method distinguishes between assertions and verifications by the is_assertion parameter. Assertions
-        will halt test execution on failure by raising an exception, while verifications log the outcome and
-        allow the test to continue, enhancing traceability and flexibility in test scripting.
-
-        Parameters:
-            actual_value (str|bool): The actual value retrieved from the element, to be compared against an expected value.
-            is_assertion (bool): Indicates whether the Expect object is being prepared for an assertion (True)
-                                 or a verification (False). This controls whether failures result in raised exceptions
-                                 or logged outcomes without stopping the test.
-            prefix (str): A message prefix to prepend to log entries, providing context about the comparison being performed.
+        Args:
+            expected_value (Union[Image, str]): The expected image or a path to the image file against which the actual image is compared.
+            mismatch_threshold (float): The allowable percentage difference between the images to consider them as matching.
+            compare_regions (Optional[list]): A list of regions (dictionaries with 'x', 'y', 'width', and 'height' keys) to exclusively compare.
+            exclude_regions (Optional[list]): A list of regions to exclude from the comparison.
+            mode (VisualModeType): The mode of operation (collect or compare) which can override the default behavior.
 
         Returns:
-            Expect: An Expect object configured with the actual value, logging details, and operational mode (assert or verify),
-                    ready for performing comparisons and handling outcomes appropriately.
+            ImageExpectationResult: The result of the visual comparison, including a similarity score and potential difference image.
         """
-        return Expect(
-            actual_value,
-            sender=self.__full_name__,
-            logger=logger,
-            is_assertion=is_assertion,
-            prefix=prefix,
+        return verify_visual_match(
+            self,
+            expected_value,
+            mismatch_threshold,
+            compare_regions,
+            exclude_regions,
+            mode,
+            logger,
+        )
+
+    def assert_visual_match(
+        self,
+        expected_value: Union[Image, str],
+        mismatch_threshold: float = config.visual.default_mismatch_threshold,
+        compare_regions: Optional[list] = None,
+        exclude_regions: Optional[list] = None,
+        mode: VisualModeType = config.visual.mode,
+    ) -> ImageExpectationResult:
+        """
+        Asserts that the current visual state matches the expected visual reference within a defined mismatch threshold.
+        Allows focusing on or excluding specific regions for comparison, providing flexibility for varied testing needs.
+
+        Args:
+            expected_value (Union[Image, str]): The expected image or path to the image file for comparison.
+            mismatch_threshold (float): The permissible percentage difference between the images for a successful match.
+            compare_regions (Optional[list]): Specific regions to compare, defined as dictionaries with coordinates and dimensions.
+            exclude_regions (Optional[list]): Regions to be excluded from the comparison.
+            mode (VisualModeType): The mode setting which determines the behavior (collect or compare).
+
+        Returns:
+            ImageExpectationResult: The outcome of the visual assertion, including details on similarity and any differences.
+        """
+        return assert_visual_match(
+            self,
+            expected_value,
+            mismatch_threshold,
+            compare_regions,
+            exclude_regions,
+            mode,
+            logger,
+        )
+
+    def verify_visual_match_in_regions(
+        self,
+        expected_value: Union[Image, str],
+        compare_regions: Optional[list] = None,
+        mismatch_threshold: float = config.visual.default_partial_mismatch_threshold,
+        mode: VisualModeType = config.visual.mode,
+    ):
+
+        return verify_visual_match_in_regions(
+            self, expected_value, compare_regions, mismatch_threshold, mode, logger
+        )
+
+    def assert_visual_match_in_regions(
+        self,
+        expected_value: Union[Image, str],
+        compare_regions: Optional[list] = None,
+        mismatch_threshold: float = config.visual.default_partial_mismatch_threshold,
+        mode: VisualModeType = config.visual.mode,
+    ):
+        """
+        Verifies that designated regions within the visual state match the expected reference, considering an optional mismatch threshold.
+        This method is particularly useful for tests that target specific areas of the visual representation.
+
+        Args:
+            expected_value (Union[Image, str]): The reference image or path to the image file for focused comparison.
+            compare_regions (list): The regions within the image to compare, each defined with 'x', 'y', 'width', and 'height'.
+            mismatch_threshold (float): The allowed variance percentage between the specified regions of the images.
+            mode (VisualModeType): The operational mode (collect or compare) affecting the method's behavior.
+
+        Returns:
+            ImageExpectationResult: Detailed results of the region-specific visual comparison.
+        """
+        return assert_visual_match_in_regions(
+            self, expected_value, compare_regions, mismatch_threshold, mode, logger
+        )
+
+    def verify_visual_exclusion_match(
+        self,
+        expected_value: Union[Image, str],
+        exclude_regions: Optional[list] = None,
+        mismatch_threshold: float = config.visual.default_mismatch_threshold,
+        mode: VisualModeType = config.visual.mode,
+    ) -> ImageExpectationResult:
+        """
+        Verifies the visual match excluding certain regions, ideal for ignoring known variabilities or non-relevant sections.
+        Offers a way to concentrate verification on stable, significant areas of the visual content.
+
+        Args:
+            expected_value (Union[Image, str]): The reference image or path for the exclusion-based comparison.
+            exclude_regions (Optional[list]): Regions to omit during the verification, specified with their coordinates and dimensions.
+            mismatch_threshold (float): Permitted percentage of difference in the non-excluded image areas.
+            mode (VisualModeType): The running mode (collect or compare), influencing the execution context.
+
+        Returns:
+            ImageExpectationResult: The outcome of the comparison, emphasizing the non-excluded areas.
+        """
+        return verify_visual_exclusion_match(
+            self, expected_value, exclude_regions, mismatch_threshold, mode, logger
+        )
+
+    def assert_visual_exclusion_match(
+        self,
+        expected_value: Union[Image, str],
+        exclude_regions: Optional[list] = None,
+        mismatch_threshold: float = config.visual.default_mismatch_threshold,
+        mode: VisualModeType = config.visual.mode,
+    ) -> ImageExpectationResult:
+        """
+        Asserts a visual match while disregarding specified regions, suitable for bypassing dynamic or irrelevant image parts.
+        Enhances test accuracy by focusing assertions on essential and predictable image segments.
+
+        Args:
+            expected_value (Union[Image, str]): The expected image or file path for focused exclusion assertion.
+            exclude_regions (Optional[list]): Areas to exclude, each defined by 'x', 'y', 'width', and 'height'.
+            mismatch_threshold (float): Acceptance threshold for variations outside the excluded regions.
+            mode (VisualModeType): Configuration setting to switch between collect and compare modes.
+
+        Returns:
+            ImageExpectationResult: Detailed assertion results, highlighting the examined image portions.
+        """
+        return assert_visual_exclusion_match(
+            self, expected_value, exclude_regions, mismatch_threshold, mode, logger
         )
 
     @wait()

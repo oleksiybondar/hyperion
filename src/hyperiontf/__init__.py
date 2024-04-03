@@ -26,6 +26,8 @@ from .configuration import config
 
 from .fs import File, Dir
 
+from .image_processing.image import Image
+
 __all__ = [
     "By",
     "getLogger",
@@ -51,4 +53,5 @@ __all__ = [
     "File",
     "Dir",
     "Color",
+    "Image",
 ]

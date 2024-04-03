@@ -16,6 +16,7 @@ from hyperiontf.typing import LocatorStrategies
 import base64
 
 logger = getLogger()
+adapter_logger = getLogger("PlaywrightAdapter")
 
 if config.logger.intercept_selenium_logs:
     logger.merge_logger_stream(AutomationTool.SELENIUM)
@@ -167,6 +168,49 @@ class Page:
     @map_exception
     def page_source(self):
         return self.page.content()
+
+    @property
+    @map_exception
+    def size(self):
+        adapter_logger.debug(
+            "Window size getter:\nPlaywright does not actually manage window "
+            "size!\nReturning viewport size instead!"
+        )
+        return self.page.viewport_size
+
+    @property
+    @map_exception
+    def location(self):
+        adapter_logger.debug(
+            "Window location getter:\nPlaywright does not actually manage window "
+            "location!\nReturning zero coordinate instead!"
+        )
+        return {"x": 0, "y": 0}
+
+    @map_exception
+    def set_window_size(self, width, height):
+        adapter_logger.debug(
+            "Window size setter:\nPlaywright does not actually manage window "
+            "size!\nSetting viewport size instead!"
+        )
+        self.page.set_viewport_size({"width": width, "height": height})
+
+    @map_exception
+    def set_window_location(self, x_, y_):
+        adapter_logger.warning(
+            "Window location setter:\nPlaywright does not actually manage window "
+            "location!\nNothing to do here!"
+        )
+
+    @map_exception
+    def set_window_rect(self, x, y, width, height):
+        self.set_window_location(x, y)
+        self.set_window_size(width, height)
+
+    @property
+    @map_exception
+    def rect(self):
+        return {**self.size, **self.location}
 
     def dump(self):
         attachments = []

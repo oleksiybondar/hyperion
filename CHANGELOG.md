@@ -5,11 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+*NOTE: Pre v1.0.0 Version Clarification*
+
+As of our initial release (v0.1.0), this framework has been focused on providing a comprehensive yet streamlined experience for UI testing, which is our primary objective. Despite this focus, the framework is designed with flexibility in mind, offering robust API testing capabilities from the outset. Plans to extend our testing capabilities to include CLI and database interactions are underway, aiming to make this framework versatile across various testing scenarios.
+
+It is important to acknowledge that versions prior to v1.0.0 are considered to be in a developmental stage where not all envisioned features have been fully implemented. However, this does not detract from the core functionality which has been our cornerstone: to deliver a high-level and simplistic API that caters to both API and UI testing needs.
+
+From its first version, our framework has included a dedicated REST client equipped with extensive, built-in logging features, alongside a UI harness that simplifies page object creation. This harness supports a unified API compatible with Selenium, Appium, and Playwright, ensuring a seamless and efficient testing process.
+
+## [0.3.5] - 2024-04-02
+
+### Added
+
+- Viewport adjustment API web
+
+### fixed
+
+- Visual testing: autoscale issue, now scales both images to a smallest common resolution to reduce level of noice
+
+## [0.3.1] - 2024-03-23
+
+### fixed
+
+- WinApplicationDriver find_element incompatible response fix
+
+## [0.3.0] - 2024-03-10
+
+### Added
+
+- Image comparison tools
+
+#### Features
+
+- Basic Visual testing API for Page object
+
 ## [0.2.5] - 2024-03-05
 
 ### Added
 
 - 'windows application driver' automation name, allowing directly use WinApplicationDriver without appium
+
+#### Automation Tools support
+
+- Window Application Driver
 
 ## [0.2.4] - 2024-02-26
 
@@ -67,6 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pytest automatic log hepper and fixture decorator
 
 #### Automation Tools support
+
 - Selenium
 - Appium 
 - Playwright

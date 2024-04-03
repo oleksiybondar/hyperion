@@ -7,5 +7,8 @@ pip install Appium-Python-Client
 pip install playwright
 pip install pytest
 pip install ply
+pip install opencv-python
+pip install opencv-python-headless
+pip install opencv-contrib-python
 
 playwright install

@@ -304,6 +304,7 @@ class Element:
             f"Unsupported {locator.by} locator for Selenium WebDriver"
         )
 
+    @property
     @map_exception
     def screenshot_as_base64(self):
         return self.element.screenshot_as_base64

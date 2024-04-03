@@ -1,10 +1,17 @@
 import time
+from typing import Optional
 
 from .decorators.autolog_class_method_helper import (
     auto_decorate_class_methods_with_logging,
 )
 from hyperiontf.logging import getLogger
-from hyperiontf.typing import Platform, LoggerSource, PlatformType, OSType
+from hyperiontf.typing import (
+    Platform,
+    LoggerSource,
+    PlatformType,
+    OSType,
+    ViewportLabelType,
+)
 import platform
 from .page_object_base import BasePageObject
 from .content_manager import ContentManager
@@ -25,6 +32,13 @@ class WebPage(BasePageObject):
     @property
     def viewport(self):
         return self.viewport_manager.current_viewport
+
+    @viewport.setter
+    def viewport(self, viewport: ViewportLabelType):
+        self.viewport_manager.set_viewport(viewport)
+
+    def change_viewport(self, width: int, height: Optional[int] = None) -> None:
+        self.viewport_manager.resize(width, height)
 
     @property
     def platform(self) -> PlatformType:

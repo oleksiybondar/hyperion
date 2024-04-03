@@ -83,6 +83,7 @@ DESKTOP_FAMILY = [
     AutomationTool.AUTOIT,
     AutomationTool.XDOTOOL,
     AutomationTool.PYAUTOGUI,
+    AutomationTool.WIN_APP_DRIVER,
 ]
 
 
@@ -317,6 +318,21 @@ class ComparisonOp:
     LE: ComparisonOperator = "<="
     GT: ComparisonOperator = ">"
     GE: ComparisonOperator = ">="
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Visual Section
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+VisualModeType = Literal[
+    "collect",
+    "compare",
+]
+
+
+class VisualMode:
+    COLLECT: VisualModeType = "collect"
+    COMPARE: VisualModeType = "compare"
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
