@@ -204,7 +204,7 @@ class ExpectationResult:
         Returns:
             bool: True if equal, False otherwise.
         """
-        if isinstance(other, (bool, ExpectationResult)):
+        if isinstance(other, (bool, ExpectationResult, int)):
             return self.result == bool(other)
         return NotImplemented
 

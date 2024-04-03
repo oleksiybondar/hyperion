@@ -148,9 +148,9 @@ def test_compare_mode_for_element(page):
     result = page.verify_visual_match(
         full_page_img, mode=VisualMode.COMPARE, mismatch_threshold=1
     )
-    assert result.result == 0, f"Expected False, but got {result.result}"  # type: ignore
+    assert result == 0, f"Expected False, but got {result.result}"  # type: ignore
 
     result = page.dice.verify_visual_match(
         dice_img, mode=VisualMode.COMPARE, mismatch_threshold=1
     )
-    assert result.result == 1, f"Expected True, but got {result.result}"  # type: ignore
+    assert result == 1, f"Expected True, but got {result.result}"  # type: ignore
