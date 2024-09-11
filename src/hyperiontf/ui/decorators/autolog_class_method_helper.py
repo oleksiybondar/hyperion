@@ -147,12 +147,34 @@ def auto_decorate_class_methods_with_logging(
         _wrap_method(instance, method, sender_name, logger)
 
 
+def _is_property(instance: Any, method: str) -> bool:
+    """
+    Determine if a given method name corresponds to a property of the provided instance.
+
+    Args:
+        instance (Any): The object instance to check.
+        method (str): The name of the method or attribute to check.
+
+    Returns:
+        bool: True if the specified method name is a property, False otherwise.
+    """
+    # Retrieve the attribute from the class (not the instance) to avoid triggering a property call
+    attr = getattr(instance.__class__, method, None)
+
+    # Check if the attribute is a property
+    return isinstance(attr, property)
+
+
 def _wrap_method(instance: Any, method: str, sender_name: str, logger: Any):
     if (
         bool(re.match(PRIVATE_METHODS_PATTERN, method))
         and not config.page_object.log_private
     ):
         return
+
+    if _is_property(instance, method):
+        return
+
     undecorated_method = getattr(instance, method)
 
     if not callable(undecorated_method):
