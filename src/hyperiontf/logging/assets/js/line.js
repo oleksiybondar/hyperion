@@ -55,7 +55,7 @@ class Line {
     let currentLevel = this.metaData.lvl || 0;
 
     this.lines.forEach((line) => {
-      if (line.level > currentLevel) currentLevel = line.level;
+      if (line.level > currentLevel && line.level !== 10000) currentLevel = line.level;
     });
 
     return currentLevel;
@@ -643,7 +643,9 @@ class Line {
 
     // Render and append each child line to the children wrapper
     this.lines.forEach((childLine) => {
-      this.childrenWrapper.append(childLine.render());
+      if (childLine.level !== 10000) {
+        this.childrenWrapper.append(childLine.render());
+      }
     });
 
     // Append the children wrapper to the current log line's DOM element

@@ -1,48 +1,59 @@
 #!/bin/bash
-echo 'Generation HTML Template...'
+echo 'Generating HTML Template...'
 [ -e template.html ] && rm template.html
 
 echo '  Generating HTML stub...'
 echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Test Log | Hyperion Testing Framework</title>' > template.html
 echo '  Done!'
 
-echo '  Minify JavaScript and appending to HTML...'
+echo '  Minifying JavaScript and appending to HTML...'
 echo '<script type="application/javascript">' >> template.html
+cat_dest=""
 if [ "$1" == "dev" ]; then
-  cat js/helpers.js >> template.html
-  cat js/config.js >> template.html
-  cat js/eventBroker.js >> template.html
-  cat js/controlPanel.js >> template.html
-  cat js/line.js >> template.html
-  cat js/logger.js >> template.html
-  cat js/app.js >> template.html
+  cat_dest="template.html"
+
+  # Concatenate all JS files for development mode
 else
-  minify js/helpers.js >> template.html
-  minify js/config.js >> template.html
-  minify js/eventBroker.js >> template.html
-  minify js/controlPanel.js >> template.html
-  minify js/line.js >> template.html
-  minify js/logger.js >> template.html
-  minify js/app.js >> template.html
+  # Concatenate all JS files into a temporary file
+  cat_dest="logger.full.js"
 fi
+
+cat js/helpers.js >> "$cat_dest"
+cat js/config.js >> "$cat_dest"
+cat js/eventBroker.js >> "$cat_dest"
+cat js/controlPanel.js >> "$cat_dest"
+cat js/line.js >> "$cat_dest"
+cat js/logger.js >> "$cat_dest"
+cat js/app.js >> "$cat_dest"
+
+if [ "$1" != "dev" ]; then
+  terser -o logger.min.js "$cat_dest"
+  cat logger.min.js >> template.html
+  rm "$cat_dest"
+  rm logger.min.js
+fi
+
 echo '</script>' >> template.html
 echo '  Done!'
 
-echo '  Minify CSS and appending to HTML...'
+echo '  Minifying CSS and appending to HTML...'
 echo '<style>' >> template.html
+
 if [ "$1" == "dev" ]; then
   cat css/icon.css >> template.html
-  cat css/icon-images.css >> template.html
-  cat css/icon-color-filters.css >> template.html
-  cat css/tooltip.css >> template.html
-  cat css/colors.css >> template.html
-  cat css/button.css >> template.html
-  cat css/button-border-colors.css >> template.html
-  cat css/filter-bar.css >> template.html
-  cat css/log-message.css >> template.html
-  cat css/header.css >> template.html
-  cat css/misc.css >> template.html
+    cat css/icon-images.css >> template.html
+    cat css/icon-color-filters.css >> template.html
+    cat css/tooltip.css >> template.html
+    cat css/colors.css >> template.html
+    cat css/button.css >> template.html
+    cat css/button-border-colors.css >> template.html
+    cat css/filter-bar.css >> template.html
+    cat css/log-message.css >> template.html
+    cat css/header.css >> template.html
+    cat css/misc.css >> template.html
 else
+
+  # Minify the concatenated file
   minify css/icon.css >> template.html
   minify css/icon-images.css >> template.html
   minify css/icon-color-filters.css >> template.html
@@ -54,7 +65,11 @@ else
   minify css/log-message.css >> template.html
   minify css/header.css >> template.html
   minify css/misc.css >> template.html
+
+  # Remove the temporary file
+  rm "$temp_css_file"
 fi
+
 echo '</style>' >> template.html
 echo '  Done!'
 
