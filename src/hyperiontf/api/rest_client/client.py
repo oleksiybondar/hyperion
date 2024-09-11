@@ -70,8 +70,32 @@ class Client:
         self.connection_timeout = connection_timeout
         self.request_timeout = request_timeout
 
+        self._default_event_logging_level = "info"
+
         self.session = requests.Session()
         self.session.max_redirects = redirections_limit
+
+    @property
+    def default_event_logging_level(self) -> str:
+        """
+        Returns the default logging level for events.
+        """
+        return self._default_event_logging_level
+
+    @default_event_logging_level.setter
+    def default_event_logging_level(self, value: str):
+        """
+        Sets the default logging level for events.
+
+        Parameters:
+        value (str): The logging level to set. Must be either 'debug' or 'info'.
+
+        Raises:
+        ValueError: If the provided logging level is not 'debug' or 'info'.
+        """
+        if value not in ["debug", "info"]:
+            raise ValueError("Logging level must be 'debug' or 'info'.")
+        self._default_event_logging_level = value
 
     @staticmethod
     def _parse_url(url: str):

@@ -15,6 +15,10 @@ From its first version, our framework has included a dedicated REST client equip
 
 ## [0.3.6] - 2024-09-11
 
+### Added
+
+- REST Client: Introduced the default_event_logging_level property, enabling users to reduce the default logging level for standard events to debug.
+
 ### fixed
 
 - Logger: Logger now properly handles sequential folder operations, ensuring that messages are correctly nested and do not break between folders. Previously, messages from different folders were incorrectly grouped under the same parent folder.

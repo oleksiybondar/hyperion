@@ -440,9 +440,19 @@ class Request:
         """
         curl_command = self._generate_curl_command(request_params)
 
-        logger.info(
+        self._log_event(
             f"[{self.client.__full_name__}] Performing {self.method} call to {self.full_url}\n{curl_command}"
         )
+
+    def _log_event(self, message: str):
+        """
+        Logs the given event message using the logger's default event logging level
+
+        Parameters:
+        message (str): The event message to be logged
+        """
+        method = getattr(logger, self.client.default_event_logging_level)
+        method(message)
 
     @staticmethod
     def _generate_curl_command(request_params: dict) -> str:
