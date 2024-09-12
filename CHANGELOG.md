@@ -23,6 +23,7 @@ From its first version, our framework has included a dedicated REST client equip
 
 - Logger: Logger now properly handles sequential folder operations, ensuring that messages are correctly nested and do not break between folders. Previously, messages from different folders were incorrectly grouped under the same parent folder.
 - Automatic Logging for Page Objects: no auto decoration for properties
+- Window Application Driver: fixed missing post morten screen snaps and source dumps when connecting to entire desktop
 
 ## [0.3.5] - 2024-04-02
 

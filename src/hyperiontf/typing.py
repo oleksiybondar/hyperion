@@ -86,6 +86,7 @@ DESKTOP_FAMILY = [
     AutomationTool.WIN_APP_DRIVER,
 ]
 
+WIN_APP_DRIVER_ROOT_HANDLE: str = "---root---"
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Log Sources
