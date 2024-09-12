@@ -6,8 +6,10 @@ from hyperiontf.typing import (
 
 STALE_ELEMENT_ERROR_MESSAGES = [
     "Element is not attached to the DOM",
-    "Frame was detached",
-    "Execution context was destroyed, most likely because of a navigation",
+    "Frame was detached",  # older < 1.46.0 playwright versions
+    "ElementHandle.evaluate: Frame was detached",  # newer >= 1.46.0  playwright versions
+    "ElementHandle.evaluate: Execution context was destroyed, most likely because of a navigation",  # newer >= 1.46.0  playwright versions
+    "Execution context was destroyed, most likely because of a navigation",  # older < 1.46.0 playwright versions
 ]
 
 
