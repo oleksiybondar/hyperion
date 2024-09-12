@@ -1,5 +1,6 @@
 from selenium.webdriver import Remote
 from selenium.webdriver.remote.command import Command
+from hyperiontf.typing import WIN_APP_DRIVER_ROOT_HANDLE
 
 
 class WinAppDriver(Remote):
@@ -55,6 +56,24 @@ class WinAppDriver(Remote):
         response = self.execute(Command.NEW_SESSION, capabilities)
         self.session_id = response.get("sessionId")
         self.caps = response
+
+    @property
+    def window_handle(self):
+        try:
+            handle = super().current_window_handle
+            if handle is None:
+                return WIN_APP_DRIVER_ROOT_HANDLE
+
+            return handle
+        except Exception:
+            return WIN_APP_DRIVER_ROOT_HANDLE
+
+    @property
+    def window_handles(self):
+        handles = super().window_handles
+        if len(handles) == 0:
+            handles.append(WIN_APP_DRIVER_ROOT_HANDLE)
+        return handles
 
     def _unwrap_value(self, value):
         """

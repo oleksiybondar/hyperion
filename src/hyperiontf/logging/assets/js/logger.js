@@ -165,7 +165,9 @@ class Logger {
     linesDomElement.classList.toggle('main-content');
     document.body.append(linesDomElement);
     this.lines.forEach((line) => {
-      linesDomElement.append(line.render());
+      if(line.level !== 10000) {
+        linesDomElement.append(line.render());
+      }
     });
   }
 }

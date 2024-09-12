@@ -291,7 +291,17 @@ class Response:
                 logger.critical(log_message)
                 raise FailedHTTPRequestException(log_message)
 
-        logger.info(log_message)
+        self._log_event(log_message)
+
+    def _log_event(self, message: str):
+        """
+        Logs the given event message using the logger's default event logging level
+
+        Parameters:
+        message (str): The event message to be logged
+        """
+        method = getattr(logger, self.client.default_event_logging_level)
+        method(message)
 
 
 class SuccessResponse(Response):

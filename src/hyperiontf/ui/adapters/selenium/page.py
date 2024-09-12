@@ -6,7 +6,12 @@ from selenium.webdriver.common.by import By as SeleniumBy
 from hyperiontf.configuration import config
 from hyperiontf.logging import getLogger
 from hyperiontf.ui import By
-from hyperiontf.typing import Browser, AutomationTool, UnsupportedLocatorException
+from hyperiontf.typing import (
+    Browser,
+    AutomationTool,
+    UnsupportedLocatorException,
+    WIN_APP_DRIVER_ROOT_HANDLE,
+)
 from .map_locator import map_locator
 from .map_exception import map_exception
 from .element import Element
@@ -394,7 +399,8 @@ class Page:
             source_code_content_type = "html"
 
         for index, window in enumerate(self.window_handles):
-            self.switch_to_window(window)
+            if window != WIN_APP_DRIVER_ROOT_HANDLE:
+                self.switch_to_window(window)
 
             base_64_img_URL = f"data:image/png;base64,{self.screenshot_as_base64}"
             attachments.append(

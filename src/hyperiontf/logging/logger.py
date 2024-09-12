@@ -29,6 +29,9 @@ from .file_handler import FileHandler as HyperionFileHandler
 from .log_depth_manager import LogDepthManager
 from .log_file_manager import generate_test_log_filename
 
+END_OF_FOLDER_LEVEL = 10000
+END_OF_FOLDER_MESSAGE = "---EOF---"
+
 
 class Logger(logging.Logger):
     """
@@ -86,12 +89,14 @@ class Logger(logging.Logger):
         Decrease the log depth.
         """
         self._depth_manager.decrease_depth()
+        self._pop_folder_entry()
 
     def pop_all(self):
         """
         Reset the log depth to zero.
         """
         self._depth_manager.reset_depth()
+        self._pop_folder_entry()
 
     def merge_logger_stream(self, name: str):
         """
@@ -101,7 +106,7 @@ class Logger(logging.Logger):
         :type name: str
         """
         logger = logging.getLogger(name)
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(END_OF_FOLDER_LEVEL)
         logger.addHandler(self._file_handler)
 
     def init_test_log(self, test_name: str):
@@ -121,6 +126,9 @@ class Logger(logging.Logger):
         :type new_name: str
         """
         self._file_handler.init_file(new_name)
+
+    def _pop_folder_entry(self):
+        self.log(END_OF_FOLDER_LEVEL, END_OF_FOLDER_MESSAGE)
 
 
 def getLogger(name: str = "TestCase") -> Logger:
