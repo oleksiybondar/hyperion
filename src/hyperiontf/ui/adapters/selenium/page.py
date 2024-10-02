@@ -6,12 +6,7 @@ from selenium.webdriver.common.by import By as SeleniumBy
 from hyperiontf.configuration import config
 from hyperiontf.logging import getLogger
 from hyperiontf.ui import By
-from hyperiontf.typing import (
-    Browser,
-    AutomationTool,
-    UnsupportedLocatorException,
-    WIN_APP_DRIVER_ROOT_HANDLE,
-)
+from hyperiontf.typing import Browser, AutomationTool, UnsupportedLocatorException
 from .map_locator import map_locator
 from .map_exception import map_exception
 from .element import Element
@@ -19,8 +14,6 @@ from .element import Element
 from hyperiontf.typing import LocatorStrategies
 
 import base64
-
-from .win_app_driver import WinAppDriver
 
 logger = getLogger()
 
@@ -33,7 +26,6 @@ BROWSER_START_METHODS = {
     Browser.EDGE: "start_edge_browser",
     Browser.SAFARI: "start_safari_browser",
     Browser.REMOTE: "start_remote_browser",
-    Browser.WIN_APP_DRIVER: "start_windows_application_driver",
 }
 
 
@@ -145,36 +137,6 @@ class Page:
         return webdriver.Remote(command_executor=caps["remote_url"], options=options)
 
     @staticmethod
-    def start_windows_application_driver(caps: dict):
-        """
-        Initializes and returns a WinAppDriver instance with the provided capabilities.
-
-        This method serves as a factory to create and configure an instance of WinAppDriver,
-        facilitating the interaction with Windows applications through the specified capabilities.
-        It abstracts the instantiation process, directly using the WinAppDriver class defined earlier,
-        accommodating the necessary capabilities formatting required by WinAppDriver.
-
-        Args:
-            caps (dict): A dictionary containing all the desired capabilities and the remote URL.
-                         It should include the 'remote_url' key for the WinAppDriver server and may
-                         contain other keys for desired capabilities.
-
-        Returns:
-            WinAppDriver: An instance of the WinAppDriver class ready to interact with the specified Windows application.
-
-        Usage Example:
-            caps = {
-                "remote_url": "http://127.0.0.1:4723",
-                "app": "Root"
-            }
-            driver = YourFrameworkClass.start_windows_application_driver(caps)
-        """
-        from .win_app_driver import WinAppDriver
-
-        options = Page.process_windows_application_driver_caps(caps)
-        return WinAppDriver(command_executor=caps["remote_url"], options=options)
-
-    @staticmethod
     def process_chrome_caps(caps: dict):
         from selenium.webdriver import ChromeOptions
 
@@ -234,39 +196,6 @@ class Page:
             return Page.process_edge_caps(caps).to_capabilities()
         elif remote_browser == Browser.SAFARI:
             return {}
-
-    @staticmethod
-    def process_windows_application_driver_caps(caps):
-        """
-        Processes the provided capabilities dictionary to create and configure an ArgOptions instance.
-
-        This method prepares the ArgOptions instance specifically for the WinAppDriver by setting
-        a modified '_caps' attribute, ensuring that the 'desiredCapabilities' are formatted
-        according to WinAppDriver's expectations. It extracts all capabilities except the 'remote_url'
-        and repackages them into the necessary structure.
-
-        Args:
-            caps (dict): The capabilities dictionary provided by the user, which should include
-                         any desired capabilities for the WinAppDriver session and exclude the 'remote_url'.
-
-        Returns:
-            ArgOptions: The ArgOptions instance configured with the necessary capabilities for WinAppDriver.
-
-        Usage Example:
-            caps = {
-                "remote_url": "http://127.0.0.1:4723",
-                "app": "Root"
-            }
-            options = YourFrameworkClass.process_windows_application_driver_caps(caps)
-        """
-        from selenium.webdriver.common.options import ArgOptions
-
-        options = ArgOptions()
-        desired_capabilities = {
-            key: value for key, value in caps.items() if key != "remote_url"
-        }
-        setattr(options, "_caps", {"desiredCapabilities": desired_capabilities})
-        return options
 
     @map_exception
     def open(self, url: str):
@@ -393,14 +322,8 @@ class Page:
 
     def dump(self):
         attachments = []
-        if isinstance(self.driver, WinAppDriver):
-            source_code_content_type = "xml"
-        else:
-            source_code_content_type = "html"
-
         for index, window in enumerate(self.window_handles):
-            if window != WIN_APP_DRIVER_ROOT_HANDLE:
-                self.switch_to_window(window)
+            self.switch_to_window(window)
 
             base_64_img_URL = f"data:image/png;base64,{self.screenshot_as_base64}"
             attachments.append(
@@ -412,7 +335,7 @@ class Page:
             )
 
             base_64_src_url = (
-                f"data:text/{source_code_content_type};base64,"
+                f"data:text/html;base64,"
                 f"{base64.b64encode(self.page_source.encode('utf-8')).decode('utf-8')}"
             )
             attachments.append(

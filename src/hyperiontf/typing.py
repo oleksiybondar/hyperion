@@ -107,6 +107,7 @@ class LoggerSource:
     EXPECT: str = "Expect"
     SILENT_FAILURES: str = "SilentFailures"
     REST_CLIENT: str = "RestClient"
+    WIN_APP_DRIVER: str = "WindowsApplicationDriverClient"
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -10,7 +10,6 @@ from hyperiontf.typing import (
     DESKTOP_FAMILY,
     AutomationTool,
     LoggerSource,
-    Browser,
 )
 from hyperiontf.typing import ANDROID_AUTOMATION_FAMILY, IOS_AUTOMATION_FAMILY
 from hyperiontf.typing import UnsupportedAutomationTypeException
@@ -196,9 +195,11 @@ class AutomationAdaptersManager:
         logger = getLogger(LoggerSource.DESKTOP_SCREEN)
         logger.info(f"Start '{app}' desktop application")
         if automation_type == AutomationTool.WIN_APP_DRIVER:
-            from hyperiontf.ui.adapters.selenium.page import Page as seleniumAPI
+            from hyperiontf.ui.adapters.win_app_driver.page import (
+                Page as winAppDriverAPI,
+            )
 
-            adapter = seleniumAPI.start_browser(Browser.WIN_APP_DRIVER, final_caps)
+            adapter = winAppDriverAPI.launch_app(final_caps)
         else:
             from hyperiontf.ui.adapters.appium.page import Page as AppiumAPI
 

@@ -2,17 +2,14 @@ import time
 
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
-from hyperiontf.logging import getLogger
 
-from hyperiontf.typing import LoggerSource, HTTPMethodType
+from hyperiontf.typing import HTTPMethodType
 from hyperiontf.typing import AuthType, TokenType, ContentType, HTTPHeader
 from hyperiontf.typing import AnyResponse, AnyRequest
 from hyperiontf.typing import ConnectionErrorException
 from typing import Optional, Union, Any, Tuple, Dict
 from urllib.parse import urlparse, urlunparse
 from .response import Response
-
-logger = getLogger(LoggerSource.REST_CLIENT)
 
 
 class Request:
@@ -166,6 +163,10 @@ class Request:
         return (
             provided_value if provided_value is not None else getattr(client, attr_name)
         )
+
+    @property
+    def logger(self):
+        return self.client.logger
 
     @staticmethod
     def _merge(client, attr_name, override_value):
@@ -451,7 +452,7 @@ class Request:
         Parameters:
         message (str): The event message to be logged
         """
-        method = getattr(logger, self.client.default_event_logging_level)
+        method = getattr(self.logger, self.client.default_event_logging_level)
         method(message)
 
     @staticmethod
