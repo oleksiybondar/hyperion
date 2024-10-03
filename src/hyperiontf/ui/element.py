@@ -336,6 +336,12 @@ class Element(LocatableElement):
             logger.info(f"[{self.__full_name__}] getting element's size: {size}")
         return size
 
+    def _prepare_action_builder(self):
+        builder = self.root.action_builder
+        builder.sender = self.__full_name__
+        builder.logger = logger
+        return builder
+
     @error_recovery(logger=logger)
     def get_rect(self, log: bool = True) -> dict:
         """
@@ -1067,3 +1073,38 @@ class Element(LocatableElement):
 
     def _is_user_interactable(self) -> bool:
         return self._get_is_displayed(log=False) and self._get_is_enabled(log=False)
+
+    @error_recovery(logger=logger)
+    def drag_and_drop_by(self, x: float, y: float):
+        """
+        Drag the current element and drop it at the specified offset coordinates.
+
+        This method simulates dragging the element by the specified x and y offsets.
+        It uses the action builder to perform the drag-and-drop action.
+
+        Parameters:
+            x (float): The horizontal offset by which to drag the element.
+            y (float): The vertical offset by which to drag the element.
+
+        Returns:
+            None: The action is performed and executed using the action builder.
+        """
+        builder = self._prepare_action_builder()
+        builder.drag_element_by(self, x, y).perform()
+
+    @error_recovery(logger=logger)
+    def drag_and_drop(self, other):
+        """
+        Drag the current element and drop it onto another element.
+
+        This method simulates dragging the current element and dropping it on the target element.
+        It uses the action builder to perform the drag-and-drop action between two elements.
+
+        Parameters:
+            other: The target element on which the current element will be dropped.
+
+        Returns:
+            None: The action is performed and executed using the action builder.
+        """
+        builder = self._prepare_action_builder()
+        builder.drag_element_on_element(self, other).perform()
