@@ -88,6 +88,7 @@ DESKTOP_FAMILY = [
 
 WIN_APP_DRIVER_ROOT_HANDLE: str = "---root---"
 
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Log Sources
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -108,6 +109,7 @@ class LoggerSource:
     SILENT_FAILURES: str = "SilentFailures"
     REST_CLIENT: str = "RestClient"
     WIN_APP_DRIVER: str = "WindowsApplicationDriverClient"
+    ACTION_BUILDER: str = "ActionBuilder"
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -270,7 +272,31 @@ class OS:
 DESKTOP_OS_FAMILY = [OS.WINDOWS, OS.MAC, OS.LINUX]
 MOBILE_OS_FAMILY = [OS.ANDROID, OS.IOS]
 
+MouseButtonType = Literal["left", "middle", "right", "back", "forward"]
+
+
+class MouseButton:
+    LEFT: MouseButtonType = "left"
+    MIDDLE: MouseButtonType = "middle"
+    RIGHT: MouseButtonType = "right"
+    BACK: MouseButtonType = "back"
+    FORWARD: MouseButtonType = "forward"
+
+
+TouchFingerType = Literal["one", "two", "three", "four", "five"]
+
+
+class TouchFinger:
+    ONE: TouchFingerType = "one"
+    TWO: TouchFingerType = "two"
+    THREE: TouchFingerType = "three"
+    FOUR: TouchFingerType = "four"
+    FIVE: TouchFingerType = "five"
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
 # Elements Query Language
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ASTType = Literal[

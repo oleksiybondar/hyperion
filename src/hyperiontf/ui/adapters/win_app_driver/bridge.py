@@ -175,8 +175,8 @@ class Bridge:
         """
         element_keys = [
             "ELEMENT",
-            "element-6066-11e4-a52e-4f735466cecf",
-        ]  # W3C standard and legacy key
+            "element-6066-11e4-a52e-4f735466cecf",  # W3C standard and legacy key
+        ]
         for key in element_keys:
             if key in value_dict:
                 return key

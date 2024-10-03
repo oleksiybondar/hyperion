@@ -67,6 +67,18 @@ class Element(LocatableElement):
         return True
 
     @property
+    def location(self):
+        return self.get_location()
+
+    @property
+    def size(self):
+        return self.get_size()
+
+    @property
+    def rect(self):
+        return self.get_rect()
+
+    @property
     def is_present(self):
         return self.__is_present__()
 
@@ -290,6 +302,7 @@ class Element(LocatableElement):
         """
         return self._get_is_selected()
 
+    @error_recovery(logger=logger)
     def get_location(self, log: bool = True) -> dict:
         """
         Retrieves the location of the element in the page.
@@ -307,6 +320,7 @@ class Element(LocatableElement):
             )
         return location
 
+    @error_recovery(logger=logger)
     def get_size(self, log: bool = True) -> dict:
         """
         Retrieves the size of the element.
@@ -322,6 +336,7 @@ class Element(LocatableElement):
             logger.info(f"[{self.__full_name__}] getting element's size: {size}")
         return size
 
+    @error_recovery(logger=logger)
     def get_rect(self, log: bool = True) -> dict:
         """
         Retrieves the rectangle that bounds the element, including its location and size.
