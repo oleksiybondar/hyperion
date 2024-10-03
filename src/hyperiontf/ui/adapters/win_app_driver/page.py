@@ -8,6 +8,7 @@ from hyperiontf.typing import (
 from hyperiontf.ui import By
 from hyperiontf.ui.adapters.win_app_driver.bridge import Bridge
 from hyperiontf.ui.adapters.win_app_driver.element import Element
+from hyperiontf.ui.adapters.win_app_driver.action_builder import WinActionBuilder
 import hyperiontf.ui.adapters.win_app_driver.command as command
 import base64
 import urllib.parse
@@ -67,6 +68,10 @@ class Page:
             return handle if handle else WIN_APP_DRIVER_ROOT_HANDLE
         except HyperionException:
             return WIN_APP_DRIVER_ROOT_HANDLE
+
+    @property
+    def action_builder(self) -> WinActionBuilder:
+        return WinActionBuilder(self.bridge)
 
     @property
     def window_handles(self) -> List[str]:

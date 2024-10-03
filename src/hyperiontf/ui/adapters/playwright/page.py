@@ -11,6 +11,7 @@ from .map_locator import convert_locator
 from .map_exception import map_exception
 from .selenium_to_playwright_script import convert_to_function
 from .element import Element
+from .action_builder import PlaywrightActionBuilder
 from hyperiontf.typing import LocatorStrategies
 
 import base64
@@ -46,6 +47,10 @@ class Page:
             return self._page
 
         return self._iframe
+
+    @property
+    def action_builder(self) -> PlaywrightActionBuilder:
+        return PlaywrightActionBuilder(self.page)
 
     @staticmethod
     def start_browser(browser: str, caps: dict):

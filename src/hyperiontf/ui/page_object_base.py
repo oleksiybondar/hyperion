@@ -1,5 +1,6 @@
 from typing import Optional, Union
 from .automation_adapter_manager import AutomationAdaptersManager
+from .action_builder import ActionBuilder
 from hyperiontf.image_processing.image import Image
 from hyperiontf.assertions.image_expectation_result import ImageExpectationResult
 from hyperiontf.configuration import config
@@ -25,6 +26,13 @@ class BasePageObject:
     @property
     def root(self):
         return self
+
+    @property
+    def action_builder(self) -> ActionBuilder:
+        builder = ActionBuilder(self.automation_adapter.action_builder)
+        builder.sender = self.__full_name__
+        builder.logger = self.logger
+        return builder
 
     def quit(self):
         self.logger.info(f"[{self.__full_name__}] Quitting the browser")

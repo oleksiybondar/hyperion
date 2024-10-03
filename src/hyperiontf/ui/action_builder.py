@@ -1,4 +1,4 @@
-from hyperiontf import getLogger
+from hyperiontf.logging import getLogger
 from hyperiontf.typing import (
     LoggerSource,
     MouseButtonType,

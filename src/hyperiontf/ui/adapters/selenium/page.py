@@ -10,6 +10,7 @@ from hyperiontf.typing import Browser, AutomationTool, UnsupportedLocatorExcepti
 from .map_locator import map_locator
 from .map_exception import map_exception
 from .element import Element
+from .action_builder import SeleniumActionBuilder
 
 from hyperiontf.typing import LocatorStrategies
 
@@ -200,6 +201,11 @@ class Page:
     @map_exception
     def open(self, url: str):
         self.driver.get(url)
+
+    @property
+    @map_exception
+    def action_builder(self) -> SeleniumActionBuilder:
+        return SeleniumActionBuilder(self.driver)
 
     @property
     @map_exception
