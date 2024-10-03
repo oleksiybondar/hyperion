@@ -245,6 +245,19 @@ class ActionBuilder:
         coordinates = self._extract_coordinates(element)
         return self.click_by(*coordinates)
 
+    def right_click_on_element(self, element: Element):
+        """
+        Right click on the specified element.
+
+        Parameters:
+            element (Element): The element to click on.
+
+        Returns:
+            ActionBuilder: Returns self to allow method chaining.
+        """
+        coordinates = self._extract_coordinates(element)
+        return self.right_click_by(*coordinates)
+
     def tap(self):
         """
         Perform a tap action using one finger.

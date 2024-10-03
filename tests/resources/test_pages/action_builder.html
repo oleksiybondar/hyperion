@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standalone HTML Page with Canvas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        canvas {
+            border: 1px solid black;
+        }
+
+        #popupMenu {
+            display: none;
+            position: absolute;
+            background-color: white;
+            border: 1px solid black;
+            padding: 5px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+<h3>Canvas Drawing and Popup Menu</h3>
+
+<div>
+    <!-- Canvas -->
+    <canvas id="myCanvas" width="300" height="300"></canvas>
+</div>
+<!-- Right-click popup menu -->
+<div id="popupMenu">
+    <p>Right Click Menu</p>
+    <button onclick="closeMenu()">Close</button>
+</div>
+
+<div>
+    <!-- Text Areas -->
+    <textarea id="textArea1" rows="4" cols="30"></textarea>
+    <textarea id="textArea2" rows="4" cols="30"></textarea>
+</div>
+<script>
+  // Canvas drawing functionality
+  const canvas = document.getElementById('myCanvas');
+  const ctx = canvas.getContext('2d');
+  let drawing = false;
+
+  canvas.addEventListener('mousedown', function (event) {
+    if (event.button === 0) { // Left mouse button
+      drawing = true;
+      ctx.beginPath();
+      ctx.moveTo(event.offsetX, event.offsetY);
+    }
+  });
+
+  canvas.addEventListener('mousemove', function (event) {
+    if (drawing) {
+      ctx.lineTo(event.offsetX, event.offsetY);
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  });
+
+  canvas.addEventListener('mouseup', function () {
+    drawing = false;
+  });
+
+  canvas.addEventListener('mouseleave', function () {
+    drawing = false;
+  });
+
+  // Popup menu functionality
+  document.addEventListener('contextmenu', function (event) {
+    event.preventDefault();
+    const popupMenu = document.getElementById('popupMenu');
+    popupMenu.style.display = 'block';
+    popupMenu.style.left = `${event.pageX}px`;
+    popupMenu.style.top = `${event.pageY}px`;
+  });
+
+  function closeMenu() {
+    document.getElementById('popupMenu').style.display = 'none';
+  }
+
+  document.addEventListener('click', function () {
+    closeMenu();
+  });
+</script>
+
+</body>
+</html>
