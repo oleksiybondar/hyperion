@@ -2,29 +2,29 @@ import hyperiontf.ui.adapters.win_app_driver.command as command
 from hyperiontf.typing import MouseButtonType, MouseButton, TouchFingerType, TouchFinger
 import time
 
+# Mouse and Touch Value Maps for Selenium Compatibility
+MOUSE_BUTTON_MAP = {
+    MouseButton.LEFT: 0,
+    MouseButton.MIDDLE: 1,
+    MouseButton.RIGHT: 2,
+    MouseButton.BACK: 3,
+    MouseButton.FORWARD: 4,
+}
+
+TOUCH_FINGER_MAP = {
+    TouchFinger.ONE: 1,
+    TouchFinger.TWO: 2,
+    TouchFinger.THREE: 3,
+    TouchFinger.FOUR: 4,
+    TouchFinger.FIVE: 5,
+}
+
 
 class WinActionBuilder:
     """
     WinActionBuilder handles mouse, touch, keyboard, and custom actions for WindowsApplicationDriver.
     It uses a bridge to communicate with the client and pushes actions to a stack, which is executed when perform() is called.
     """
-
-    # Mouse and Touch Value Maps for Selenium Compatibility
-    MOUSE_BUTTON_MAP = {
-        MouseButton.LEFT: 0,
-        MouseButton.MIDDLE: 1,
-        MouseButton.RIGHT: 2,
-        MouseButton.BACK: 3,
-        MouseButton.FORWARD: 4,
-    }
-
-    TOUCH_FINGER_MAP = {
-        TouchFinger.ONE: 1,
-        TouchFinger.TWO: 2,
-        TouchFinger.THREE: 3,
-        TouchFinger.FOUR: 4,
-        TouchFinger.FIVE: 5,
-    }
 
     def __init__(self, bridge):
         """
@@ -65,7 +65,7 @@ class WinActionBuilder:
         Parameters:
             button (MouseButtonType): The mouse button to press (default: 'left').
         """
-        payload = {"button": self.MOUSE_BUTTON_MAP[button]}
+        payload = {"button": MOUSE_BUTTON_MAP[button]}
         self._add_action(command.mouse.button_down, payload)
 
     def mouse_up(self, button: MouseButtonType = MouseButton.LEFT):
@@ -75,7 +75,7 @@ class WinActionBuilder:
         Parameters:
             button (MouseButtonType): The mouse button to release (default: 'left').
         """
-        payload = {"button": self.MOUSE_BUTTON_MAP[button]}
+        payload = {"button": MOUSE_BUTTON_MAP[button]}
         self._add_action(command.mouse.button_up, payload)
 
     def move_to(self, x: float, y: float):
@@ -125,7 +125,7 @@ class WinActionBuilder:
             x (float): The x-coordinate for the touch down action (optional).
             y (float): The y-coordinate for the touch down action (optional).
         """
-        payload = {"finger": self.TOUCH_FINGER_MAP[finger], "x": x, "y": y}
+        payload = {"finger": TOUCH_FINGER_MAP[finger], "x": x, "y": y}
         self._add_action(command.touch.down, payload)
 
     def touch_up(
@@ -142,7 +142,7 @@ class WinActionBuilder:
             x (float): The x-coordinate for the touch up action (optional).
             y (float): The y-coordinate for the touch up action (optional).
         """
-        payload = {"finger": self.TOUCH_FINGER_MAP[finger], "x": x, "y": y}
+        payload = {"finger": TOUCH_FINGER_MAP[finger], "x": x, "y": y}
         self._add_action(command.touch.up, payload)
 
     def touch_move(
@@ -159,7 +159,7 @@ class WinActionBuilder:
             x (float): The x-coordinate for the touch move action (optional).
             y (float): The y-coordinate for the touch move action (optional).
         """
-        payload = {"finger": self.TOUCH_FINGER_MAP[finger], "x": x, "y": y}
+        payload = {"finger": TOUCH_FINGER_MAP[finger], "x": x, "y": y}
         self._add_action(command.touch.move, payload)
 
     # Wait action (custom implementation)
