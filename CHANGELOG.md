@@ -13,6 +13,17 @@ It is important to acknowledge that versions prior to v1.0.0 are considered to b
 
 From its first version, our framework has included a dedicated REST client equipped with extensive, built-in logging features, alongside a UI harness that simplifies page object creation. This harness supports a unified API compatible with Selenium, Appium, and Playwright, ensuring a seamless and efficient testing process.
 
+## [0.5.0] - 2024-10-04
+
+### Added
+
+- Action builder implementation
+
+#### Features
+
+- New complex element actions like drag&drop
+- Action Builder public API, allowing to perform complex manipulations like image drawing
+
 ## [0.4.0] - 2024-10-02
 
 ### Added
