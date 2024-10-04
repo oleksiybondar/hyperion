@@ -139,6 +139,10 @@ class SeleniumActionBuilder:
         """
         self.action_builder.key_action.key_up(key)
 
+    def wait(self, milliseconds: float):
+        self._mouse_actions.pause(milliseconds)
+        self._touch_actions.pause(milliseconds)
+
     # Perform all actions
     def perform(self):
         """

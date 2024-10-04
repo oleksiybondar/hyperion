@@ -45,8 +45,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup runtime environment
-        uses: ./.github/workflows/actions/setup_tests_runtime
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies and set up paths
+        run: |
+          cd tests
+          sh ./install_web_dependencies.sh
+
+      - name: Extend PYTHONPATH
+        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src:$(pwd)/tests" >> $GITHUB_ENV
 
       - name: Run Common tests
         run: |
@@ -67,11 +80,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
       - name: Install browsers
         uses: ./.github/workflows/actions/setup_browsers
 
-      - name: Setup runtime environment
-        uses: ./.github/workflows/actions/setup_tests_runtime
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies and set up paths
+        run: |
+          cd tests
+          sh ./install_web_dependencies.sh
+
+      - name: Extend PYTHONPATH
+        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src:$(pwd)/tests" >> $GITHUB_ENV
 
       - name: Run web tests
         run: |
@@ -91,11 +117,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
       - name: Install browsers
         uses: ./.github/workflows/actions/setup_browsers
 
-      - name: Setup runtime environment
-        uses: ./.github/workflows/actions/setup_tests_runtime
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies and set up paths
+        run: |
+          cd tests
+          sh ./install_web_dependencies.sh
+
+      - name: Extend PYTHONPATH
+        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src:$(pwd)/tests" >> $GITHUB_ENV
 
       - name: Run Wait API tests
         run: |

@@ -69,7 +69,7 @@ class LocatableElement:
         self.parent = parent
         self._locator = locator
         self._element_adapter: Any = self._NOT_SEARCHED_YET
-        if bool(re.match("^\d+$", name)):
+        if bool(re.match("^\\d+$", name)):
             self.__full_name__ = f"{parent.__full_name__}[{name}]"
         else:
             self.__full_name__ = f"{parent.__full_name__}.{name}"

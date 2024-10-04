@@ -93,7 +93,7 @@ def test_eql_handles_non_existent_attribute_without_failure(page):
 @pytest.mark.ElementsQueryLanguage
 @pytest.mark.NestedArrays
 @pytest.mark.StyleAttribute
-@pytest.mark.MultipleWidgets
+@pytest.mark.MultipleWidget
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_eql_navigates_nested_arrays_to_retrieve_style_attribute(page):
     """
