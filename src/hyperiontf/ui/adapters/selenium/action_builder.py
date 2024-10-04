@@ -110,15 +110,14 @@ class SeleniumActionBuilder:
             x (float): The x-coordinate to move the pointer to.
             y (float): The y-coordinate to move the pointer to.
         """
-        self._touch_actions.move_by(x, y)
+        self._touch_actions.move_to_location(x, y)
 
-    # Move to coordinates (already handled at the upper abstraction layer)
     def move_to(self, x: float, y: float):
         """
         Move the pointer to the specified x, y coordinates.
         This action is typically handled at the upper abstraction layer.
         """
-        self._touch_actions.move_by(x, y)
+        self._mouse_actions.move_to_location(x, y)
 
     # Keyboard actions
     def key_down(self, key: str):
