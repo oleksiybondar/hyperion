@@ -1,0 +1,15 @@
+name: "Install browsers"
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Playwright
+      uses: microsoft/playwright-github-action@v1
+
+    - name: Set up Firefox
+      uses: browser-actions/setup-firefox@v1
+
+    - name: Set up Chrome
+      uses: browser-actions/setup-chrome@v1
+
+    - name: Set up Edge
+      uses: browser-actions/setup-edge@v1

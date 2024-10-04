@@ -23,8 +23,7 @@ def page(request):
 
 
 @pytest.mark.ElementChainResolution
-@pytest.mark.InternalTesting
-@pytest.mark.EQL
+@pytest.mark.ElementsQueryLanguage
 @pytest.mark.AttributeResolution
 @pytest.mark.SingleElement
 @pytest.mark.SingleWidget
@@ -47,8 +46,7 @@ def test_eql_resolves_element_chain_correctly(page):
 
 
 @pytest.mark.ElementChainResolution
-@pytest.mark.InternalTesting
-@pytest.mark.EQL
+@pytest.mark.ElementsQueryLanguage
 @pytest.mark.UnreachableElement
 @pytest.mark.SingleElement
 @pytest.mark.SingleWidget
@@ -70,8 +68,7 @@ def test_eql_handles_unreachable_element_without_failure(page):
 
 
 @pytest.mark.ElementChainResolution
-@pytest.mark.InternalTesting
-@pytest.mark.EQL
+@pytest.mark.ElementsQueryLanguage
 @pytest.mark.NonExistentAttribute
 @pytest.mark.SingleElement
 @pytest.mark.SingleWidget
@@ -93,8 +90,7 @@ def test_eql_handles_non_existent_attribute_without_failure(page):
 
 
 @pytest.mark.ElementChainResolution
-@pytest.mark.InternalTesting
-@pytest.mark.EQL
+@pytest.mark.ElementsQueryLanguage
 @pytest.mark.NestedArrays
 @pytest.mark.StyleAttribute
 @pytest.mark.MultipleWidgets

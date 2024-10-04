@@ -22,7 +22,7 @@ def page(request):
     yield page
 
 
-@pytest.mark.Iframe
+@pytest.mark.SingleIframe
 @pytest.mark.AutoResolve
 @pytest.mark.SingleElement
 @pytest.mark.text
@@ -36,7 +36,7 @@ def test_auto_resolve_context_switching_to_iframe(page):
     )
 
 
-@pytest.mark.Iframe
+@pytest.mark.SingleIframe
 @pytest.mark.AutoResolve
 @pytest.mark.SingleElement
 @pytest.mark.text
@@ -52,7 +52,7 @@ def test_auto_resolve_context_switching_from_iframe(page):
     page.page_header.assert_text("Main Page Content")
 
 
-@pytest.mark.Iframe
+@pytest.mark.SingleIframe
 @pytest.mark.AutoResolve
 @pytest.mark.SingleElement
 @pytest.mark.text
@@ -65,7 +65,7 @@ def test_auto_resolve_context_switching_to_nested_iframe(page):
     nested_frame_child.assert_text("Single Element 1 (ID: single-element-1)")
 
 
-@pytest.mark.Iframe
+@pytest.mark.SingleIframe
 @pytest.mark.AutoResolve
 @pytest.mark.ContextSwitching
 @pytest.mark.text
@@ -81,7 +81,7 @@ def test_switch_back_to_root_from_inner_iframe(page):
     page.page_header.assert_text("Main Page Content")
 
 
-@pytest.mark.Iframe
+@pytest.mark.SingleIframe
 @pytest.mark.AutoResolve
 @pytest.mark.ContextSwitching
 @pytest.mark.text
@@ -97,7 +97,7 @@ def test_switch_back_to_mid_level_iframe_from_inner_iframe(page):
     page.dynamic_iframe.page_header.assert_text("Iframe Content")
 
 
-@pytest.mark.Iframe
+@pytest.mark.SingleIframe
 @pytest.mark.AutoResolve
 @pytest.mark.ContextSwitching
 @pytest.mark.text
@@ -124,7 +124,7 @@ def test_switch_back_to_mid_level_iframe_using_memorized_child(page):
     memorized_mid_child_element.assert_text("Iframe Content")
 
 
-@pytest.mark.Iframe
+@pytest.mark.SingleIframe
 @pytest.mark.AutoResolve
 @pytest.mark.ContextSwitching
 @pytest.mark.text
@@ -140,7 +140,7 @@ def test_auto_resolve_context_switching_between_iframes(page):
     page.dynamic_iframe.page_header.assert_text("Iframe Content")
 
 
-@pytest.mark.Iframe
+@pytest.mark.SingleIframe
 @pytest.mark.AutoResolve
 @pytest.mark.ContextSwitching
 @pytest.mark.text

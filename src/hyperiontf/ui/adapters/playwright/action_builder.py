@@ -1,6 +1,7 @@
 from hyperiontf.typing import MouseButtonType, MouseButton, TouchFingerType, TouchFinger
 from typing import List, Callable, Tuple, Dict
 from playwright.sync_api import Page
+import time
 
 # Mouse Value Map for Playwright Compatibility
 MOUSE_BUTTON_MAP = {
@@ -123,6 +124,9 @@ class PlaywrightActionBuilder:
             key (str): The key to release.
         """
         self._add_action(self.page.keyboard.up, key)
+
+    def wait(self, milliseconds: float):
+        self._add_action(time.sleep, milliseconds / 1000)
 
     # Perform all actions
     def perform(self):

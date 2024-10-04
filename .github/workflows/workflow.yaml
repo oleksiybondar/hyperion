@@ -23,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.x'
 
       - name: Install style check dependencies
         run: pip install mypy black ruff xenon
@@ -40,60 +40,81 @@ jobs:
       - name: Run Xenon for static code analyse
         run: xenon --max-average=A --max-modules=A --max-absolute=A src/ tests/**/*.py
 
-#      - name: Check for duplicate code
-#        uses: platisd/duplicate-code-detection-tool@master
-#        with:
-#          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          directories: "src/"
+  common-test-execution:
+    needs: style-checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup runtime environment
+        uses: ./.github/workflows/actions/setup_tests_runtime
+
+      - name: Run Common tests
+        run: |
+          cd tests
+          pytest common/  
+
+      - name: Upload logs as artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: common-test-logs
+          path: ${{ github.workspace }}/tests/logs/
+          retention-days: 7
+
 
   web-test-execution:
     needs: style-checks
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
+      - name: Install browsers
+        uses: ./.github/workflows/actions/setup_browsers
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
+      - name: Setup runtime environment
+        uses: ./.github/workflows/actions/setup_tests_runtime
 
-      - name: Set up Playwright
-        uses: microsoft/playwright-github-action@v1
-
-      - name: Set up Firefox
-        uses: browser-actions/setup-firefox@v1
-
-      - name: Set up Chrome
-        uses: browser-actions/setup-chrome@v1
-
-      - name: Set up Edge
-        uses: browser-actions/setup-edge@v1
-
-      - name: Install test dependencies
-        run: |
-          cd tests
-          sh ./install_web_dependencies.sh
-
-      - name: Extend PYTHONPATH
-        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src:$(pwd)/tests" >> $GITHUB_ENV
-
-      - name: Run Common and Web tests
+      - name: Run web tests
         run: |
             cd tests
-            pytest common/ web/
+            pytest web/   
 
       - name: Upload logs as artifact
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-logs
+          name: web-test-logs
+          path: ${{ github.workspace }}/tests/logs/
+          retention-days: 7
+
+  web-waits-test-execution:
+    needs: style-checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install browsers
+        uses: ./.github/workflows/actions/setup_browsers
+
+      - name: Setup runtime environment
+        uses: ./.github/workflows/actions/setup_tests_runtime
+
+      - name: Run Wait API tests
+        run: |
+          cd tests
+          pytest waits/    
+
+      - name: Upload logs as artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waits-test-logs
           path: ${{ github.workspace }}/tests/logs/
           retention-days: 7
 
   build-check:
-    needs: web-test-execution
+    needs:
+      - common-test-execution
+      - web-test-execution
+      - web-waits-test-execution
     runs-on: ubuntu-latest
 
     steps:

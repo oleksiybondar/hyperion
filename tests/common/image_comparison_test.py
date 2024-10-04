@@ -90,7 +90,7 @@ variants = [
 @pytest.mark.parametrize("test_case", variants)
 @pytest.mark.expect
 @pytest.mark.methods
-@pytest.mark.visual
+@pytest.mark.Visual
 def test_basic_visual_testing_functionality(test_case):
     actual_value = test_case["actual"]
     expected_value = test_case["expected"]
