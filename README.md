@@ -55,11 +55,18 @@ Unconditional logging of all actions provides comprehensive information for debu
 
 An integrated REST client covered by automatic logging includes a built-in JSON schema verification helper in the Response class.
 
+### CLI Client for command line applications testing
+
+The CLI Client in Hyperion Testing Framework enables interaction with command-line interfaces (CLI) through a persistent shell session. This feature is particularly useful for automating tasks that involve shell commands or interacting with terminal-based applications in a cross-platform environment.
+
+### Image comparison tools and basic visula testing API for page objects
+
+
+
 ### Planned Features
 
 - **Database Interface (DBI)**: A future database client with adapters for multiple databases and automatic logging. It will implement an MVC-like router with write protection rules, offering safe direct database access during testing.
 - **Non-functional Testing**:
-   - **Visual Testing**: Will allow the comparison of screenshots or elements on a screen to detect visual defects.
    - **Accessibility Testing**: Will assess the application's usability by people with disabilities.
 
 ## Getting Started
@@ -908,6 +915,79 @@ try:
 except JSONSchemaFailedAssertionException as e:
     print(f"JSON Schema validation failed: {str(e)}")
 ```
+
+## Command line client
+
+### Key Features
+
+- **Shell Support**: Supports popular shell environments such as Bash, Zsh, CMD, and PowerShell.
+- **Interactive and Non-Interactive Commands**: Handles both interactive prompts (e.g., `read`) and non-interactive commands (e.g., `ls`).
+- **Output Caching and Retrieval**: Caches output during command execution and allows retrieval for further processing or assertions.
+- **Exit Code Verification**: Provides methods to assert or verify exit codes of executed commands.
+- **Timeout Handling**: Ensures that long-running commands are automatically interrupted when they exceed a specified timeout period.
+- **Seamless Integration**: Easily integrates with your test cases, offering familiar methods for assertions and verifications.
+
+### Basic Usage
+
+Here’s a simple example of how to use the `CLIClient`:
+
+```python
+from hyperiontf import CLIClient
+
+client = CLIClient(shell='bash')
+
+# Execute a non-interactive command
+client.execute('pwd')
+client.assert_output("/home/user")
+
+# Execute an interactive command
+client.exec_interactive('read -p "Enter something:"')
+client.wait("Enter something:")
+client.send_keys('Hyperion')
+client.wait()
+client.assert_output_contains('Hyperion')
+
+# Verify exit code
+client.execute('ls /nonexistent_directory')
+client.assert_exit_code(1)
+
+# Quit the session
+client.quit()
+```
+
+### Test Example
+
+You can integrate the CLI client into your pytest-based tests as follows:
+
+```python
+import pytest
+from hyperiontf import CLIClient
+
+@pytest.fixture
+def cli_client():
+    client = CLIClient()
+    yield client
+    client.quit()
+
+def test_cli_execution(cli_client):
+    # Test executing a command and verifying output
+    cli_client.execute('echo "Hello, Hyperion!"')
+    cli_client.assert_output("Hello, Hyperion!")
+```
+
+### Key Methods Overview
+
+- **`execute(command: str, timeout: int)`**: Executes a command with an optional timeout and waits for the prompt to reappear.
+- **`exec_interactive(command: str)`**: Executes an interactive command that waits for user input.
+- **`send_keys(data: str)`**: Sends keystrokes to the interactive shell.
+- **`assert_output(expected_output: str)`**: Asserts that the shell output matches the expected output.
+- **`verify_output(expected_output: str)`**: Verifies that the shell output matches the expected output without raising an exception.
+- **`assert_exit_code(expected_code: int)`**: Asserts that the exit code from the last command matches the expected code.
+- **`verify_exit_code(expected_code: int)`**: Verifies that the exit code matches without raising an exception.
+
+With `CLIClient`, you can automate and test command-line tasks across platforms, whether it's executing shell scripts, interacting with command-line tools, or managing long-running tasks in your test workflows.
+
+
 
 ## Cross-Platform Testing with Hyperion Framework
 
