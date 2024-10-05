@@ -34,22 +34,40 @@
         .dragging {
             opacity: 0.5;
         }
+
+        /* Two-column layout */
+        .container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        textarea {
+            margin-top: 20px;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
 
 <!-- Draggable section -->
-<div id="draggable-section" style="height: 180px; width: 300px;">
-    <h3>Drag and Drop Rows</h3>
-    <div class="draggable" draggable="true" id="row1">Row 1: Item A</div>
-    <div class="draggable" draggable="true" id="row2">Row 2: Item B</div>
-    <div class="draggable" draggable="true" id="row3">Row 3: Item C</div>
-</div>
 
-<div>
-    <h3>Canvas Drawing and Popup Menu</h3>
-    <!-- Canvas -->
-    <canvas id="myCanvas" width="300" height="300"></canvas>
+<div class="container">
+    <div class="col">
+        <h3>Canvas Drawing and Popup Menu</h3>
+        <!-- Canvas -->
+        <canvas id="myCanvas" width="300" height="300"></canvas>
+    </div>
+    <div class="col" id="draggable-section" style="height: 180px;">
+        <h3>Drag and Drop Rows</h3>
+        <div class="draggable" draggable="true" id="row1">Row 1: Item A</div>
+        <div class="draggable" draggable="true" id="row2">Row 2: Item B</div>
+        <div class="draggable" draggable="true" id="row3">Row 3: Item C</div>
+    </div>
 </div>
 
 <!-- Right-click popup menu -->
@@ -58,13 +76,11 @@
     <button onclick="closeMenu()">Close</button>
 </div>
 
-<div>
-    <!-- Text Areas -->
-    <textarea id="textArea1" rows="4" cols="30"></textarea>
-    <textarea id="textArea2" rows="4" cols="30"></textarea>
+<!-- Text Areas in two columns -->
+<div class="container">
+    <textarea id="textArea1" rows="4" cols="30" class="col"></textarea>
+    <textarea id="textArea2" rows="4" cols="30" class="col"></textarea>
 </div>
-
-
 
 <script>
   // Canvas drawing functionality
