@@ -104,7 +104,7 @@ def test_auto_recovery_with_memorized_element(page):
 
 
 @pytest.mark.NestedWidgets
-@pytest.mark.MultipleWidgets
+@pytest.mark.MultipleWidget
 @pytest.mark.SingleWidget
 @pytest.mark.SingleElement
 @pytest.mark.StaleErrorAutoRecovery

@@ -55,11 +55,21 @@ Unconditional logging of all actions provides comprehensive information for debu
 
 An integrated REST client covered by automatic logging includes a built-in JSON schema verification helper in the Response class.
 
+### CLI Client for command line applications testing
+
+The CLI Client in Hyperion Testing Framework enables interaction with command-line interfaces (CLI) through a persistent shell session. This feature is particularly useful for automating tasks that involve shell commands or interacting with terminal-based applications in a cross-platform environment.
+
+### Image comparison tools and basic visula testing API for page objects
+
+Hyperion Testing Framework includes a robust Visual Testing feature that allows for precise image comparisons. It supports both pixel-perfect comparisons and percentage-based threshold comparisons, where the user can specify a mismatch threshold (e.g., a threshold of 5 allows for a 95% similarity). If the images have different sizes, they are automatically scaled to the closest common size for comparison.
+
+Visual assertions can be performed at both the page and element levels, offering convenience methods for asserting visual correctness directly in page objects. This feature is integrated into the expect API, providing seamless visual comparison capabilities across your tests.
+
+
 ### Planned Features
 
 - **Database Interface (DBI)**: A future database client with adapters for multiple databases and automatic logging. It will implement an MVC-like router with write protection rules, offering safe direct database access during testing.
 - **Non-functional Testing**:
-   - **Visual Testing**: Will allow the comparison of screenshots or elements on a screen to detect visual defects.
    - **Accessibility Testing**: Will assess the application's usability by people with disabilities.
 
 ## Getting Started
@@ -820,6 +830,51 @@ Please note that the resolution order of locators is as follows:
 
 This sophisticated locator resolution allows you to design tests that are robust and adaptable to various environments. Up next, we will delve into more advanced features of the Hyperion Testing Framework. Stay tuned!
 
+### Visual Testing Modes in Hyperion POM
+
+Hyperion Testing Framework offers a powerful **Visual Testing** feature that supports both page-wide and element-specific visual verifications. The framework provides two main modes of operation: **collect** and **compare**. These modes can be explicitly passed to the comparison methods or configured globally through the framework’s configuration.
+
+#### Visual Testing Modes:
+- **Collect Mode**: In this mode, the expected (baseline) image is captured and stored for future comparisons. Any existing baseline image will be overwritten by the newly captured image.
+- **Compare Mode**: This mode compares the current visual representation against the stored baseline image and evaluates whether the images meet the specified similarity criteria.
+
+#### Example Usage:
+
+##### Page-Level Visual Comparison:
+
+```python
+# Perform a visual comparison for the whole page
+page_image = Image("/path/to/page_image.png")
+page.verify_visual_match(page_image, mode=VisualMode.COMPARE, mismatch_threshold=5)
+```
+
+This will compare the current visual state of the entire page with the baseline image, allowing up to a 5% mismatch.
+
+##### Element-Level Visual Comparison:
+
+```python
+# Perform a visual comparison for a specific element
+element_image = Image("/path/to/element_image.png")
+page.element.verify_visual_match(element_image, mode=VisualMode.COLLECT)
+```
+
+This will collect the visual state of the specified element and store it as the baseline image for future comparisons.
+
+#### Key Features:
+- **Mismatch Threshold**: Allows users to specify the degree of similarity between the baseline and the current image. For example, a threshold of 5 means that the image must be at least 95% similar.
+- **Auto-scaling for Different Sizes**: If the compared images have different sizes, they are automatically scaled to the closest common size before comparison.
+
+Visual testing can be applied seamlessly at the **page** and **element** levels, providing comprehensive control over the visual integrity of your web pages and their components.
+
+
+### ActionBuilder Class
+
+The `ActionBuilder` class provides a fluent interface for performing a wide range of user interactions such as mouse, keyboard, and touch actions, while logging all performed actions. It serves as a wrapper around the builder adapter, which is responsible for executing the actual actions.
+
+```python
+page.action_builder.mouse_move_to(10,10).mouse_down('left').mouse_move_to(50,50).mouse_up('left').perform()
+```
+
 ## REST Client
 
 The REST Client provides a convenient and easy-to-use interface for making HTTP requests and handling responses. It is designed to simplify the process of interacting with RESTful APIs and web services.
@@ -908,6 +963,79 @@ try:
 except JSONSchemaFailedAssertionException as e:
     print(f"JSON Schema validation failed: {str(e)}")
 ```
+
+## Command line client
+
+### Key Features
+
+- **Shell Support**: Supports popular shell environments such as Bash, Zsh, CMD, and PowerShell.
+- **Interactive and Non-Interactive Commands**: Handles both interactive prompts (e.g., `read`) and non-interactive commands (e.g., `ls`).
+- **Output Caching and Retrieval**: Caches output during command execution and allows retrieval for further processing or assertions.
+- **Exit Code Verification**: Provides methods to assert or verify exit codes of executed commands.
+- **Timeout Handling**: Ensures that long-running commands are automatically interrupted when they exceed a specified timeout period.
+- **Seamless Integration**: Easily integrates with your test cases, offering familiar methods for assertions and verifications.
+
+### Basic Usage
+
+Here’s a simple example of how to use the `CLIClient`:
+
+```python
+from hyperiontf import CLIClient
+
+client = CLIClient(shell='bash')
+
+# Execute a non-interactive command
+client.execute('pwd')
+client.assert_output("/home/user")
+
+# Execute an interactive command
+client.exec_interactive('read -p "Enter something:"')
+client.wait("Enter something:")
+client.send_keys('Hyperion')
+client.wait()
+client.assert_output_contains('Hyperion')
+
+# Verify exit code
+client.execute('ls /nonexistent_directory')
+client.assert_exit_code(1)
+
+# Quit the session
+client.quit()
+```
+
+### Test Example
+
+You can integrate the CLI client into your pytest-based tests as follows:
+
+```python
+import pytest
+from hyperiontf import CLIClient
+
+@pytest.fixture
+def cli_client():
+    client = CLIClient()
+    yield client
+    client.quit()
+
+def test_cli_execution(cli_client):
+    # Test executing a command and verifying output
+    cli_client.execute('echo "Hello, Hyperion!"')
+    cli_client.assert_output("Hello, Hyperion!")
+```
+
+### Key Methods Overview
+
+- **`execute(command: str, timeout: int)`**: Executes a command with an optional timeout and waits for the prompt to reappear.
+- **`exec_interactive(command: str)`**: Executes an interactive command that waits for user input.
+- **`send_keys(data: str)`**: Sends keystrokes to the interactive shell.
+- **`assert_output(expected_output: str)`**: Asserts that the shell output matches the expected output.
+- **`verify_output(expected_output: str)`**: Verifies that the shell output matches the expected output without raising an exception.
+- **`assert_exit_code(expected_code: int)`**: Asserts that the exit code from the last command matches the expected code.
+- **`verify_exit_code(expected_code: int)`**: Verifies that the exit code matches without raising an exception.
+
+With `CLIClient`, you can automate and test command-line tasks across platforms, whether it's executing shell scripts, interacting with command-line tools, or managing long-running tasks in your test workflows.
+
+
 
 ## Cross-Platform Testing with Hyperion Framework
 

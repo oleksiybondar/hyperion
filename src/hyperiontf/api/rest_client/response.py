@@ -92,6 +92,10 @@ class Response:
         return self.response.text
 
     @property
+    def logger(self):
+        return self.client.logger
+
+    @property
     def body(self) -> Union[str, dict, object]:
         """
         Get the parsed body of the response.
@@ -163,7 +167,7 @@ class Response:
                 f"which is required for following a redirection. Current URL: {self.request.full_url}"
             )
 
-        logger.debug(
+        self.logger.debug(
             f"[{self.client.__full_name__}] Following redirection to new endpoint: {next_url}"
         )
 
@@ -228,7 +232,7 @@ class Response:
             self.body,
             is_assertion=is_assertion,
             sender=self.client.__full_name__,
-            logger=logger,
+            logger=self.logger,
         ).to_match_schema(schema)
 
     def _generate_log_message(self) -> str:

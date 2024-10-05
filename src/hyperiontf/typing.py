@@ -88,6 +88,7 @@ DESKTOP_FAMILY = [
 
 WIN_APP_DRIVER_ROOT_HANDLE: str = "---root---"
 
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Log Sources
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -107,6 +108,10 @@ class LoggerSource:
     EXPECT: str = "Expect"
     SILENT_FAILURES: str = "SilentFailures"
     REST_CLIENT: str = "RestClient"
+    WIN_APP_DRIVER: str = "WindowsApplicationDriverClient"
+    ACTION_BUILDER: str = "ActionBuilder"
+    CLI: str = "CommandLineClient"
+    SSH: str = "SecureShellClient"
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -269,7 +274,31 @@ class OS:
 DESKTOP_OS_FAMILY = [OS.WINDOWS, OS.MAC, OS.LINUX]
 MOBILE_OS_FAMILY = [OS.ANDROID, OS.IOS]
 
+MouseButtonType = Literal["left", "middle", "right", "back", "forward"]
+
+
+class MouseButton:
+    LEFT: MouseButtonType = "left"
+    MIDDLE: MouseButtonType = "middle"
+    RIGHT: MouseButtonType = "right"
+    BACK: MouseButtonType = "back"
+    FORWARD: MouseButtonType = "forward"
+
+
+TouchFingerType = Literal["one", "two", "three", "four", "five"]
+
+
+class TouchFinger:
+    ONE: TouchFingerType = "one"
+    TWO: TouchFingerType = "two"
+    THREE: TouchFingerType = "three"
+    FOUR: TouchFingerType = "four"
+    FIVE: TouchFingerType = "five"
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
 # Elements Query Language
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ASTType = Literal[
@@ -451,6 +480,10 @@ class HyperionAPIException(HyperionException):
     pass
 
 
+class HyperionCLIException(HyperionException):
+    pass
+
+
 class ElementQueryLanguageParseException(HyperionException):
     pass
 
@@ -518,4 +551,39 @@ class ConnectionErrorException(HyperionAPIException):
 
 
 class JSONSchemaFailedAssertionException(HyperionAPIException):
+    pass
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# CLI Exceptions
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+class CommandExecutionTimeoutException(HyperionCLIException):
+    """Raised when a command execution times out."""
+
+    pass
+
+
+class CommandExecutionException(HyperionCLIException):
+    """Raised for general command execution failures."""
+
+    pass
+
+
+class InvalidCommandException(HyperionCLIException):
+    """Raised when an invalid command is issued."""
+
+    pass
+
+
+class AuthenticationException(HyperionCLIException):
+    """Raised when authentication fails (e.g., incorrect sudo password)."""
+
+    pass
+
+
+class CommandExpectFailureException(HyperionCLIException):
+    """Raised when the expected pattern is not found in the output."""
+
     pass

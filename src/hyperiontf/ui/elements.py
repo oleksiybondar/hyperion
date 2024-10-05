@@ -53,6 +53,10 @@ class Elements(LocatableElement):
 
         return self._elements_cache
 
+    def force_refresh(self):
+        self._elements_cache = []
+        self.find_itself()
+
     def _cache_elements(self):
         i = 0
         self._elements_cache = []

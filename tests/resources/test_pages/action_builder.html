@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Action Builder Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        canvas {
+            border: 1px solid black;
+        }
+
+        #popupMenu {
+            display: none;
+            position: absolute;
+            background-color: white;
+            border: 1px solid black;
+            padding: 5px;
+            z-index: 1000;
+        }
+
+        /* Style for draggable rows */
+        .draggable {
+            padding: 10px;
+            margin: 10px;
+            border: 1px solid black;
+            background-color: #f9f9f9;
+            cursor: move;
+        }
+
+        .dragging {
+            opacity: 0.5;
+        }
+
+        /* Two-column layout */
+        .container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        textarea {
+            margin-top: 20px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Draggable section -->
+
+<div class="container">
+    <div class="col">
+        <h3>Canvas Drawing and Popup Menu</h3>
+        <!-- Canvas -->
+        <canvas id="myCanvas" width="300" height="300"></canvas>
+    </div>
+    <div class="col" id="draggable-section" style="height: 180px;">
+        <h3>Drag and Drop Rows</h3>
+        <div class="draggable" draggable="true" id="row1">Row 1: Item A</div>
+        <div class="draggable" draggable="true" id="row2">Row 2: Item B</div>
+        <div class="draggable" draggable="true" id="row3">Row 3: Item C</div>
+    </div>
+</div>
+
+<!-- Right-click popup menu -->
+<div id="popupMenu">
+    <p>Right Click Menu</p>
+    <button onclick="closeMenu()">Close</button>
+</div>
+
+<!-- Text Areas in two columns -->
+<div class="container">
+    <textarea id="textArea1" rows="4" cols="30" class="col"></textarea>
+    <textarea id="textArea2" rows="4" cols="30" class="col"></textarea>
+</div>
+
+<script>
+  // Canvas drawing functionality
+  const canvas = document.getElementById('myCanvas');
+  const ctx = canvas.getContext('2d');
+  let drawing = false;
+
+  canvas.addEventListener('mousedown', function (event) {
+    if (event.button === 0) { // Left mouse button
+      drawing = true;
+      ctx.beginPath();
+      ctx.moveTo(event.offsetX, event.offsetY);
+    }
+  });
+
+  canvas.addEventListener('mousemove', function (event) {
+    if (drawing) {
+      ctx.lineTo(event.offsetX, event.offsetY);
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  });
+
+  canvas.addEventListener('mouseup', function () {
+    drawing = false;
+  });
+
+  canvas.addEventListener('mouseleave', function () {
+    drawing = false;
+  });
+
+  // Popup menu functionality
+  document.addEventListener('contextmenu', function (event) {
+    event.preventDefault();
+    const popupMenu = document.getElementById('popupMenu');
+    popupMenu.style.display = 'block';
+    popupMenu.style.left = `${event.pageX}px`;
+    popupMenu.style.top = `${event.pageY}px`;
+  });
+
+  function closeMenu() {
+    document.getElementById('popupMenu').style.display = 'none';
+  }
+
+  document.addEventListener('click', function () {
+    closeMenu();
+  });
+
+  // Drag and drop functionality
+  const draggables = document.querySelectorAll('.draggable');
+  const section = document.getElementById('draggable-section');
+  let draggedElement = null;
+
+  draggables.forEach(draggable => {
+    draggable.addEventListener('dragstart', function (event) {
+      draggedElement = draggable;
+      setTimeout(() => draggable.classList.add('dragging'), 0);
+    });
+
+    draggable.addEventListener('dragend', function () {
+      draggedElement = null;
+      draggable.classList.remove('dragging');
+      updateOrder(); // Update the new order
+    });
+  });
+
+  section.addEventListener('dragover', function (event) {
+    event.preventDefault();
+    const afterElement = getDragAfterElement(section, event.clientY);
+    if (afterElement == null) {
+      section.appendChild(draggedElement);
+    } else {
+      section.insertBefore(draggedElement, afterElement);
+    }
+  });
+
+  function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+
+  // Function to log the new order after drag-and-drop
+  function updateOrder() {
+    const rows = [...section.querySelectorAll('.draggable')];
+    const order = rows.map(row => row.textContent).join(', ');
+    console.log("New Order: " + order); // Log or handle the new order
+  }
+</script>
+
+</body>
+</html>

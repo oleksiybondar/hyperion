@@ -3,9 +3,9 @@ from hyperiontf.executors.pytest import automatic_log_setup, fixture  # noqa: F4
 from hyperiontf import expect
 from hyperiontf.typing import TimeoutException
 
-from ..page_objects.waits import WaitsPage
+from page_objects.waits import WaitsPage
 
-from .caps_variants import caps_variants
+from web.caps_variants import caps_variants
 import os
 import time
 

@@ -110,7 +110,7 @@ def assert_visual_match(
         )
 
     expect_object = prepare_expect_object(
-        page_object, actual_image, False, "Asserting visual match.", logger
+        page_object, actual_image, True, "Asserting visual match.", logger
     )
     return expect_object.to_be_similar(
         expected_value, mismatch_threshold, compare_regions, exclude_regions
@@ -186,7 +186,7 @@ def assert_visual_match_in_regions(
         )
 
     expect_object = prepare_expect_object(
-        page_object, actual_image, False, "Asserting partial visual match.", logger
+        page_object, actual_image, True, "Asserting partial visual match.", logger
     )
     return expect_object.to_match_in_specified_regions(
         expected_value, compare_regions, mismatch_threshold
@@ -264,7 +264,7 @@ def assert_visual_exclusion_match(
         )
 
     expect_object = prepare_expect_object(
-        page_object, actual_image, False, "Asserting partial visual match.", logger
+        page_object, actual_image, True, "Asserting partial visual match.", logger
     )
     return expect_object.to_match_excluding_regions(
         expected_value, exclude_regions, mismatch_threshold

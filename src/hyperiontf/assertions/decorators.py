@@ -17,7 +17,7 @@ def auto_log(func):
         if self.logger:
             result.logger = self.logger
         if self.is_assertion:
-            if result:
+            if result.result:
                 result.log_info()
             else:
                 result.raise_exception()

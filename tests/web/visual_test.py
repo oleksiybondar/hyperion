@@ -25,9 +25,9 @@ def page(request):
     yield page
 
 
-@pytest.mark.visual
-@pytest.mark.collect_code
-@pytest.mark.page
+@pytest.mark.Visual
+@pytest.mark.CollectMode
+@pytest.mark.PageVisual
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_collect_mode_for_whole_page(page):
     """
@@ -48,9 +48,9 @@ def test_collect_mode_for_whole_page(page):
     expect(page_img).not_to_exist()
 
 
-@pytest.mark.visual
-@pytest.mark.collect_code
-@pytest.mark.element
+@pytest.mark.Visual
+@pytest.mark.CollectMode
+@pytest.mark.ElementVisual
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_collect_mode_for_element_only(page):
     """
@@ -72,11 +72,11 @@ def test_collect_mode_for_element_only(page):
     expect(dice).not_to_exist()
 
 
-@pytest.mark.visual
-@pytest.mark.compare_code
-@pytest.mark.threshold
-@pytest.mark.page
-@pytest.mark.change_viewport
+@pytest.mark.Visual
+@pytest.mark.CompareMode
+@pytest.mark.VisualThreshold
+@pytest.mark.PageVisual
+@pytest.mark.ChangeViewport
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_compare_mode_for_whole_page(page):
     """
@@ -96,11 +96,11 @@ def test_compare_mode_for_whole_page(page):
     assert result == 1, f"Expected True, but got {result.result}"  # type: ignore
 
 
-@pytest.mark.visual
-@pytest.mark.compare_code
-@pytest.mark.threshold
-@pytest.mark.page
-@pytest.mark.change_viewport
+@pytest.mark.Visual
+@pytest.mark.CompareMode
+@pytest.mark.VisualThreshold
+@pytest.mark.PageVisual
+@pytest.mark.ChangeViewport
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_compare_mode_for_whole_page_with_interferences(page):
     """
@@ -122,11 +122,11 @@ def test_compare_mode_for_whole_page_with_interferences(page):
     assert result == 0, f"Expected False, but got {result.result}"  # type: ignore
 
 
-@pytest.mark.visual
-@pytest.mark.compare_code
-@pytest.mark.threshold
-@pytest.mark.page
-@pytest.mark.change_viewport
+@pytest.mark.Visual
+@pytest.mark.CompareMode
+@pytest.mark.VisualThreshold
+@pytest.mark.PageVisual
+@pytest.mark.ChangeViewport
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_compare_mode_for_element(page):
     """

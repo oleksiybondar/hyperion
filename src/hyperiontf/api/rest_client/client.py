@@ -30,6 +30,8 @@ class Client:
         redirections_limit: int = config.rest.redirections_limit,
         connection_timeout: int = config.rest.connection_timeout,
         request_timeout: int = config.rest.request_timeout,
+        default_event_logging_level: str = "info",
+        logger=logger,
     ):
         """
         Initializes the client object with the specified parameters.
@@ -70,7 +72,8 @@ class Client:
         self.connection_timeout = connection_timeout
         self.request_timeout = request_timeout
 
-        self._default_event_logging_level = "info"
+        self.logger = logger
+        self._default_event_logging_level = default_event_logging_level
 
         self.session = requests.Session()
         self.session.max_redirects = redirections_limit

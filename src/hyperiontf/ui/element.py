@@ -67,6 +67,18 @@ class Element(LocatableElement):
         return True
 
     @property
+    def location(self):
+        return self.get_location()
+
+    @property
+    def size(self):
+        return self.get_size()
+
+    @property
+    def rect(self):
+        return self.get_rect()
+
+    @property
     def is_present(self):
         return self.__is_present__()
 
@@ -290,6 +302,7 @@ class Element(LocatableElement):
         """
         return self._get_is_selected()
 
+    @error_recovery(logger=logger)
     def get_location(self, log: bool = True) -> dict:
         """
         Retrieves the location of the element in the page.
@@ -307,6 +320,7 @@ class Element(LocatableElement):
             )
         return location
 
+    @error_recovery(logger=logger)
     def get_size(self, log: bool = True) -> dict:
         """
         Retrieves the size of the element.
@@ -322,6 +336,13 @@ class Element(LocatableElement):
             logger.info(f"[{self.__full_name__}] getting element's size: {size}")
         return size
 
+    def _prepare_action_builder(self):
+        builder = self.root.action_builder
+        builder.sender = self.__full_name__
+        builder.logger = logger
+        return builder
+
+    @error_recovery(logger=logger)
     def get_rect(self, log: bool = True) -> dict:
         """
         Retrieves the rectangle that bounds the element, including its location and size.
@@ -1052,3 +1073,70 @@ class Element(LocatableElement):
 
     def _is_user_interactable(self) -> bool:
         return self._get_is_displayed(log=False) and self._get_is_enabled(log=False)
+
+    def _scroll_into_view(self, force: bool = False):
+        if not self._get_is_displayed(log=False) or force:
+            self.element_adapter.location_once_scrolled_into_view
+
+    @error_recovery(logger=logger)
+    def scroll_into_view(self, force: bool = False):
+        """
+        Scroll the current element into view.
+
+        This method ensures that the element is scrolled into the visible area of the page or container.
+        It is typically used when an element is not immediately visible, and interaction with it requires
+        the element to be brought into the viewport.
+        """
+        self._scroll_into_view(force)
+
+    @error_recovery(logger=logger)
+    def drag_and_drop_by(self, x: float, y: float):
+        """
+        Drag the current element and drop it at the specified offset coordinates.
+
+        This method simulates dragging the element by the specified x and y offsets.
+        It uses the action builder to perform the drag-and-drop action.
+
+        Parameters:
+            x (float): The horizontal offset by which to drag the element.
+            y (float): The vertical offset by which to drag the element.
+
+        Returns:
+            None: The action is performed and executed using the action builder.
+        """
+        self._scroll_into_view()
+        builder = self._prepare_action_builder()
+        builder.drag_element_by(self, x, y).perform()
+
+    @error_recovery(logger=logger)
+    def drag_and_drop(self, other):
+        """
+        Drag the current element and drop it onto another element.
+
+        This method simulates dragging the current element and dropping it on the target element.
+        It uses the action builder to perform the drag-and-drop action between two elements.
+
+        Parameters:
+            other: The target element on which the current element will be dropped.
+
+        Returns:
+            None: The action is performed and executed using the action builder.
+        """
+        self._scroll_into_view()
+        builder = self._prepare_action_builder()
+        builder.drag_element_on_element(self, other).perform()
+
+    @error_recovery(logger=logger)
+    def right_click(self):
+        """
+        Perform a right-click action on the current element.
+
+        This method simulates a right-click (context click) on the current element.
+        It uses the action builder to execute the right-click operation on the element.
+
+        Returns:
+            None: The action is performed and executed using the action builder.
+        """
+        self._scroll_into_view()
+        builder = self._prepare_action_builder()
+        builder.right_click_on_element(self).perform()
