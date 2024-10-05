@@ -42,7 +42,7 @@ def test_find_simple_element_and_assert_its_attribute(page):
 
 
 @pytest.mark.SingleElement
-@pytest.mark.style
+@pytest.mark.StyleAttribute
 @pytest.mark.parametrize("page", caps_variants, indirect=True)
 def test_find_simple_element_and_assert_its_style(page):
     """

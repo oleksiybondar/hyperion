@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Optional, Union
 
 from ptyprocess import PtyProcess
@@ -111,11 +112,29 @@ class CLIClient:
         for line in lines:
             line = line.strip()
 
-            if line == self.last_cmd:
+            if self._is_cmd_line(line):
                 self.last_cmd = None
                 continue
 
             self.output_cache.append(line)
+
+    def _is_cmd_line(self, line: str) -> bool:
+        # Pattern to match different shell prompt and command formats
+        # - Full command only
+        # - Prompt + command
+        # - Shortened prompt due to path length
+        # Example pattern: <path/end$ <cmd>
+
+        # Define a regex pattern to match prompt variations
+        pattern = r"^\s*<.*?(\$|\#)\s*"  # Matches <path$ or <path#
+
+        if not self.last_cmd:
+            return False
+        # Check if the line matches the last command or one of the patterns
+        return line == self.last_cmd or (
+            self.last_cmd in line
+            and (bool(re.search(pattern, line)) or self.action_prompt in line)
+        )
 
     def _clear_cache(self):
         """

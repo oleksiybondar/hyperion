@@ -61,6 +61,9 @@ The CLI Client in Hyperion Testing Framework enables interaction with command-li
 
 ### Image comparison tools and basic visula testing API for page objects
 
+Hyperion Testing Framework includes a robust Visual Testing feature that allows for precise image comparisons. It supports both pixel-perfect comparisons and percentage-based threshold comparisons, where the user can specify a mismatch threshold (e.g., a threshold of 5 allows for a 95% similarity). If the images have different sizes, they are automatically scaled to the closest common size for comparison.
+
+Visual assertions can be performed at both the page and element levels, offering convenience methods for asserting visual correctness directly in page objects. This feature is integrated into the expect API, providing seamless visual comparison capabilities across your tests.
 
 
 ### Planned Features
@@ -826,6 +829,51 @@ Please note that the resolution order of locators is as follows:
 4. Finally, check for automation-specific keys (like `selenium`, `playwright`, `appium`, `autoit`, etc.)
 
 This sophisticated locator resolution allows you to design tests that are robust and adaptable to various environments. Up next, we will delve into more advanced features of the Hyperion Testing Framework. Stay tuned!
+
+### Visual Testing Modes in Hyperion POM
+
+Hyperion Testing Framework offers a powerful **Visual Testing** feature that supports both page-wide and element-specific visual verifications. The framework provides two main modes of operation: **collect** and **compare**. These modes can be explicitly passed to the comparison methods or configured globally through the framework’s configuration.
+
+#### Visual Testing Modes:
+- **Collect Mode**: In this mode, the expected (baseline) image is captured and stored for future comparisons. Any existing baseline image will be overwritten by the newly captured image.
+- **Compare Mode**: This mode compares the current visual representation against the stored baseline image and evaluates whether the images meet the specified similarity criteria.
+
+#### Example Usage:
+
+##### Page-Level Visual Comparison:
+
+```python
+# Perform a visual comparison for the whole page
+page_image = Image("/path/to/page_image.png")
+page.verify_visual_match(page_image, mode=VisualMode.COMPARE, mismatch_threshold=5)
+```
+
+This will compare the current visual state of the entire page with the baseline image, allowing up to a 5% mismatch.
+
+##### Element-Level Visual Comparison:
+
+```python
+# Perform a visual comparison for a specific element
+element_image = Image("/path/to/element_image.png")
+page.element.verify_visual_match(element_image, mode=VisualMode.COLLECT)
+```
+
+This will collect the visual state of the specified element and store it as the baseline image for future comparisons.
+
+#### Key Features:
+- **Mismatch Threshold**: Allows users to specify the degree of similarity between the baseline and the current image. For example, a threshold of 5 means that the image must be at least 95% similar.
+- **Auto-scaling for Different Sizes**: If the compared images have different sizes, they are automatically scaled to the closest common size before comparison.
+
+Visual testing can be applied seamlessly at the **page** and **element** levels, providing comprehensive control over the visual integrity of your web pages and their components.
+
+
+### ActionBuilder Class
+
+The `ActionBuilder` class provides a fluent interface for performing a wide range of user interactions such as mouse, keyboard, and touch actions, while logging all performed actions. It serves as a wrapper around the builder adapter, which is responsible for executing the actual actions.
+
+```python
+page.action_builder.mouse_move_to(10,10).mouse_down('left').mouse_move_to(50,50).mouse_up('left').perform()
+```
 
 ## REST Client
 

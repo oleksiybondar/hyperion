@@ -31,9 +31,9 @@ BROWSER_START_METHODS = {
 
 
 class Page:
-    chrome_driver = "/Users/oleksiybondar/Downloads/chromedriver-mac-arm64/chromedriver"
+    chrome_driver = None
     firefox_driver = None
-    edge_driver = "/Users/oleksiybondar/Downloads/edgedriver_mac64_m1/msedgedriver"
+    edge_driver = None
 
     @staticmethod
     def get_chrome_driver_bin():

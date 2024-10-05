@@ -1074,12 +1074,12 @@ class Element(LocatableElement):
     def _is_user_interactable(self) -> bool:
         return self._get_is_displayed(log=False) and self._get_is_enabled(log=False)
 
-    def _scroll_into_view(self):
-        if not self._get_is_displayed(log=False):
+    def _scroll_into_view(self, force: bool = False):
+        if not self._get_is_displayed(log=False) or force:
             self.element_adapter.location_once_scrolled_into_view
 
     @error_recovery(logger=logger)
-    def scroll_into_view(self):
+    def scroll_into_view(self, force: bool = False):
         """
         Scroll the current element into view.
 
@@ -1087,7 +1087,7 @@ class Element(LocatableElement):
         It is typically used when an element is not immediately visible, and interaction with it requires
         the element to be brought into the viewport.
         """
-        self._scroll_into_view()
+        self._scroll_into_view(force)
 
     @error_recovery(logger=logger)
     def drag_and_drop_by(self, x: float, y: float):

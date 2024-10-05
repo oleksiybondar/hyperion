@@ -18,7 +18,7 @@ ply="^3.11"
 opencv-python="^4.9.0.80"
 opencv-python-headless="^4.9.0.80"
 opencv-contrib-python="^4.9.0.80"
-paramiko="^3.5.0"
+ptyprocess="^0.7.0"
 
 [build-system]
 requires = ["poetry-core"]

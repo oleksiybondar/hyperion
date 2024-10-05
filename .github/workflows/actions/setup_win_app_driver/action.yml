@@ -1,0 +1,20 @@
+name: 'Setup Windows Application Driver'
+description: 'Enable development mode, disable firewall, install Windows Application Driver, and run it.'
+runs:
+  using: 'composite'
+  steps:
+    - name: Enable Developer Mode
+      run: |
+        powershell.exe -Command "Enable-WindowsOptionalFeature -Online -FeatureName 'DeveloperMode' -NoRestart"
+
+    - name: Disable Firewall
+      run: |
+        powershell.exe -Command "Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False"
+
+    - name: Install Windows Application Driver
+      run: |
+        powershell.exe -Command "Invoke-WebRequest -Uri 'https://github.com/microsoft/WinAppDriver/releases/download/v1.2.1/WindowsApplicationDriver_1.2.1.msi' -OutFile 'C:\\WindowsApplicationDriver.msi'"
+
+    - name: Run Windows Application Driver
+      run: |
+        powershell.exe -Command "Start-Process 'C:\\Program Files (x86)\\Windows Application Driver\\WinAppDriver.exe'"

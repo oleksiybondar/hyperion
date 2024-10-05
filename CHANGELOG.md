@@ -22,7 +22,6 @@ From its first version, our framework has included a dedicated REST client equip
 #### Features
 
 - bash/sh/zsh interactive client with built-in logging and assertions helpers
-- ssh client
 
 ## [0.5.0] - 2024-10-04
 

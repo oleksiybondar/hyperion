@@ -156,7 +156,10 @@ class Element:
             HyperionException: If an error occurs while getting the location of the element once scrolled into view.
 
         """
-        self.element.scroll_into_view()
+        if hasattr(self.element, "scroll_into_view"):
+            self.element.scroll_into_view()
+        else:
+            self.element.scroll_into_view_if_needed()
         bbox = self.element.bounding_box()
         return {"x": bbox["x"], "y": bbox["y"]}
 

@@ -25,14 +25,10 @@
         /* Style for draggable rows */
         .draggable {
             padding: 10px;
-            margin: 5px 0;
+            margin: 10px;
             border: 1px solid black;
             background-color: #f9f9f9;
             cursor: move;
-        }
-
-        #draggable-section {
-            margin-top: 20px;
         }
 
         .dragging {
@@ -42,9 +38,16 @@
 </head>
 <body>
 
-<h3>Canvas Drawing and Popup Menu</h3>
+<!-- Draggable section -->
+<div id="draggable-section" style="height: 180px; width: 300px;">
+    <h3>Drag and Drop Rows</h3>
+    <div class="draggable" draggable="true" id="row1">Row 1: Item A</div>
+    <div class="draggable" draggable="true" id="row2">Row 2: Item B</div>
+    <div class="draggable" draggable="true" id="row3">Row 3: Item C</div>
+</div>
 
 <div>
+    <h3>Canvas Drawing and Popup Menu</h3>
     <!-- Canvas -->
     <canvas id="myCanvas" width="300" height="300"></canvas>
 </div>
@@ -61,13 +64,7 @@
     <textarea id="textArea2" rows="4" cols="30"></textarea>
 </div>
 
-<!-- Draggable section -->
-<div id="draggable-section">
-    <h3>Drag and Drop Rows</h3>
-    <div class="draggable" draggable="true" id="row1">Row 1: Item A</div>
-    <div class="draggable" draggable="true" id="row2">Row 2: Item B</div>
-    <div class="draggable" draggable="true" id="row3">Row 3: Item C</div>
-</div>
+
 
 <script>
   // Canvas drawing functionality

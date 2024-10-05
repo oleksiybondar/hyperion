@@ -1,5 +1,5 @@
 import pytest
-from hyperiontf import CLIClient
+from hyperiontf import CLIClient, expect
 from hyperiontf.executors.pytest import automatic_log_setup  # noqa: F401
 from hyperiontf.executors.pytest import fixture
 import os
@@ -49,7 +49,9 @@ def test_interactive_command_execution(cli_client):
 
 
 @pytest.mark.CLI
-@pytest.mark.ExitCodeAssertion
+@pytest.mark.ExitCode
+@pytest.mark.expect
+@pytest.mark.ExecuteCommand
 def test_exit_code_assertion(cli_client):
     """
     Test exit code assertion for a failed command.
@@ -58,10 +60,11 @@ def test_exit_code_assertion(cli_client):
     and asserts that the exit code is non-zero (typically 1).
     """
     cli_client.execute("ls /nonexistentdirectory")
-    cli_client.assert_exit_code(1)
+    expect(cli_client.exit_code).not_to_be(0)
 
 
 @pytest.mark.CLI
+@pytest.mark.ExecuteCommand
 @pytest.mark.Timeout
 def test_command_execution_with_timeout(cli_client):
     """
