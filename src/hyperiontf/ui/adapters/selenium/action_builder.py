@@ -91,7 +91,7 @@ class SeleniumActionBuilder:
         Parameters:
             finger (TouchFingerType): The finger identifier for the touch action.
         """
-        self._mouse_actions.pointer_down(FINGERS_MAP[finger])
+        self._touch_actions.pointer_down(FINGERS_MAP[finger])
 
     def touch_up(self, finger: TouchFingerType):
         """
@@ -100,9 +100,9 @@ class SeleniumActionBuilder:
         Parameters:
             finger (TouchFingerType): The finger identifier for the touch action.
         """
-        self._mouse_actions.pointer_down(FINGERS_MAP[finger])
+        self._touch_actions.pointer_down(FINGERS_MAP[finger])
 
-    def touch_move(self, x: float, y: float):
+    def touch_move_to(self, x: float, y: float):
         """
         Simulate a touch move action by mapping it to a mouse move action.
 
@@ -139,8 +139,8 @@ class SeleniumActionBuilder:
         self.action_builder.key_action.key_up(key)
 
     def wait(self, milliseconds: float):
-        self._mouse_actions.pause(milliseconds)
-        self._touch_actions.pause(milliseconds)
+        self._mouse_actions.pause(milliseconds / 1000)
+        self._touch_actions.pause(milliseconds / 1000)
 
     # Perform all actions
     def perform(self):

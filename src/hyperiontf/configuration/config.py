@@ -7,6 +7,7 @@ from hyperiontf.configuration.sections import (
     DesktopCapabilities,
     WebCapabilities,
     Visual,
+    CLI,
 )
 from hyperiontf.configuration.sections import Rest, MobileCapabilities
 
@@ -32,6 +33,7 @@ class Config:
         self.desktop_capabilities = DesktopCapabilities()
         self.rest = Rest()
         self.visual = Visual()
+        self.cli = CLI()
 
     def _parse_config_data(self, data):
         """

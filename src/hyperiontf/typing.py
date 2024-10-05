@@ -110,6 +110,8 @@ class LoggerSource:
     REST_CLIENT: str = "RestClient"
     WIN_APP_DRIVER: str = "WindowsApplicationDriverClient"
     ACTION_BUILDER: str = "ActionBuilder"
+    CLI: str = "CommandLineClient"
+    SSH: str = "SecureShellClient"
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -478,6 +480,10 @@ class HyperionAPIException(HyperionException):
     pass
 
 
+class HyperionCLIException(HyperionException):
+    pass
+
+
 class ElementQueryLanguageParseException(HyperionException):
     pass
 
@@ -545,4 +551,39 @@ class ConnectionErrorException(HyperionAPIException):
 
 
 class JSONSchemaFailedAssertionException(HyperionAPIException):
+    pass
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# CLI Exceptions
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+class CommandExecutionTimeoutException(HyperionCLIException):
+    """Raised when a command execution times out."""
+
+    pass
+
+
+class CommandExecutionException(HyperionCLIException):
+    """Raised for general command execution failures."""
+
+    pass
+
+
+class InvalidCommandException(HyperionCLIException):
+    """Raised when an invalid command is issued."""
+
+    pass
+
+
+class AuthenticationException(HyperionCLIException):
+    """Raised when authentication fails (e.g., incorrect sudo password)."""
+
+    pass
+
+
+class CommandExpectFailureException(HyperionCLIException):
+    """Raised when the expected pattern is not found in the output."""
+
     pass

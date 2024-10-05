@@ -1,5 +1,5 @@
 # firefox_caps = {"automation": "selenium", "browser": "firefox"}
-chrome_caps = {"automation": "selenium", "browser": "chrome", "headless": "true"}
+chrome_caps = {"automation": "selenium", "browser": "chrome", "headless": True}
 edge_caps = {"automation": "selenium", "browser": "edge"}
 webkit_playwright_caps = {"automation": "playwright", "browser": "webkit"}
 chrome_playwright_caps = {"automation": "playwright", "browser": "chrome"}

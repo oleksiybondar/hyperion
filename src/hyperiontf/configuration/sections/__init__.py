@@ -6,6 +6,7 @@ from .mobile_capabilities import MobileCapabilities
 from .desktop_capabilities import DesktopCapabilities
 from .rest import Rest
 from .visual import Visual
+from .cli import CLI
 
 __all__ = [
     "Logger",
@@ -16,4 +17,5 @@ __all__ = [
     "DesktopCapabilities",
     "Rest",
     "Visual",
+    "CLI",
 ]
