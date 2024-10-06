@@ -16,7 +16,7 @@ repos:
     rev: v1.4.1 # Use the desired version
     hooks:
       - id: mypy
-        additional_dependencies: [types-requests, types-PyYAML , types-jsonschema]
+        additional_dependencies: [types-requests, types-PyYAML , types-jsonschema, types-paramiko]
     # Staty code analysis for Cyclomatic-Complexity and Maintainability Index
   - repo: https://github.com/yunojuno/pre-commit-xenon
     rev: cc59b0431a5d072786b59430e9b342b2881064f6

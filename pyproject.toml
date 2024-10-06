@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hyperiontf"
-version = "0.6.0"
+version = "0.6.1"
 description = "Hyperion Testing Framework"
 authors = ["Oleksiy Bondar <bondaroleksiyandriyovich@gmail.com>"]
 license = "Apache 2.0 License"
@@ -19,6 +19,7 @@ opencv-python="^4.9.0.80"
 opencv-python-headless="^4.9.0.80"
 opencv-contrib-python="^4.9.0.80"
 ptyprocess="^0.7.0"
+paramiko="^3.5.0"
 
 [build-system]
 requires = ["poetry-core"]

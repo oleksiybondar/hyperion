@@ -19,7 +19,7 @@ from .ui import (
     webview,
     Color,
 )
-from .cli import CLIClient
+from .cli import CLIClient, SSHClient
 from .logging import getLogger
 from .assertions import expect, verify
 from .api import Client as RESTClient
@@ -56,4 +56,5 @@ __all__ = [
     "Color",
     "Image",
     "CLIClient",
+    "SSHClient",
 ]
