@@ -10,5 +10,5 @@ pip install ply
 pip install opencv-python
 pip install opencv-python-headless
 pip install opencv-contrib-python
-pip install ptyprocessd
+pip install ptyprocess
 pip install paramiko
