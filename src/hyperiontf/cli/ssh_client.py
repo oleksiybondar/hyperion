@@ -63,10 +63,8 @@ class SSHClient(BaseShell):
 
             # Start an interactive shell
             self.shell = self.ssh_client.invoke_shell()
-            # when shell initialized connection first time host, then it take a bit more time to update host and become
-            # available, therefore doubling timeout for initial connection
             time.sleep(
-                config.cli.command_registration_time * 2
+                config.cli.ssh_connection_explicit_wait
             )  # Wait for shell to initialize
 
             self._detect_action_prompt()
