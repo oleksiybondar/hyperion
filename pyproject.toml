@@ -20,7 +20,6 @@ opencv-python-headless="^4.9.0.80"
 opencv-contrib-python="^4.9.0.80"
 ptyprocess="^0.7.0"
 paramiko="^3.5.0"
-colorama="^0.4.6"
 
 [build-system]
 requires = ["poetry-core"]
