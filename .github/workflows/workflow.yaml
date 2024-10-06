@@ -53,6 +53,17 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Create SSH User and Enable Password Authentication
+        run: |
+          # Create the user with the specified password
+          sudo useradd -m ssh_test_user -s /bin/bash
+          echo 'ssh_test_user:test_password' | sudo chpasswd
+          
+          # Ensure SSH allows password-based authentication
+          sudo sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo systemctl restart ssh    
+
       - name: Install dependencies and set up paths
         run: |
           cd tests
@@ -96,6 +107,9 @@ jobs:
           cd tests
           sh ./install_web_dependencies.sh
 
+      - name: Initialize Playwright
+        run: playwright install
+
       - name: Extend PYTHONPATH
         run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src:$(pwd)/tests" >> $GITHUB_ENV
 
@@ -132,6 +146,9 @@ jobs:
         run: |
           cd tests
           sh ./install_web_dependencies.sh
+
+      - name: Initialize Playwright
+        run: playwright install
 
       - name: Extend PYTHONPATH
         run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src:$(pwd)/tests" >> $GITHUB_ENV
