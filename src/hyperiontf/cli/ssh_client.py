@@ -115,7 +115,7 @@ class SSHClient(BaseShell):
         """
         if self.shell:
             # if self.shell.recv_ready():
-            output = self.shell.recv(1024).decode("utf-8")  # Read 1024 bytes at a time
+            output = self.shell.recv(1536).decode("utf-8")  # Read 1024 bytes at a time
             output = remove_ansi_sequences(output)
             self._log_debug(f"Reading shell output chunk: {output.strip()}")
             return output.strip()
