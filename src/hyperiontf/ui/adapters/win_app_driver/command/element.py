@@ -15,11 +15,11 @@ displayed = {
     "endpointTemplate": "/session/{sessionId}/element/{elementId}/displayed",
 }
 find_element = {
-    "method": "GET",
+    "method": "POST",
     "endpointTemplate": "/session/{sessionId}/element/{elementId}/element",
 }
 find_elements = {
-    "method": "GET",
+    "method": "POST",
     "endpointTemplate": "/session/{sessionId}/element/{elementId}/elements",
 }
 enabled = {
