@@ -11,7 +11,6 @@ from hyperiontf.ui.adapters.win_app_driver.element import Element
 from hyperiontf.ui.adapters.win_app_driver.action_builder import WinActionBuilder
 import hyperiontf.ui.adapters.win_app_driver.command as command
 import base64
-import urllib.parse
 
 
 class Page:
@@ -36,14 +35,11 @@ class Page:
         :param url: The URL where the WinAppDriver server is running.
         :param capabilities: A dictionary of capabilities for the WinAppDriver session.
         """
-        parsed_url = urllib.parse.urlparse(url)
-        host = parsed_url.hostname
-        port = parsed_url.port
 
         self.caps = capabilities
 
         # Use default port 4723 if no port is specified in the URL
-        self.bridge = Bridge(url=host, port=port or 4723)
+        self.bridge = Bridge(url=url)
         self.session_id = self._create_session(capabilities)
 
     def _create_session(self, capabilities: Dict[str, Any]) -> str:
@@ -53,8 +49,10 @@ class Page:
         :param capabilities: A dictionary of capabilities for the session.
         :return: The session ID for the new session.
         """
-        response = self.bridge.execute(command.session.new, {}, capabilities)
-        return response["sessionId"]
+        self.bridge.execute(
+            command.session.new, {}, {"desiredCapabilities": capabilities}
+        )
+        return str(self.bridge.session_id)
 
     @property
     def window_handle(self) -> str:
@@ -92,13 +90,10 @@ class Page:
         :param locator: The locator object (By) for finding the element.
         :return: An Element instance representing the found element.
         """
-        return Element(
-            self.bridge.execute(
-                command.element.find_element,
-                {"sessionId": self.session_id},
-                {"using": locator.by, "value": locator.value},
-            ),
-            self.bridge,
+        return self.bridge.execute(
+            command.element.find_element,
+            {"sessionId": self.session_id},
+            {"using": locator.by, "value": locator.value},
         )
 
     def find_elements(self, locator: By) -> List[Element]:
@@ -108,12 +103,11 @@ class Page:
         :param locator: The locator object (By) for finding the elements.
         :return: A list of Element instances representing the found elements.
         """
-        elements = self.bridge.execute(
+        return self.bridge.execute(
             command.element.find_elements,
             {"sessionId": self.session_id},
             {"using": locator.by, "value": locator.value},
         )
-        return [Element(element["ELEMENT"], self.bridge) for element in elements]
 
     def open(self, url: str):
         """

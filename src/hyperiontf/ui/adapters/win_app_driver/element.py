@@ -16,6 +16,13 @@ class Element:
         self.bridge = bridge
 
     @property
+    def element(self):
+        """
+        indicates if elements found or not, needed for frameworks element API
+        """
+        return self.element_id
+
+    @property
     def _params(self) -> Dict[str, str]:
         """Return the default params for any command involving this element."""
         return {"sessionId": self.bridge.session_id, "elementId": self.element_id}

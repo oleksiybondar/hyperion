@@ -14,18 +14,16 @@ logger = getLogger(LoggerSource.WIN_APP_DRIVER)
 
 
 class Bridge:
-    def __init__(
-        self, url: Optional[str] = "http://127.0.0.1", port: Optional[int] = 4723
-    ):
+    def __init__(self, url: Optional[str] = "http://127.0.0.1:4723"):
         self.url = url
-        self.port = port
         self.session_id = None
         self.client = RESTClient(
-            url=f"{url}:{port}",
+            url=url,
             accept_errors=True,
             default_event_logging_level="debug",
             logger=logger,
         )
+        self.custom_base_path = self.client.path
 
     def execute(self, command, params, payload=None):
         """
@@ -37,7 +35,7 @@ class Bridge:
         :return: Processed response data.
         """
         # Perform endpoint substitution using the params
-        endpoint = command["endpointTemplate"].format(**params)
+        endpoint = self._make_endpoint_path(command, params)
 
         # Handle GET and POST/PUT requests
         if command["method"] in ["GET", "DELETE"]:
@@ -190,3 +188,10 @@ class Bridge:
         :return: An instance of an Element object (implementation-dependent).
         """
         return Element(element_id, self)
+
+    def _make_endpoint_path(self, command, params):
+        endpoint = command["endpointTemplate"].format(**params)
+        if self.custom_base_path is None:
+            return endpoint
+
+        return f"/{self.custom_base_path}{endpoint}"
