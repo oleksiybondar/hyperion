@@ -91,7 +91,7 @@ class Page:
         :return: An Element instance representing the found element.
         """
         return self.bridge.execute(
-            command.element.find_element,
+            command.driver.find_element,
             {"sessionId": self.session_id},
             {"using": locator.by, "value": locator.value},
         )
@@ -104,7 +104,7 @@ class Page:
         :return: A list of Element instances representing the found elements.
         """
         return self.bridge.execute(
-            command.element.find_elements,
+            command.driver.find_elements,
             {"sessionId": self.session_id},
             {"using": locator.by, "value": locator.value},
         )
