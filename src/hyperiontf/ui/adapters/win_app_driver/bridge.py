@@ -61,6 +61,9 @@ class Bridge:
         """
         response_json = response.body
         if response_json["status"] == 0:
+            if self.session_id is None:
+                self.session_id = response_json.get("sessionId", None)
+
             return self.process_value(response_json["value"])
 
         self._process_error(response_json)
