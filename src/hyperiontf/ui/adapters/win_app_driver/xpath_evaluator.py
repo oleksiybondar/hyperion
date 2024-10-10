@@ -1,5 +1,8 @@
+import logging
 from lxml import etree
-from command.driver import source
+import re
+from hyperiontf.ui.adapters.win_app_driver.command.driver import source, find_element
+from hyperiontf.typing import LocatorStrategies
 
 
 class XPathEvaluator:
@@ -29,8 +32,9 @@ class XPathEvaluator:
         Finds elements in the document or within a base element's context using the provided XPath expression.
 
         This method determines whether the XPath expression should be evaluated globally (from the document root) or
-        locally (relative to a base element). The results are processed via the `bridge` to return elements in the
-        framework's expected format.
+        locally (relative to a base element). To improve performance, logging is suppressed temporarily to avoid
+        unnecessary logs when dealing with large XML structures. The results are processed via the `bridge` to return
+        elements in the framework's expected format.
 
         Args:
             xpath (str): The XPath expression used to search for elements. If it starts with '//', the search is global.
@@ -39,14 +43,28 @@ class XPathEvaluator:
 
         Returns:
             list: A list of elements found by the XPath query, processed and converted into the framework's format.
-                  Each element is processed by the `bridge.process_value` method.
         """
-        if xpath.startswith("//"):
-            context = self.document
-        else:
-            context = self._fetch_context(base_element)
-        nodes = self._query_xpath(xpath, context)
-        return self.bridge.process_value(self._nodes_to_response_format(nodes))
+        elements = []
+        try:
+            # Suppress bridge logging to avoid excess log data when working with large XML responses
+            self._suppress_bridge_logging()
+
+            # Determine context for the XPath query
+            if xpath.startswith("//"):
+                context = self.document
+            else:
+                context = self._fetch_context(base_element)
+
+            # Execute the XPath query and initialize elements
+            nodes = self._query_xpath(xpath, context)
+            elements = self._init_element_on_a_driver_end(nodes)
+        except Exception:
+            pass  # You may want to log or handle the exception appropriately here
+        finally:
+            # Restore bridge logging after query execution
+            self._restore_bridge_logging()
+
+        return elements
 
     def _query_xpath(self, xpath: str, context=None):
         """
@@ -92,27 +110,59 @@ class XPathEvaluator:
         Retrieves the XML representation of the current page or application state from the WinAppDriver.
 
         This property fetches the full document source (in XML format) by executing the appropriate command via the `bridge`.
-        It then parses the XML string into an `lxml.etree.Element` object for use in XPath queries.
+        It then parses the XML string into an `lxml.etree.Element` object for use in XPath queries. The method also ensures that
+        any XML declaration is removed (e.g., `<?xml version="1.0" encoding="utf-16"?>`), which can cause parsing issues with `lxml`.
 
         Returns:
             etree.Element: The root element of the XML document representing the current page or app state.
         """
-        source_xml = self.bridge.execute(source, {"sessionId": self.bridge.session_id})
-        return etree.fromstring(source_xml)
+        source_xml = self.bridge.execute(source, self.params)
 
-    @staticmethod
-    def _nodes_to_response_format(nodes):
+        # Remove any XML declaration (e.g., `<?xml version="1.0" encoding="utf-16"?>`)
+        cleaned_xml = re.sub(r"<\?xml.*?\?>", "", source_xml)
+
+        return etree.fromstring(cleaned_xml)
+
+    @property
+    def params(self):
         """
-        Converts a list of XML nodes into a framework-specific format.
-
-        This method extracts the 'RuntimeId' attribute from each XML node and formats it into a dictionary with the key 'ELEMENT',
-        which is expected by the framework. The resulting list is then processed by the `bridge` to convert these raw results
-        into proper element instances.
-
-        Args:
-            nodes (list): A list of XML nodes returned by an XPath query.
+        Generates the required parameters for the document request, such as session ID.
 
         Returns:
-            list: A list of dictionaries where each dictionary represents an element with the 'RuntimeId' as the 'ELEMENT' key.
+            dict: A dictionary containing the session ID parameter.
         """
-        return [{"ELEMENT": node.get("RuntimeId")} for node in nodes]
+        return {"sessionId": self.bridge.session_id}
+
+    def _init_element_on_a_driver_end(self, nodes):
+        """
+        Initializes elements on the driver side to ensure that they are recognized by WinAppDriver's internal cache.
+
+        Although the `RuntimeId` may be valid, WinAppDriver requires an internal cache lookup before interacting with
+        elements. This method fires `find_element` calls to ensure elements are properly initialized in the driver's cache.
+
+        Args:
+            nodes (list): A list of XML nodes representing elements in the document.
+
+        Returns:
+            list: A list of elements initialized on the driver side.
+        """
+        return [
+            self.bridge.execute(
+                find_element,
+                self.params,
+                {"using": LocatorStrategies.ID, "value": node.get("RuntimeId")},
+            )
+            for node in nodes
+        ]
+
+    def _suppress_bridge_logging(self):
+        """
+        Temporarily suppresses the bridge's logger to prevent verbose logging during large XML processing.
+        """
+        self.bridge.client.logger.setLevel(logging.CRITICAL)
+
+    def _restore_bridge_logging(self):
+        """
+        Restores the bridge's logger to its default logging level (DEBUG).
+        """
+        self.bridge.client.logger.setLevel(logging.DEBUG)

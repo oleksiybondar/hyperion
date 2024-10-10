@@ -99,7 +99,7 @@ class Element:
         """Clear the element (used typically for input fields)."""
         return self.bridge.execute(command.element.clear, self._params)
 
-    def get_attribute(self, attribute_name: str) -> Any:
+    def attribute(self, attribute_name: str) -> Any:
         """Retrieve a specific attribute value of the element."""
         params = {**self._params, "name": attribute_name}
         return self.bridge.execute(command.element.attribute, params)
