@@ -487,7 +487,57 @@ In the code above, the `login_form` is defined as a `widget` within the `LoginPa
 
 This level of abstraction makes the code more manageable, especially for larger applications with complex UIs.
 
-In the next sections, we will discuss more advanced features of the Hyperion Testing Framework. Stay tuned!
+#### Handling Recursive Class References in Nested Widgets
+
+In the context of nested widgets, an edge case arises when a widget class has a child element that is of the same type as its parent class. This scenario can cause an evaluation error due to the class being referenced before its full definition is available.
+
+To address this issue, a decorator is provided that wraps the result of a method with an instance of a specified class. This decorator accepts a mandatory argument, klass, which expects a reference to the class that will wrap the method result.
+
+*Basic Usage Example*
+
+Here is a typical usage of the decorator, where the klass argument takes a reference to another widget class:
+
+```python
+class MyWgt(Widget):
+
+   @widget(klass=MyOtherWidget)
+   def other(self):
+       pass
+```
+
+In this example, the widget decorator wraps the result of the other() method with an instance of MyOtherWidget
+
+*Edge Case: Recursive Class Reference*
+
+An edge case arises when the child element is of the same type as the widget class itself. This situation leads to a recursive class reference, where a widget references itself before the class has been fully evaluated.
+
+*Problem*
+
+Consider the following code:
+
+```python
+class MyWgt(Widget):
+
+   @widget(klass=MyWgt)
+   def recursive(self):
+      pass
+```
+
+In this example, the klass argument references MyWgt, which is the same class being defined. This causes an evaluation error because MyWgt is used before its definition is complete. As a result, Python raises a NameError since the class is not fully available at the time it's referenced inside the decorator.
+
+*Solution: Using Lambda for Lazy Evaluation*
+
+To resolve this issue, lambda support has been added to the decorator. Instead of referencing the class directly, the class is now provided as a lambda function, which defers its evaluation until the method is invoked.
+
+Here is how to modify the code to handle recursive class references:
+
+```python
+class MyWgt(Widget):
+
+   @widget(klass=lambda: MyWgt)
+   def recursive(self):
+      pass
+```
 
 ### Using Elements Query Language (EQL)
 

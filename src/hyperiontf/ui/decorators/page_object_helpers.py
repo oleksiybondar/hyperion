@@ -61,7 +61,8 @@ def elements(
 
 
 def widget(
-    locator_getter: Optional[Callable] = None, klass: Optional[Type[Widget]] = Widget
+    locator_getter: Optional[Callable] = None,
+    klass: Optional[Union[Type[Widget], Callable]] = Widget,
 ) -> Any:
     """
     Decorator for accessing a single widget UI element.
@@ -77,7 +78,8 @@ def widget(
 
 
 def widgets(
-    locator_getter: Optional[Callable] = None, klass: Optional[Type[Widget]] = Widget
+    locator_getter: Optional[Callable] = None,
+    klass: Optional[Union[Type[Widget], Callable]] = Widget,
 ) -> Any:
     """
     Decorator for accessing a list of widget UI elements.
@@ -93,7 +95,8 @@ def widgets(
 
 
 def iframe(
-    locator_getter: Optional[Callable] = None, klass: Optional[Type[IFrame]] = IFrame
+    locator_getter: Optional[Callable] = None,
+    klass: Optional[Union[Type[IFrame], Callable]] = IFrame,
 ) -> Any:
     """
     Decorator for accessing a single iframe UI element.
@@ -109,7 +112,8 @@ def iframe(
 
 
 def iframes(
-    locator_getter: Optional[Callable] = None, klass: Optional[Type[IFrame]] = IFrame
+    locator_getter: Optional[Callable] = None,
+    klass: Optional[Union[Type[IFrame], Callable]] = IFrame,
 ) -> Any:
     """
     Decorator for accessing a list of iframe UI elements.
@@ -125,7 +129,8 @@ def iframes(
 
 
 def webview(
-    locator_getter: Optional[Callable] = None, klass: Optional[Type[WebView]] = WebView
+    locator_getter: Optional[Callable] = None,
+    klass: Optional[Union[Type[WebView]]] = WebView,
 ) -> Any:
     """
     Decorator for accessing a single webview UI element.
@@ -141,7 +146,8 @@ def webview(
 
 
 def webviews(
-    locator_getter: Optional[Callable] = None, klass: Optional[Type[WebView]] = WebView
+    locator_getter: Optional[Callable] = None,
+    klass: Optional[Union[Type[WebView], Callable]] = WebView,
 ) -> Any:
     """
     Decorator for accessing a list of webview UI elements.
@@ -158,7 +164,9 @@ def webviews(
 
 def dynamic(
     locator_getter: Optional[Callable] = None,
-    klass: Optional[Type[Union[Element, Widget, IFrame, WebView]]] = Element,
+    klass: Optional[
+        Union[Type[Union[Element, Widget, IFrame, WebView]], Callable]
+    ] = Element,
 ) -> Any:
     """
     Decorator for accessing a single UI element without memorization (creates new instance every time).
@@ -177,7 +185,9 @@ def dynamic(
 
 def dynamics(
     locator_getter: Optional[Callable] = None,
-    klass: Optional[Type[Union[Element, Widget, IFrame, WebView]]] = Element,
+    klass: Optional[
+        Union[Type[Union[Element, Widget, IFrame, WebView]], Callable]
+    ] = Element,
 ) -> Any:
     """
     Decorator for accessing a list of UI elements without memorization (creates new instances every time).

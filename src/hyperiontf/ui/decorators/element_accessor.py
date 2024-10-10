@@ -20,6 +20,8 @@ Note:
 
 """
 
+import types
+
 from hyperiontf.typing import AnyElement
 from ..element import Element
 from ..widget import Widget
@@ -30,7 +32,7 @@ from typing import Optional, Callable, Type, Union, Any, Tuple
 
 
 def _create_element_instance(
-    klass: AnyElement,
+    klass: Union[AnyElement, Callable],
     parent: Any,
     locator: Any,
     name: str,
@@ -46,6 +48,9 @@ def _create_element_instance(
     :param is_list: A flag indicating if it's a single element (False) or an array of elements (True).
     :return: An instance of the specified class (Element, Widget, IFrame, or WebView) or Elements if is_list is True.
     """
+    if isinstance(klass, types.LambdaType) and klass.__name__ == "<lambda>":
+        klass = klass()
+
     if is_list:
         return Elements(parent, locator, name, klass)
     else:
@@ -54,7 +59,9 @@ def _create_element_instance(
 
 def element_property(
     source_function: Optional[Callable] = None,
-    klass: Optional[Type[Union[Element, Widget, IFrame, WebView]]] = Element,
+    klass: Optional[
+        Union[Type[Union[Element, Widget, IFrame, WebView]], Callable]
+    ] = Element,
     is_list: bool = False,
     is_memorized: bool = True,
 ) -> Union[Callable[[Callable[..., Tuple]], property], property]:
