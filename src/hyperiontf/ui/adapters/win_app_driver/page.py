@@ -4,11 +4,13 @@ from hyperiontf.typing import (
     WIN_APP_DRIVER_ROOT_HANDLE,
     APPIUM_DEFAULT_URL,
     HyperionException,
+    LocatorStrategies,
 )
 from hyperiontf.ui import By
 from hyperiontf.ui.adapters.win_app_driver.bridge import Bridge
 from hyperiontf.ui.adapters.win_app_driver.element import Element
 from hyperiontf.ui.adapters.win_app_driver.action_builder import WinActionBuilder
+from hyperiontf.ui.adapters.win_app_driver.xpath_evaluator import XPathEvaluator
 import hyperiontf.ui.adapters.win_app_driver.command as command
 import base64
 
@@ -90,6 +92,9 @@ class Page:
         :param locator: The locator object (By) for finding the element.
         :return: An Element instance representing the found element.
         """
+        if locator.by == LocatorStrategies.XPATH:
+            return self.find_elements_by_xpath(locator.value)[0]
+
         return self.bridge.execute(
             command.driver.find_element,
             {"sessionId": self.session_id},
@@ -103,11 +108,17 @@ class Page:
         :param locator: The locator object (By) for finding the elements.
         :return: A list of Element instances representing the found elements.
         """
+        if locator.by == LocatorStrategies.XPATH:
+            return self.find_elements_by_xpath(locator.value)
+
         return self.bridge.execute(
             command.driver.find_elements,
             {"sessionId": self.session_id},
             {"using": locator.by, "value": locator.value},
         )
+
+    def find_elements_by_xpath(self, xpath):
+        return XPathEvaluator(self.bridge).find_elements(xpath)
 
     def open(self, url: str):
         """

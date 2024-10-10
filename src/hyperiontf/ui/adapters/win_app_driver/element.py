@@ -1,7 +1,10 @@
 import base64
 import hyperiontf.ui.adapters.win_app_driver.command as command
 from typing import Dict, Any, List
+
+from hyperiontf.typing import LocatorStrategies
 from hyperiontf.ui import By
+from hyperiontf.ui.adapters.win_app_driver.xpath_evaluator import XPathEvaluator
 
 
 class Element:
@@ -110,10 +113,19 @@ class Element:
 
     def find_element(self, locator: By) -> Any:
         """Find a child element inside the current element."""
+        if locator.by == LocatorStrategies.XPATH:
+            return self.find_elements_by_xpath(locator.value)[0]
+
         payload = {"using": locator.by, "value": locator.value}
         return self.bridge.execute(command.element.find_element, self._params, payload)
 
     def find_elements(self, locator: By) -> List[Any]:
         """Find all child elements inside the current element."""
+        if locator.by == LocatorStrategies.XPATH:
+            return self.find_elements_by_xpath(locator.value)
+
         payload = {"using": locator.by, "value": locator.value}
         return self.bridge.execute(command.element.find_elements, self._params, payload)
+
+    def find_elements_by_xpath(self, xpath):
+        return XPathEvaluator(self.bridge).find_elements(xpath, self)
