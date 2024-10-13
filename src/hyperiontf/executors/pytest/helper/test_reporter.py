@@ -119,6 +119,16 @@ class TestReporter:
         return self.request.node
 
     @property
+    def raw_test_name(self):
+        """
+        Get the test name as it appears in pytest.request.node object.
+
+        Returns:
+           str: raw test name string.
+        """
+        return self.test_node.name
+
+    @property
     def test_name(self):
         """
         Get the test name in a human-readable format.
@@ -126,7 +136,7 @@ class TestReporter:
         Returns:
             str: The test name converted to a human-readable string.
         """
-        return method_name_to_human_readable(self.test_node.name)
+        return method_name_to_human_readable(self.raw_test_name)
 
     @property
     def test_tags(self):
@@ -171,8 +181,8 @@ class TestReporter:
         Returns:
             str: The description of the test, extracted from the test function's docstring.
         """
-        name = self.test_node.name.split("[")[0]
-        description = getattr(self.test_node.module, name).__doc__
+        name = self.raw_test_name.split("[")[0]
+        description = getattr(self.test_node.module, name).__doc__ or ""
         return description.strip()
 
     def finalize(self):
