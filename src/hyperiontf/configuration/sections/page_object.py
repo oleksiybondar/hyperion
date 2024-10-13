@@ -10,6 +10,9 @@ class PageObject(Section):
         self.start_retries = 3
         self.retry_delay = 1
 
+        self.post_morten_dumps = False
+        self.auto_quit = True
+
         self.log_private = True
 
         # Explanation of `viewport_*` properties and their usage in Responsive Design:

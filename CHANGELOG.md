@@ -13,7 +13,7 @@ It is important to acknowledge that versions prior to v1.0.0 are considered to b
 
 From its first version, our framework has included a dedicated REST client equipped with extensive, built-in logging features, alongside a UI harness that simplifies page object creation. This harness supports a unified API compatible with Selenium, Appium, and Playwright, ensuring a seamless and efficient testing process.
 
-## [0.6.7] - 2024-10-10
+## [0.6.8] - 2024-10-10
 
 ### added
 
@@ -24,6 +24,10 @@ From its first version, our framework has included a dedicated REST client equip
 
 - support of relative element search with ./
 - support XPath axes
+
+### fixed
+
+- improved finalizer for pytest executer
 
 
 ## [0.6.5] - 2024-10-07
