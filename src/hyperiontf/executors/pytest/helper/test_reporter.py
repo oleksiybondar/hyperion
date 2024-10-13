@@ -1,6 +1,7 @@
 from datetime import datetime
 import sys
 from hyperiontf.configuration import config
+from hyperiontf.exception import HyperionException
 from hyperiontf.logging import getLogger
 from hyperiontf.helpers.string_helpers import method_name_to_human_readable
 from hyperiontf.ui.automation_adapter_manager import AutomationAdaptersManager
@@ -98,23 +99,32 @@ class TestReporter:
         """
         Fetch the most recent exception information.
 
-        This method attempts to retrieve the most recent exception details using
-        `sys.last_type`, `sys.last_value`, and `sys.last_traceback`, which are
-        available in interactive Python sessions after an unhandled exception.
-        If these attributes do not exist (i.e., outside of an interactive session),
-        it falls back to using `sys.exc_info()` to fetch the current exception
-        details.
+        This method tries to retrieve the most recent exception in the following order:
+
+        1. It first checks if the current exception is available via `sys.exc_info()`.
+        2. If no exception is active, it checks if `sys.last_type`, `sys.last_value`,
+           and `sys.last_traceback` exist (used in interactive sessions).
+        3. If neither of the above provides information, it falls back to the cached
+           exception details stored in `HyperionException.last_exec_info`.
 
         Returns:
             tuple:
                 - The type of the last exception (`type` or `None`).
                 - The exception instance (`BaseException` or `None`).
-                - The traceback object associated with the last exception (`traceback` or `None`).
+                - The traceback object associated with the last exception or cached traceback (or `None`).
         """
+        # Get the current active exception from sys.exc_info()
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+
+        if exc_type:
+            return exc_type, exc_value, exc_traceback
+
+        # Check for exception details in interactive sessions (sys.last_type, etc.)
         if hasattr(sys, "last_type"):
             return (sys.last_type, sys.last_value, sys.last_traceback)
 
-        return sys.exc_info()
+        # Fall back to the cached exception details from HyperionException
+        return HyperionException.last_exec_info
 
     def _log_dumps(self):
         """

@@ -1,4 +1,5 @@
 from typing import Type, Union, TypeVar, Literal
+from .exception import HyperionException
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Browser Section
@@ -458,12 +459,6 @@ class ExpectationStatus:
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Exceptions
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
-class HyperionException(Exception):
-    pass
-
-
 class FailedExpectationException(HyperionException):
     pass
 
