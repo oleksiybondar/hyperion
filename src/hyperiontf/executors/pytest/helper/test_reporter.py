@@ -89,7 +89,32 @@ class TestReporter:
         Log critical information in case the test fails with an exception.
         """
         if self.test_status == "Failed":
-            logger.critical("Test Failed with Exception", exc_info=sys.exc_info())
+            logger.critical(
+                "Test Failed with Exception", exc_info=self._fetch_last_exception()
+            )
+
+    @staticmethod
+    def _fetch_last_exception():
+        """
+        Fetch the most recent exception information.
+
+        This method attempts to retrieve the most recent exception details using
+        `sys.last_type`, `sys.last_value`, and `sys.last_traceback`, which are
+        available in interactive Python sessions after an unhandled exception.
+        If these attributes do not exist (i.e., outside of an interactive session),
+        it falls back to using `sys.exc_info()` to fetch the current exception
+        details.
+
+        Returns:
+            tuple:
+                - The type of the last exception (`type` or `None`).
+                - The exception instance (`BaseException` or `None`).
+                - The traceback object associated with the last exception (`traceback` or `None`).
+        """
+        if hasattr(sys, "last_type"):
+            return (sys.last_type, sys.last_value, sys.last_traceback)
+
+        return sys.exc_info()
 
     def _log_dumps(self):
         """
@@ -192,5 +217,6 @@ class TestReporter:
         """
         self._log_final_meta()
         self._close_log_folders()
+        self._log_exception()
         self._log_dumps()
         self._finalize_automation()

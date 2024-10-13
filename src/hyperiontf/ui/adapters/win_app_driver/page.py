@@ -181,9 +181,12 @@ class Page:
     @property
     def screenshot_as_base64(self) -> str:
         """Take a screenshot of the current window and return it as a base64 string."""
-        return self.bridge.execute(
+        self.bridge.supress_logging()
+        result = self.bridge.execute(
             command.driver.screenshot, {"sessionId": self.session_id}
         )
+        self.bridge.restore_logging()
+        return result
 
     def screenshot(self, path: str) -> None:
         """
@@ -198,9 +201,12 @@ class Page:
     @property
     def page_source(self) -> str:
         """Retrieve the page source of the current window."""
-        return self.bridge.execute(
+        self.bridge.supress_logging()
+        result = self.bridge.execute(
             command.driver.source, {"sessionId": self.session_id}
         )
+        self.bridge.restore_logging()
+        return result
 
     @property
     def size(self) -> Dict[str, int]:

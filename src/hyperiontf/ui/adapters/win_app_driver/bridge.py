@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from hyperiontf import RESTClient, getLogger
@@ -198,3 +199,15 @@ class Bridge:
             return endpoint
 
         return f"/{self.custom_base_path}{endpoint}"
+
+    def supress_logging(self):
+        """
+        Temporarily suppresses the bridge's logger to prevent verbose logging during large XML processing.
+        """
+        self.client.logger.setLevel(logging.CRITICAL)
+
+    def restore_logging(self):
+        """
+        Restores the bridge's logger to its default logging level (DEBUG).
+        """
+        self.client.logger.setLevel(logging.DEBUG)

@@ -1,4 +1,3 @@
-import logging
 from lxml import etree
 import re
 from hyperiontf.ui.adapters.win_app_driver.command.driver import source, find_element
@@ -47,7 +46,7 @@ class XPathEvaluator:
         elements = []
         try:
             # Suppress bridge logging to avoid excess log data when working with large XML responses
-            self._suppress_bridge_logging()
+            self.bridge.supress_logging()
 
             # Determine context for the XPath query
             if xpath.startswith("//"):
@@ -62,7 +61,7 @@ class XPathEvaluator:
             pass  # You may want to log or handle the exception appropriately here
         finally:
             # Restore bridge logging after query execution
-            self._restore_bridge_logging()
+            self.bridge.restore_logging()
 
         return elements
 
@@ -154,15 +153,3 @@ class XPathEvaluator:
             )
             for node in nodes
         ]
-
-    def _suppress_bridge_logging(self):
-        """
-        Temporarily suppresses the bridge's logger to prevent verbose logging during large XML processing.
-        """
-        self.bridge.client.logger.setLevel(logging.CRITICAL)
-
-    def _restore_bridge_logging(self):
-        """
-        Restores the bridge's logger to its default logging level (DEBUG).
-        """
-        self.bridge.client.logger.setLevel(logging.DEBUG)
