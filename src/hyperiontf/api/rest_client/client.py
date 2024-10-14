@@ -55,6 +55,13 @@ class Client:
         :param connection_timeout: The timeout for establishing a connection.
         :param request_timeout: The timeout for completing a request.
         """
+        self.scheme: str
+        self.netloc: str
+        self.path: str
+        self.params: str
+        self.query: str
+        self.fragment: str
+
         self.scheme, self.netloc, self.path, self.params, self.query, self.fragment = (
             self._parse_url(url)
             if url
