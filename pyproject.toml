@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hyperiontf"
-version = "0.6.11"
+version = "0.6.12"
 description = "Hyperion Testing Framework"
 authors = ["Oleksiy Bondar <bondaroleksiyandriyovich@gmail.com>"]
 license = "Apache 2.0 License"

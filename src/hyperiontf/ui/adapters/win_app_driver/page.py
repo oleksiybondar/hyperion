@@ -51,6 +51,10 @@ class Page:
         :param capabilities: A dictionary of capabilities for the session.
         :return: The session ID for the new session.
         """
+        if "sessionId" in self.caps:
+            # attach to existing session instead
+            return self.caps["sessionId"]
+
         self.bridge.execute(
             command.session.new, {}, {"desiredCapabilities": capabilities}
         )
