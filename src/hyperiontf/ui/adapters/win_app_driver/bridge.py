@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from hyperiontf import RESTClient, getLogger
@@ -14,18 +15,16 @@ logger = getLogger(LoggerSource.WIN_APP_DRIVER)
 
 
 class Bridge:
-    def __init__(
-        self, url: Optional[str] = "http://127.0.0.1", port: Optional[int] = 4723
-    ):
+    def __init__(self, url: Optional[str] = "http://127.0.0.1:4723"):
         self.url = url
-        self.port = port
         self.session_id = None
         self.client = RESTClient(
-            url=f"{url}:{port}",
+            url=url,
             accept_errors=True,
             default_event_logging_level="debug",
             logger=logger,
         )
+        self.custom_base_path = self.client.path
 
     def execute(self, command, params, payload=None):
         """
@@ -37,7 +36,7 @@ class Bridge:
         :return: Processed response data.
         """
         # Perform endpoint substitution using the params
-        endpoint = command["endpointTemplate"].format(**params)
+        endpoint = self._make_endpoint_path(command, params)
 
         # Handle GET and POST/PUT requests
         if command["method"] in ["GET", "DELETE"]:
@@ -63,7 +62,10 @@ class Bridge:
         """
         response_json = response.body
         if response_json["status"] == 0:
-            return self.process_value(response_json["value"])
+            if self.session_id is None:
+                self.session_id = response_json.get("sessionId", None)
+
+            return self.process_value(response_json.get("value", True))
 
         self._process_error(response_json)
 
@@ -190,3 +192,22 @@ class Bridge:
         :return: An instance of an Element object (implementation-dependent).
         """
         return Element(element_id, self)
+
+    def _make_endpoint_path(self, command, params):
+        endpoint = command["endpointTemplate"].format(**params)
+        if self.custom_base_path is None:
+            return endpoint
+
+        return f"/{self.custom_base_path}{endpoint}"
+
+    def supress_logging(self):
+        """
+        Temporarily suppresses the bridge's logger to prevent verbose logging during large XML processing.
+        """
+        self.client.logger.setLevel(logging.CRITICAL)
+
+    def restore_logging(self):
+        """
+        Restores the bridge's logger to its default logging level (DEBUG).
+        """
+        self.client.logger.setLevel(logging.DEBUG)

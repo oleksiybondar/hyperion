@@ -4,14 +4,15 @@ from hyperiontf.typing import (
     WIN_APP_DRIVER_ROOT_HANDLE,
     APPIUM_DEFAULT_URL,
     HyperionException,
+    LocatorStrategies,
 )
 from hyperiontf.ui import By
 from hyperiontf.ui.adapters.win_app_driver.bridge import Bridge
 from hyperiontf.ui.adapters.win_app_driver.element import Element
 from hyperiontf.ui.adapters.win_app_driver.action_builder import WinActionBuilder
+from hyperiontf.ui.adapters.win_app_driver.xpath_evaluator import XPathEvaluator
 import hyperiontf.ui.adapters.win_app_driver.command as command
 import base64
-import urllib.parse
 
 
 class Page:
@@ -36,14 +37,11 @@ class Page:
         :param url: The URL where the WinAppDriver server is running.
         :param capabilities: A dictionary of capabilities for the WinAppDriver session.
         """
-        parsed_url = urllib.parse.urlparse(url)
-        host = parsed_url.hostname
-        port = parsed_url.port
 
         self.caps = capabilities
 
         # Use default port 4723 if no port is specified in the URL
-        self.bridge = Bridge(url=host, port=port or 4723)
+        self.bridge = Bridge(url=url)
         self.session_id = self._create_session(capabilities)
 
     def _create_session(self, capabilities: Dict[str, Any]) -> str:
@@ -53,8 +51,14 @@ class Page:
         :param capabilities: A dictionary of capabilities for the session.
         :return: The session ID for the new session.
         """
-        response = self.bridge.execute(command.session.new, {}, capabilities)
-        return response["sessionId"]
+        if "sessionId" in self.caps:
+            # attach to existing session instead
+            return self.caps["sessionId"]
+
+        self.bridge.execute(
+            command.session.new, {}, {"desiredCapabilities": capabilities}
+        )
+        return str(self.bridge.session_id)
 
     @property
     def window_handle(self) -> str:
@@ -92,13 +96,13 @@ class Page:
         :param locator: The locator object (By) for finding the element.
         :return: An Element instance representing the found element.
         """
-        return Element(
-            self.bridge.execute(
-                command.element.find_element,
-                {"sessionId": self.session_id},
-                {"using": locator.by, "value": locator.value},
-            ),
-            self.bridge,
+        if locator.by == LocatorStrategies.XPATH:
+            return self.find_elements_by_xpath(locator.value)[0]
+
+        return self.bridge.execute(
+            command.driver.find_element,
+            {"sessionId": self.session_id},
+            {"using": locator.by, "value": locator.value},
         )
 
     def find_elements(self, locator: By) -> List[Element]:
@@ -108,12 +112,17 @@ class Page:
         :param locator: The locator object (By) for finding the elements.
         :return: A list of Element instances representing the found elements.
         """
-        elements = self.bridge.execute(
-            command.element.find_elements,
+        if locator.by == LocatorStrategies.XPATH:
+            return self.find_elements_by_xpath(locator.value)
+
+        return self.bridge.execute(
+            command.driver.find_elements,
             {"sessionId": self.session_id},
             {"using": locator.by, "value": locator.value},
         )
-        return [Element(element["ELEMENT"], self.bridge) for element in elements]
+
+    def find_elements_by_xpath(self, xpath):
+        return XPathEvaluator(self.bridge).find_elements(xpath)
 
     def open(self, url: str):
         """
@@ -176,9 +185,12 @@ class Page:
     @property
     def screenshot_as_base64(self) -> str:
         """Take a screenshot of the current window and return it as a base64 string."""
-        return self.bridge.execute(
+        self.bridge.supress_logging()
+        result = self.bridge.execute(
             command.driver.screenshot, {"sessionId": self.session_id}
         )
+        self.bridge.restore_logging()
+        return result
 
     def screenshot(self, path: str) -> None:
         """
@@ -193,9 +205,12 @@ class Page:
     @property
     def page_source(self) -> str:
         """Retrieve the page source of the current window."""
-        return self.bridge.execute(
+        self.bridge.supress_logging()
+        result = self.bridge.execute(
             command.driver.source, {"sessionId": self.session_id}
         )
+        self.bridge.restore_logging()
+        return result
 
     @property
     def size(self) -> Dict[str, int]:

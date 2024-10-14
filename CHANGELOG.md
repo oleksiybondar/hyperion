@@ -13,6 +13,51 @@ It is important to acknowledge that versions prior to v1.0.0 are considered to b
 
 From its first version, our framework has included a dedicated REST client equipped with extensive, built-in logging features, alongside a UI harness that simplifies page object creation. This harness supports a unified API compatible with Selenium, Appium, and Playwright, ensuring a seamless and efficient testing process.
 
+## [0.6.12] - 2024-10-14
+
+### added
+
+- added possibility to connect to already existing session
+
+#### Features
+
+- new Framework specific capability: sessionId, which substitutes session creation, with session attachment, which is natively, does not supported by WinApplicationDriver
+
+#### Notes
+
+This feature added because when using Root as application, e.g. connect to desktop, then session is not destroyed and persists, therefore WinAppDriver must be explicitly restarted, or else when sessions count/memory limit reaches the application will crash. So adding a possibility to connect to not destroyed sessions instead of spawning new.
+
+This is an edge case scenario and needed only when using WinAppDriver directly and the environments where its difficult to manage win app driver, for example remote execution on static environments.
+
+Using WinAppDriver over appium will nto cause the issue, as Appium server manages WinAppDriver instance and terminate it when appium session is ended.
+
+
+## [0.6.11] - 2024-10-13
+
+### added
+
+- own XPath engine for WindowsApplication driver
+- ability to use widgets recursively 
+
+#### Features
+
+- support of relative element search with ./
+- support XPath axes
+
+### fixed
+
+- improved finalizer for pytest execute
+
+
+## [0.6.5] - 2024-10-07
+
+### fixed
+
+- incorrect element instantiation
+- session ID handling fix
+- proper JSON-WIRE communication logging source
+- custom base path support for bridge
+
 ## [0.6.1] - 2024-10-07
 
 #### Features

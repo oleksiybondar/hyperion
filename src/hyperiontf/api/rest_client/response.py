@@ -1,9 +1,8 @@
 import requests
 
 from hyperiontf.assertions.expectation_result import ExpectationResult
-from hyperiontf.logging import getLogger
 from hyperiontf.configuration import config
-from hyperiontf.typing import LoggerSource, HTTPHeader
+from hyperiontf.typing import HTTPHeader
 from hyperiontf.typing import AnyResponse
 from hyperiontf.typing import (
     FailedHTTPRequestException,
@@ -14,8 +13,6 @@ import json
 import xml.dom.minidom
 from typing import Union, Any
 from hyperiontf.assertions.expect import Expect
-
-logger = getLogger(LoggerSource.REST_CLIENT)
 
 CONTENT_TYPE_PARSERS = {
     "application/json": json.loads,
@@ -292,7 +289,7 @@ class Response:
         # If it's an error response, raise an exception
         if not 200 <= self.response.status_code < 300:
             if not self.request.accept_errors:
-                logger.critical(log_message)
+                self.logger.critical(log_message)
                 raise FailedHTTPRequestException(log_message)
 
         self._log_event(log_message)
@@ -304,7 +301,7 @@ class Response:
         Parameters:
         message (str): The event message to be logged
         """
-        method = getattr(logger, self.client.default_event_logging_level)
+        method = getattr(self.logger, self.client.default_event_logging_level)
         method(message)
 
 

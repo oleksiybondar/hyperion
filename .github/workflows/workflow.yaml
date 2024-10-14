@@ -88,7 +88,7 @@ jobs:
 
   web-test-execution:
     needs: style-checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Check out code
@@ -128,7 +128,7 @@ jobs:
 
   web-waits-test-execution:
     needs: style-checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Check out code

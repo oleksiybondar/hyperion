@@ -1,7 +1,10 @@
 import base64
 import hyperiontf.ui.adapters.win_app_driver.command as command
 from typing import Dict, Any, List
+
+from hyperiontf.typing import LocatorStrategies
 from hyperiontf.ui import By
+from hyperiontf.ui.adapters.win_app_driver.xpath_evaluator import XPathEvaluator
 
 
 class Element:
@@ -14,6 +17,13 @@ class Element:
         """
         self.element_id = element_id
         self.bridge = bridge
+
+    @property
+    def element(self):
+        """
+        indicates if elements found or not, needed for frameworks element API
+        """
+        return self.element_id
 
     @property
     def _params(self) -> Dict[str, str]:
@@ -89,7 +99,7 @@ class Element:
         """Clear the element (used typically for input fields)."""
         return self.bridge.execute(command.element.clear, self._params)
 
-    def get_attribute(self, attribute_name: str) -> Any:
+    def attribute(self, attribute_name: str) -> Any:
         """Retrieve a specific attribute value of the element."""
         params = {**self._params, "name": attribute_name}
         return self.bridge.execute(command.element.attribute, params)
@@ -103,10 +113,19 @@ class Element:
 
     def find_element(self, locator: By) -> Any:
         """Find a child element inside the current element."""
+        if locator.by == LocatorStrategies.XPATH:
+            return self.find_elements_by_xpath(locator.value)[0]
+
         payload = {"using": locator.by, "value": locator.value}
         return self.bridge.execute(command.element.find_element, self._params, payload)
 
     def find_elements(self, locator: By) -> List[Any]:
         """Find all child elements inside the current element."""
+        if locator.by == LocatorStrategies.XPATH:
+            return self.find_elements_by_xpath(locator.value)
+
         payload = {"using": locator.by, "value": locator.value}
         return self.bridge.execute(command.element.find_elements, self._params, payload)
+
+    def find_elements_by_xpath(self, xpath):
+        return XPathEvaluator(self.bridge).find_elements(xpath, self)
