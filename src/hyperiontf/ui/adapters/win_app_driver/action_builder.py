@@ -115,7 +115,7 @@ class WinActionBuilder:
         Parameters:
             key (str): The key to release.
         """
-        if key.startswith("\\u") and len(key) == 6:
+        if len(key) == 1 and "\ue000" <= key <= "\uefff":
             key = f"{key}{key}"  # Duplicate the Unicode sequence
         self.send_keys(key)
 

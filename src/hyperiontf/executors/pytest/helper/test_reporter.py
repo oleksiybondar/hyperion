@@ -35,6 +35,8 @@ class TestReporter:
         start_time (datetime): The timestamp when the test started.
     """
 
+    last_instance = None
+
     def __init__(self, request):
         """
         Initialize the TestReporter class and prepare logging for the test.
@@ -44,7 +46,10 @@ class TestReporter:
         """
         self.request = request
         self.start_time = datetime.now()
+        self.finalized = False
         self._init_test_log()
+
+        TestReporter.last_instance = self
 
     def _init_test_log(self):
         """
@@ -225,8 +230,13 @@ class TestReporter:
         Finalize the test reporting. This includes logging the final metadata,
         closing log folders, dumping test state if necessary, and finalizing automation adapters.
         """
+        if self.finalized:
+            return None
+
         self._log_final_meta()
         self._close_log_folders()
         self._log_exception()
         self._log_dumps()
         self._finalize_automation()
+
+        self.finalized = True
