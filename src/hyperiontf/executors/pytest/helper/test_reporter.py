@@ -240,6 +240,9 @@ class TestReporter:
         self._close_log_folders()
         self._log_exception()
         self._log_dumps()
+
+        self._exec_finalizer_hooks()
+
         self._finalize_automation()
 
         self.finalized = True
@@ -257,7 +260,7 @@ class TestReporter:
         """
         Execute all finalizer hooks in Last In, First Out (LIFO) order.
         """
-        logger.push_folder("Running custom finalizer hooks")
+        logger.push_folder("Running finalize hooks")
         while self.hooks:
             # Remove and execute the last hook in the list (LIFO behavior)
             hook = self.hooks.pop()
