@@ -1,6 +1,6 @@
 from .fixture import fixture
-from .logger_setup import automatic_log_setup
+from .setup import hyperion_test_case_setup
 from .helper.test_case import TestCase
 
 
-__all__ = ["automatic_log_setup", "fixture", "TestCase"]
+__all__ = ["hyperion_test_case_setup", "fixture", "TestCase"]
