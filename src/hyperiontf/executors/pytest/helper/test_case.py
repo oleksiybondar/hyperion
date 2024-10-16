@@ -160,8 +160,7 @@ class TestCase:
         Finalize automation by quitting all automation adapters if auto quit is enabled
         in the configuration.
         """
-        if config.page_object.auto_quit:
-            AutomationAdaptersManager().quit_all()
+        AutomationAdaptersManager().quit_all()
 
     @property
     def test_node(self):
