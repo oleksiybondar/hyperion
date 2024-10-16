@@ -1,5 +1,7 @@
 from datetime import datetime
 import sys
+from typing import Callable
+
 from hyperiontf.configuration import config
 from hyperiontf.exception import HyperionException
 from hyperiontf.logging import getLogger
@@ -47,6 +49,7 @@ class TestReporter:
         self.request = request
         self.start_time = datetime.now()
         self.finalized = False
+        self.hooks = []
         self._init_test_log()
 
         TestReporter.last_instance = self
@@ -240,3 +243,29 @@ class TestReporter:
         self._finalize_automation()
 
         self.finalized = True
+
+    def addfinalizer(self, hook: Callable):
+        """
+        Add a finalizer hook to the list of hooks.
+
+        Parameters:
+            hook (Callable): A callable hook to execute later.
+        """
+        self.hooks.append(hook)
+
+    def _exec_finalizer_hooks(self):
+        """
+        Execute all finalizer hooks in Last In, First Out (LIFO) order.
+        """
+        logger.push_folder("Running custom finalizer hooks")
+        while self.hooks:
+            # Remove and execute the last hook in the list (LIFO behavior)
+            hook = self.hooks.pop()
+            try:
+                hook()  # Call the hook
+            except Exception as e:
+                # Optionally, handle exceptions raised by a hook
+                logger.critical(
+                    f"Error executing finalizer hook: {e}", exc_info=sys.exc_info()
+                )
+        logger.pop_folder()
