@@ -1,6 +1,6 @@
 import pytest
 import time
-from hyperiontf.executors.pytest import automatic_log_setup  # noqa: F401
+from hyperiontf.executors.pytest import hyperion_test_case_setup  # noqa: F401
 from ..page_objects.responsive_page import ResponsivePage
 from ..page_objects.iframe_with_responsive_elements import IframeWithResponsive
 from .caps_variants import caps_variants

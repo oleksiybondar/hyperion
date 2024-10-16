@@ -1,5 +1,7 @@
 from datetime import datetime
 import sys
+from typing import Callable, Optional
+
 from hyperiontf.configuration import config
 from hyperiontf.exception import HyperionException
 from hyperiontf.logging import getLogger
@@ -21,7 +23,7 @@ RESERVED_MARKERS = [
 logger = getLogger()
 
 
-class TestReporter:
+class TestCase:
     """
     TestReporter is a helper class designed to manage logging and metadata collection
     for a test during its execution in pytest. It logs the test's start, end, duration,
@@ -35,6 +37,13 @@ class TestReporter:
         start_time (datetime): The timestamp when the test started.
     """
 
+    current: Optional["TestCase"] = None
+
+    @staticmethod
+    def addfinalizer(hook: Callable):
+        if TestCase.current:
+            TestCase.current.add_finalizer_hook(hook)
+
     def __init__(self, request):
         """
         Initialize the TestReporter class and prepare logging for the test.
@@ -44,7 +53,11 @@ class TestReporter:
         """
         self.request = request
         self.start_time = datetime.now()
+        self.finalized = False
+        self.hooks = []
         self._init_test_log()
+
+        TestCase.current = self
 
     def _init_test_log(self):
         """
@@ -121,7 +134,7 @@ class TestReporter:
 
         # Check for exception details in interactive sessions (sys.last_type, etc.)
         if hasattr(sys, "last_type"):
-            return (sys.last_type, sys.last_value, sys.last_traceback)
+            return sys.last_type, sys.last_value, sys.last_traceback
 
         # Fall back to the cached exception details from HyperionException
         return HyperionException.last_exec_info
@@ -132,7 +145,14 @@ class TestReporter:
         are enabled in the configuration. Dumps are created using the automation adapters.
         """
         if self.test_status == "Failed" or config.page_object.post_morten_dumps:
-            AutomationAdaptersManager().make_state_dump()
+            try:
+                AutomationAdaptersManager().make_state_dump()
+            except Exception as e:
+                # Optionally, handle exceptions raised by a hook
+                logger.critical(
+                    f"Error occurred while making source dumps: {e}",
+                    exc_info=sys.exc_info(),
+                )
 
     @staticmethod
     def _finalize_automation():
@@ -140,8 +160,7 @@ class TestReporter:
         Finalize automation by quitting all automation adapters if auto quit is enabled
         in the configuration.
         """
-        if config.page_object.auto_quit:
-            AutomationAdaptersManager().quit_all()
+        AutomationAdaptersManager().quit_all()
 
     @property
     def test_node(self):
@@ -225,8 +244,43 @@ class TestReporter:
         Finalize the test reporting. This includes logging the final metadata,
         closing log folders, dumping test state if necessary, and finalizing automation adapters.
         """
+        if self.finalized:
+            return None
+
         self._log_final_meta()
         self._close_log_folders()
         self._log_exception()
         self._log_dumps()
+
+        self._exec_finalizer_hooks()
+
         self._finalize_automation()
+
+        self.finalized = True
+
+    def add_finalizer_hook(self, hook: Callable):
+        """
+        Add a finalizer hook to the list of hooks.
+
+        Parameters:
+            hook (Callable): A callable hook to execute later.
+        """
+        self.hooks.append(hook)
+
+    def _exec_finalizer_hooks(self):
+        """
+        Execute all finalizer hooks in Last In, First Out (LIFO) order.
+        """
+        logger.push_folder("Running finalize hooks")
+        while self.hooks:
+            # Remove and execute the last hook in the list (LIFO behavior)
+            hook = self.hooks.pop()
+            try:
+                hook()  # Call the hook
+            except Exception as e:
+                # Optionally, handle exceptions raised by a hook
+                logger.critical(
+                    f"Error occurred while running finalizer hook: {e}",
+                    exc_info=sys.exc_info(),
+                )
+        logger.pop_folder()

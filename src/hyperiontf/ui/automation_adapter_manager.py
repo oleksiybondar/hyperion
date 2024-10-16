@@ -31,9 +31,10 @@ class AutomationAdaptersManager:
         """
         Quit all applications related to adapters and clear the adapter list.
         """
-        for index, adapter in enumerate(self.adapters):
-            adapter["logger"].info(f"Quiting application {index + 1}")
-            adapter["adapter"].quit()
+        if config.page_object.auto_quit:
+            for index, adapter in enumerate(self.adapters):
+                adapter["logger"].info(f"Quiting application {index + 1}")
+                adapter["adapter"].quit()
         self.adapters.clear()
 
     def make_state_dump(self):

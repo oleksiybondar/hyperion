@@ -89,6 +89,14 @@ class WinActionBuilder:
         payload = {"x": x, "y": y}
         self._add_action(command.mouse.moveto, payload)
 
+    def send_keys(self, keys: str):
+        if isinstance(keys, list):
+            payload = {"value": [str(k) for k in keys]}
+        else:
+            payload = {"value": [str(keys)]}
+
+        self._add_action(command.keyboard.keys, payload)
+
     # Keyboard actions
     def key_down(self, key: str):
         """
@@ -97,8 +105,8 @@ class WinActionBuilder:
         Parameters:
             key (str): The key to press down.
         """
-        payload = {"value": key}
-        self._add_action(command.keyboard.keys, payload)
+        # do nothing win app driver does not support that
+        pass
 
     def key_up(self, key: str):
         """
@@ -107,8 +115,9 @@ class WinActionBuilder:
         Parameters:
             key (str): The key to release.
         """
-        payload = {"value": key}
-        self._add_action(command.keyboard.keys, payload)
+        if len(key) == 1 and "\ue000" <= key <= "\uefff":
+            key = f"{key}{key}"  # Duplicate the Unicode sequence
+        self.send_keys(key)
 
     # Touch actions
     def touch_down(

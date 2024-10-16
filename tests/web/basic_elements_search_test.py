@@ -1,5 +1,5 @@
 import pytest
-from hyperiontf.executors.pytest import automatic_log_setup, fixture  # noqa: F401
+from hyperiontf.executors.pytest import hyperion_test_case_setup, fixture  # noqa: F401
 from ..page_objects.basic_elements_page import BasicElementsSearch
 from .caps_variants import caps_variants
 from hyperiontf import expect, Color

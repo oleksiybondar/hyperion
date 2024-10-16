@@ -1,6 +1,6 @@
 import pytest
 from hyperiontf import CLIClient, expect
-from hyperiontf.executors.pytest import automatic_log_setup  # noqa: F401
+from hyperiontf.executors.pytest import hyperion_test_case_setup  # noqa: F401
 from hyperiontf.executors.pytest import fixture
 import os
 from hyperiontf.typing import CommandExecutionTimeoutException

@@ -129,6 +129,15 @@ class ActionBuilder:
         """
         self._builder_adapter.key_up(key)
 
+    @auto_log
+    def key_press(self, key: str):
+        self._builder_adapter.key_down(key)
+        self._builder_adapter.key_up(key)
+
+    @auto_log
+    def send_keys(self, keys: str):
+        self._builder_adapter.send_keys(keys)
+
     # Base touch actions
     @auto_log
     def touch_down(self, finger: TouchFingerType):

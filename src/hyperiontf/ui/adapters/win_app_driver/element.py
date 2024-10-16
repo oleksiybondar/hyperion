@@ -106,7 +106,10 @@ class Element:
 
     def send_keys(self, keys: str) -> Any:
         """Send keystrokes to the element (typically for input fields)."""
-        payload = {"text": keys}
+        if isinstance(keys, list):
+            payload = {"value": [str(k) for k in keys]}
+        else:
+            payload = {"value": [str(keys)]}
         return self.bridge.execute(command.element.send_keys, self._params, payload)
 
     # Methods for finding elements using the By locator object
