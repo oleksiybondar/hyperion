@@ -142,6 +142,9 @@ class SeleniumActionBuilder:
         self._mouse_actions.pause(milliseconds / 1000)
         self._touch_actions.pause(milliseconds / 1000)
 
+    def send_keys(self, keys: str):
+        self.action_builder.key_action.send_keys(keys)
+
     # Perform all actions
     def perform(self):
         """
