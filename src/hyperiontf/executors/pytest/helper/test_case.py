@@ -134,7 +134,7 @@ class TestCase:
 
         # Check for exception details in interactive sessions (sys.last_type, etc.)
         if hasattr(sys, "last_type"):
-            return (sys.last_type, sys.last_value, sys.last_traceback)
+            return sys.last_type, sys.last_value, sys.last_traceback
 
         # Fall back to the cached exception details from HyperionException
         return HyperionException.last_exec_info
@@ -145,7 +145,14 @@ class TestCase:
         are enabled in the configuration. Dumps are created using the automation adapters.
         """
         if self.test_status == "Failed" or config.page_object.post_morten_dumps:
-            AutomationAdaptersManager().make_state_dump()
+            try:
+                AutomationAdaptersManager().make_state_dump()
+            except Exception as e:
+                # Optionally, handle exceptions raised by a hook
+                logger.critical(
+                    f"Error occurred while making source dumps: {e}",
+                    exc_info=sys.exc_info(),
+                )
 
     @staticmethod
     def _finalize_automation():
@@ -274,6 +281,7 @@ class TestCase:
             except Exception as e:
                 # Optionally, handle exceptions raised by a hook
                 logger.critical(
-                    f"Error executing finalizer hook: {e}", exc_info=sys.exc_info()
+                    f"Error occurred while running finalizer hook: {e}",
+                    exc_info=sys.exc_info(),
                 )
         logger.pop_folder()
