@@ -1,5 +1,5 @@
 import pytest
-from hyperiontf.executors.pytest.helper.test_reporter import TestReporter
+from hyperiontf.executors.pytest.support.test_reporter import TestReporter
 
 
 @pytest.fixture(autouse=True)

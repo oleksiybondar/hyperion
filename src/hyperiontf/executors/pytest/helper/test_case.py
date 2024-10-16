@@ -1,6 +1,6 @@
 from datetime import datetime
 import sys
-from typing import Callable
+from typing import Callable, Optional
 
 from hyperiontf.configuration import config
 from hyperiontf.exception import HyperionException
@@ -23,7 +23,7 @@ RESERVED_MARKERS = [
 logger = getLogger()
 
 
-class TestReporter:
+class TestCase:
     """
     TestReporter is a helper class designed to manage logging and metadata collection
     for a test during its execution in pytest. It logs the test's start, end, duration,
@@ -37,7 +37,12 @@ class TestReporter:
         start_time (datetime): The timestamp when the test started.
     """
 
-    last_instance = None
+    current: Optional["TestCase"] = None
+
+    @staticmethod
+    def addfinalizer(hook: Callable):
+        if TestCase.current:
+            TestCase.current.add_finalizer_hook(hook)
 
     def __init__(self, request):
         """
@@ -52,7 +57,7 @@ class TestReporter:
         self.hooks = []
         self._init_test_log()
 
-        TestReporter.last_instance = self
+        TestCase.current = self
 
     def _init_test_log(self):
         """
@@ -247,7 +252,7 @@ class TestReporter:
 
         self.finalized = True
 
-    def addfinalizer(self, hook: Callable):
+    def add_finalizer_hook(self, hook: Callable):
         """
         Add a finalizer hook to the list of hooks.
 
