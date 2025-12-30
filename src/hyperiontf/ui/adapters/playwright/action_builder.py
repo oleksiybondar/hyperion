@@ -125,6 +125,9 @@ class PlaywrightActionBuilder:
         """
         self._add_action(self.page.keyboard.up, key)
 
+    def send_keys(self, keys: str):
+        self._add_action(self.page.keyboard.type, keys)
+
     def wait(self, milliseconds: float):
         self._add_action(time.sleep, milliseconds / 1000)
 

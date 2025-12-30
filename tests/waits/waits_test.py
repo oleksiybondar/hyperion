@@ -1,5 +1,5 @@
 import pytest
-from hyperiontf.executors.pytest import automatic_log_setup, fixture  # noqa: F401
+from hyperiontf.executors.pytest import hyperion_test_case_setup, fixture  # noqa: F401
 from hyperiontf import expect
 from hyperiontf.typing import TimeoutException
 

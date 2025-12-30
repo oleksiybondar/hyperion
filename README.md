@@ -241,7 +241,7 @@ class LoginPage(WebPage):
 
 ```python
 import pytest
-from hyperiontf.executors.pytest import automatic_log_setup, fixture
+from hyperiontf.executors.pytest import hyperion_test_case_setup, fixture
 from page_objects.login_page import LoginPage
 
 # The browser to use for the tests
@@ -249,6 +249,7 @@ browser = 'chrome'
 
 # The URL of the login page
 login_page_url = 'https://example.com/login'
+
 
 @fixture(scope='function', log=False)
 def login_page():
@@ -259,7 +260,7 @@ def login_page():
 
 
 @pytest.mark.Login
-@pytest.mark.TextFields 
+@pytest.mark.TextFields
 @pytest.mark.Button
 def test_login(login_page):
     """
@@ -271,7 +272,7 @@ def test_login(login_page):
 
 
 @pytest.mark.Login
-@pytest.mark.TextFields 
+@pytest.mark.TextFields
 @pytest.mark.Button
 def test_login2(login_page):
     """
@@ -280,7 +281,7 @@ def test_login2(login_page):
     login_page.login('my_username', 'my_password')
 ```
 
-In this example, pytest is used as the testing framework. The Hyperion Testing Framework pytest helper `automatic_log_setup` enables automatic logging for each test, and `fixture` is a special decorator that wraps pytest fixtures for logging purposes.
+In this example, pytest is used as the testing framework. The Hyperion Testing Framework pytest helper `hyperion_test_case_setup` enables automatic logging for each test, and `fixture` is a special decorator that wraps pytest fixtures for logging purposes.
 
 This basic usage example demonstrates how to define a page object, interact with UI elements, and define a pytest test case using Hyperion Testing Framework. The framework has many advanced features, such as automatic stale element recovery and context switching, which you can utilize to create more robust and maintainable tests. For complex scenarios, be sure to refer to the advanced usage guide and the comprehensive test examples provided.
 
@@ -1237,8 +1238,9 @@ Here's an example of three tests, each one written for a different platform: web
 
 ```python
 import pytest
-from hyperiontf.executors.pytest import automatic_log_setup, fixture
+from hyperiontf.executors.pytest import hyperion_test_case_setup, fixture
 from .pages import CalculatorWeb, CalculatorMobile, CalculatorDesktop
+
 
 def test_addition_web():
     # Launch the web browser and navigate to the calculator application
@@ -1259,11 +1261,11 @@ def test_addition_mobile():
     # Launch the mobile application
 
     desired_caps = {
-    'platformName': 'iOS',
-    'platformVersion': '16.5',  
-    'deviceName': 'iPhone 14',
-    'bundleId': 'com.apple.calculator',
-    'automationName': 'XCUITest'           
+        'platformName': 'iOS',
+        'platformVersion': '16.5',
+        'deviceName': 'iPhone 14',
+        'bundleId': 'com.apple.calculator',
+        'automationName': 'XCUITest'
     }
 
     calc_page = CalculatorMobile.launch_app(desired_caps)
@@ -1280,10 +1282,10 @@ def test_addition_mobile():
 
 def test_addition_desktop():
     desired_caps = {
-    'platformName': 'Windows',
-    'deviceName': 'WindowsPC',  
-    'platformVersion': '',
-    'app': 'Microsoft.WindowsCalculator_8wekyb3d8bbwe!App'
+        'platformName': 'Windows',
+        'deviceName': 'WindowsPC',
+        'platformVersion': '',
+        'app': 'Microsoft.WindowsCalculator_8wekyb3d8bbwe!App'
     }
 
     # Launch the desktop application
