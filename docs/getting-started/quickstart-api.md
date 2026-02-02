@@ -65,12 +65,14 @@ without locking values to a specific snapshot.
 ```python
 import pytest
 from hyperiontf import expect, verify
+from hyperiontf.executors.pytest import hyperion_test_case_setup  # noqa: F401
+from hyperiontf.executors.pytest import fixture
 
 # If you want to assert schema failures without raising, pass is_assertion=False.
 # The method returns a boolean in that mode (as shown in framework tests).
 
 
-@pytest.fixture(scope="function")
+@fixture(scope="function")
 def posts_api():
     return PostsAPI()
 

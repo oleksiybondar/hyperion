@@ -133,6 +133,7 @@ Hyperion handles context switching and synchronization automatically based on th
 
 ```python
 import pytest
+from hyperiontf.executors.pytest import hyperion_test_case_setup  # noqa: F401
 from hyperiontf.executors.pytest import fixture
 from hyperiontf import expect, verify
 

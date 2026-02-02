@@ -65,9 +65,11 @@ In practice, baseline collection is usually done once (or explicitly), and compa
 import pytest
 from hyperiontf import VisualMode
 from hyperiontf import expect
+from hyperiontf.executors.pytest import hyperion_test_case_setup  # noqa: F401
+from hyperiontf.executors.pytest import fixture
 
 
-@pytest.fixture(scope="function")
+@fixture(scope="function")
 def dashboard_page():
     page = DashboardPage.start_browser("chrome")
     page.open("https://example.test/dashboard")

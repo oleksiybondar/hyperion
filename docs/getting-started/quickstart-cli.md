@@ -57,9 +57,11 @@ We use `expect` for “must be true” checks and `verify` for extra non-fatal c
 ```python
 import pytest
 from hyperiontf import expect, verify
+from hyperiontf.executors.pytest import hyperion_test_case_setup  # noqa: F401
+from hyperiontf.executors.pytest import fixture
 
 
-@pytest.fixture(scope="function")
+@fixture(scope="function")
 def cli():
     client = create_cli_client()
     yield client
