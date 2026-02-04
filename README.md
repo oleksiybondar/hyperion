@@ -8,6 +8,22 @@ Its primary goal is to reduce duplication, improve test stability, and enable **
 
 ---
 
+## Documentation
+
+Hyperion’s full documentation is available online and covers:
+
+- Getting started guides
+- Core concepts and design philosophy
+- Step-by-step tutorials
+- How-to guides and recipes
+- Public API reference
+- Architecture and behavior contracts
+
+📖 **Read the documentation here:**  
+https://github.com/oleksiybondar/hyperion/blob/main/docs/index.md
+
+---
+
 ## Why Hyperion?
 
 Modern applications rarely exist on a single platform.  
