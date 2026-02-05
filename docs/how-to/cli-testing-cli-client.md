@@ -1,4 +1,8 @@
-← [REST API Testing](/docs/how-to/api-testing-rest-client.md) | [SSH Testing →](/docs/how-to/ssh-testing-ssh-client.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [REST API Testing](/docs/how-to/api-testing-rest-client.md)  
+→ Next: [SSH Testing](/docs/how-to/ssh-testing-ssh-client.md)
+
+---
 
 # CLI Testing with `CLIClient`
 
@@ -228,4 +232,6 @@ This keeps CLI tests:
 
 ---
 
-← [REST API Testing](/docs/how-to/api-testing-rest-client.md) | [SSH Testing →](/docs/how-to/ssh-testing-ssh-client.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [REST API Testing](/docs/how-to/api-testing-rest-client.md)  
+→ Next: [SSH Testing](/docs/how-to/ssh-testing-ssh-client.md)

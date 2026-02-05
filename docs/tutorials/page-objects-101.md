@@ -1,6 +1,8 @@
 # 3.2 Page Objects 101
 
-← [/docs/tutorials/first-web-test.md](/docs/tutorials/first-web-test.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Your First Web Test](/docs/tutorials/first-web-test.md)  
+→ Next: [Widgets and Reusable Components](/docs/tutorials/widgets-101.md)
 
 ---
 
@@ -233,4 +235,7 @@ Next, we’ll turn repeated UI structures into reusable components using widgets
 → [/docs/tutorials/widgets-101.md](/docs/tutorials/widgets-101.md)
 
 ---
-← [/docs/tutorials/first-web-test.md](/docs/tutorials/first-web-test.md)
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Your First Web Test](/docs/tutorials/first-web-test.md)  
+→ Next: [Widgets and Reusable Components](/docs/tutorials/widgets-101.md)

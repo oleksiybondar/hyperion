@@ -1,4 +1,8 @@
-← [CLI Client](/docs/reference/public-api/cli-client.md) | [Visual Testing API →](/docs/reference/public-api/visual.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [CLI Client](/docs/reference/public-api/cli-client.md)  
+→ Next: [Visual Testing API](/docs/reference/public-api/visual.md)
+
+---
 
 # SSHClient
 
@@ -371,4 +375,6 @@ def test_ssh_interactive():
 
 ---
 
-← [CLI Client](/docs/reference/public-api/cli-client.md) | [Visual Testing API →](/docs/reference/public-api/visual.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [CLI Client](/docs/reference/public-api/cli-client.md)  
+→ Next: [Visual Testing API](/docs/reference/public-api/visual.md)

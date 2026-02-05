@@ -1,6 +1,10 @@
 # 3.3 Widgets and Reusable Components
 
-← [/docs/tutorials/page-objects-101.md](/docs/tutorials/page-objects-101.md)
+---
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Page Objects 101](/docs/tutorials/page-objects-101.md)  
+→ Next: [Working with iFrames](/docs/tutorials/iframes-and-context.md)
 
 ---
 
@@ -316,4 +320,7 @@ Next, we’ll apply the same model to one of the hardest UI challenges:
 → [/docs/tutorials/iframes-and-context.md](/docs/tutorials/iframes-and-context.md)
 
 ---
-← [/docs/tutorials/page-objects-101.md](/docs/tutorials/page-objects-101.md)
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Page Objects 101](/docs/tutorials/page-objects-101.md)  
+→ Next: [Working with iFrames](/docs/tutorials/iframes-and-context.md)

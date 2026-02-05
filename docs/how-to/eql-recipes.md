@@ -1,6 +1,10 @@
 # 4.14 Elements Query Language (EQL) Recipes
 
-← [/docs/how-to/work-with-webviews.md](/docs/how-to/work-with-webviews.md)
+---
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Visual Testing and Baselines](/docs/how-to/visual-testing-baselines.md)  
+→ Next: [Logging and Reporting](/docs/how-to/logging-and-reports.md)
 
 ---
 
@@ -274,11 +278,6 @@ Most importantly:
 
 ---
 
-## Next guide
-
-Continue with logging and reporting:
-
-→ [/docs/how-to/logging-and-reports.md](/docs/how-to/logging-and-reports.md)
-
----
-← [/docs/how-to/work-with-webviews.md](/docs/how-to/work-with-webviews.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Visual Testing and Baselines](/docs/how-to/visual-testing-baselines.md)  
+→ Next: [Logging and Reporting](/docs/how-to/logging-and-reports.md)

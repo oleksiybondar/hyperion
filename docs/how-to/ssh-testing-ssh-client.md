@@ -1,4 +1,8 @@
-← [CLI Testing](/docs/how-to/cli-testing-cli-client.md) |  [Visual Testing](/docs/how-to/visual-testing-baselines.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [CLI Testing](/docs/how-to/cli-testing-cli-client.md)  
+→ Next: [Visual Testing and Baselines](/docs/how-to/visual-testing-baselines.md)
+
+---
 
 # SSH Testing with `SSHClient`
 
@@ -254,4 +258,6 @@ def test_max_concurrent_ssh_sessions():
 
 ---
 
-← [CLI Testing](/docs/how-to/cli-testing-cli-client.md) | [Visual Testing](/docs/how-to/visual-testing-baselines.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [CLI Testing](/docs/how-to/cli-testing-cli-client.md)  
+→ Next: [Visual Testing and Baselines](/docs/how-to/visual-testing-baselines.md)

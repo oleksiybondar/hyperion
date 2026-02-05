@@ -1,4 +1,5 @@
 ← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Basic Configuration](/docs/getting-started/configuration.md)  
 → Next: [Quickstart: API Testing](/docs/getting-started/quickstart-api.md)
 
 ---
@@ -185,4 +186,5 @@ Without additional configuration, this Quickstart exercised:
 ---
 
 ← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Basic Configuration](/docs/getting-started/configuration.md)  
 → Next: [Quickstart: API Testing](/docs/getting-started/quickstart-api.md)

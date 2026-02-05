@@ -1,6 +1,10 @@
 # 3.5 Expect vs Verify
 
-← [/docs/tutorials/iframes-and-context.md](/docs/tutorials/iframes-and-context.md) | [/docs/tutorials/index.md](/docs/tutorials/index.md) →
+---
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Working with iFrames](/docs/tutorials/iframes-and-context.md)  
+→ Next: [Writing Stable Tests](/docs/how-to/write-stable-tests.md)
 
 ---
 
@@ -245,4 +249,8 @@ From here, you can:
 - explore **Examples** for real-world patterns
 - consult the **API Reference** for authoritative details
 
-← [/docs/index.md](/docs/index.md)
+---
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Working with iFrames](/docs/tutorials/iframes-and-context.md)  
+→ Next: [Writing Stable Tests](/docs/how-to/write-stable-tests.md)

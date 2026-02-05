@@ -1,6 +1,10 @@
 # 3.4 Working with iFrames
 
-← [/docs/tutorials/widgets-101.md](/docs/tutorials/widgets-101.md)
+---
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Widgets and Reusable Components](/docs/tutorials/widgets-101.md)  
+→ Next: [Expect vs Verify](/docs/tutorials/expect-vs-verify.md)
 
 ---
 
@@ -247,4 +251,7 @@ Next, we’ll look at a subtle but critical distinction:
 → [/docs/tutorials/expect-vs-verify.md](/docs/tutorials/expect-vs-verify.md)
 
 ---
-← [/docs/tutorials/widgets-101.md](/docs/tutorials/widgets-101.md)
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Widgets and Reusable Components](/docs/tutorials/widgets-101.md)  
+→ Next: [Expect vs Verify](/docs/tutorials/expect-vs-verify.md)

@@ -1,4 +1,6 @@
-← [WebView](/docs/reference/public-api/webview.md) | [SSH Client →](/docs/reference/public-api/ssh-client.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [REST Client](/docs/reference/public-api/http-client.md)  
+→ Next: [SSH Client](/docs/reference/public-api/ssh-client.md)
 
 ---
 
@@ -351,4 +353,6 @@ def test_interactive_session():
 
 ---
 
-← [WebView](/docs/reference/public-api/webview.md) | [SSH Client →](/docs/reference/public-api/ssh-client.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [REST Client](/docs/reference/public-api/http-client.md)  
+→ Next: [SSH Client](/docs/reference/public-api/ssh-client.md)

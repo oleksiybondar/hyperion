@@ -1,7 +1,10 @@
 # 5.3 DesktopWindow
 
-← [/docs/reference/public-api/mobilescreen.md](/docs/reference/public-api/mobilescreen.md)  
-→ [/docs/reference/public-api/widget.md](/docs/reference/public-api/widget.md)
+---
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [MobileScreen](/docs/reference/public-api/mobilescreen.md)  
+→ Next: [Widget](/docs/reference/public-api/widget.md)
 
 ---
 
@@ -200,5 +203,6 @@ def test_desktop_calculation():
 
 ---
 
-← [/docs/reference/public-api/mobilescreen.md](/docs/reference/public-api/mobilescreen.md)  
-→ [/docs/reference/public-api/widget.md](/docs/reference/public-api/widget.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [MobileScreen](/docs/reference/public-api/mobilescreen.md)  
+→ Next: [Widget](/docs/reference/public-api/widget.md)

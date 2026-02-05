@@ -1,4 +1,8 @@
-[← IFrame](/docs/reference/public-api/iframe.md) | [Action Builder →](/docs/reference/public-api/action-builder.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [IFrame](/docs/reference/public-api/iframe.md)  
+→ Next: [Element](/docs/reference/public-api/element.md)
+
+---
 
 # WebView
 
@@ -195,4 +199,6 @@ No additional handling is required from the test author.
 
 ---
 
-[← IFrame](/docs/reference/public-api/iframe.md) | [Action Builder →](/docs/reference/public-api/action-builder.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [IFrame](/docs/reference/public-api/iframe.md)  
+→ Next: [Element](/docs/reference/public-api/element.md)

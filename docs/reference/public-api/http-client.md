@@ -1,4 +1,8 @@
-[← Wait API](/docs/reference/public-api/waits.md) | [CLI Client →](/docs/reference/public-api/cli-client.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Wait API](/docs/reference/public-api/waits.md)  
+→ Next: [CLI Client](/docs/reference/public-api/cli-client.md)
+
+---
 
 # HTTP Client (REST)
 
@@ -556,4 +560,6 @@ assert response.status == 200
 
 ---
 
-[← Wait API](/docs/reference/public-api/waits.md) | [CLI Client →](/docs/reference/public-api/cli-client.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Wait API](/docs/reference/public-api/waits.md)  
+→ Next: [CLI Client](/docs/reference/public-api/cli-client.md)

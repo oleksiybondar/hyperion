@@ -1,4 +1,5 @@
 ← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Installation](/docs/getting-started/installation.md)  
 → Next: [Basic Configuration](/docs/getting-started/configuration.md)
 
 ---
@@ -160,4 +161,5 @@ Hyperion augments pytest with structure and observability, while keeping the und
 ---
 
 ← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Installation](/docs/getting-started/installation.md)  
 → Next: [Basic Configuration](/docs/getting-started/configuration.md)

@@ -1,4 +1,8 @@
-[← How-To Guides](/docs/index.md) | [HTTP Client API →](/docs/reference/public-api/http-client.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Working with WebViews](/docs/how-to/work-with-webviews.md)  
+→ Next: [CLI Testing](/docs/how-to/cli-testing-cli-client.md)
+
+---
 
 # How-To: REST / HTTP testing with Hyperion
 
@@ -175,4 +179,6 @@ a concrete, copy-pasteable example (no invented helpers).
 
 ---
 
-[← How-To Guides](/docs/index.md) | [HTTP Client API →](/docs/reference/public-api/http-client.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Working with WebViews](/docs/how-to/work-with-webviews.md)  
+→ Next: [CLI Testing](/docs/how-to/cli-testing-cli-client.md)

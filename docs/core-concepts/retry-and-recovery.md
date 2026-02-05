@@ -1,5 +1,6 @@
 ← [Back to Documentation Index](/docs/index.md)  
-← Previous: [Automatic Context Switching](/docs/core-concepts/context-switching.md)
+← Previous: [Automatic Context Switching](/docs/core-concepts/context-switching.md)  
+→ Next: [Your First Web Test](/docs/tutorials/first-web-test.md)
 
 ---
 
@@ -158,4 +159,6 @@ without guessing or overreaching.
 
 ---
 
-← [Back to Documentation Index](/docs/index.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Automatic Context Switching](/docs/core-concepts/context-switching.md)  
+→ Next: [Your First Web Test](/docs/tutorials/first-web-test.md)

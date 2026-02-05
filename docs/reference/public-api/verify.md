@@ -1,4 +1,8 @@
-[← Expect](/docs/reference/public-api/expect.md) | [Wait API →](/docs/reference/public-api/waits.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Expect](/docs/reference/public-api/expect.md)  
+→ Next: [Wait API](/docs/reference/public-api/waits.md)
+
+---
 
 # Verify
 
@@ -159,4 +163,6 @@ Use `expect(...)` when you need:
 
 ---
 
-[← Expect](/docs/reference/public-api/expect.md) | [Wait API →](/docs/reference/public-api/waits.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Expect](/docs/reference/public-api/expect.md)  
+→ Next: [Wait API](/docs/reference/public-api/waits.md)

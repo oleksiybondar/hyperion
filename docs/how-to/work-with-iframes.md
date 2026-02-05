@@ -1,6 +1,10 @@
 # 4.8 Working with iFrames
 
-← [/docs/how-to/nested-widgets.md](/docs/how-to/nested-widgets.md)
+---
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Nested Widgets](/docs/how-to/nested-widgets.md)  
+→ Next: [Working with WebViews](/docs/how-to/work-with-webviews.md)
 
 ---
 
@@ -276,4 +280,7 @@ Continue with:
 - [/docs/how-to/eql-recipes.md](/docs/how-to/eql-recipes.md)
 
 ---
-← [/docs/how-to/nested-widgets.md](/docs/how-to/nested-widgets.md)
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Nested Widgets](/docs/how-to/nested-widgets.md)  
+→ Next: [Working with WebViews](/docs/how-to/work-with-webviews.md)

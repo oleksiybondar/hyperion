@@ -1,4 +1,8 @@
-[← Verify](/docs/reference/public-api/verify.md) | [REST Client →](/docs/reference/public-api/http-client.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Verify](/docs/reference/public-api/verify.md)  
+→ Next: [REST Client](/docs/reference/public-api/http-client.md)
+
+---
 
 # Wait API
 
@@ -264,4 +268,6 @@ Hyperion’s Wait API provides:
 
 ---
 
-[← Verify](/docs/reference/public-api/verify.md) | [REST Client →](/docs/reference/public-api/http-client.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Verify](/docs/reference/public-api/verify.md)  
+→ Next: [REST Client](/docs/reference/public-api/http-client.md)

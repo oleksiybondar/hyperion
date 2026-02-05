@@ -1,4 +1,8 @@
-← [/docs/reference/public-api/elements.md](/docs/reference/public-api/elements.md) | [/docs/reference/public-api/action-builder.md](/docs/reference/public-api/action-builder.md) →
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Elements](/docs/reference/public-api/elements.md)  
+→ Next: [ActionBuilder](/docs/reference/public-api/action-builder.md)
+
+---
 
 # By
 
@@ -170,4 +174,6 @@ and intentionally **not extensible by users**.
 
 ---
 
-← [/docs/reference/public-api/elements.md](/docs/reference/public-api/elements.md) | [/docs/reference/public-api/action-builder.md](/docs/reference/public-api/action-builder.md) →
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Elements](/docs/reference/public-api/elements.md)  
+→ Next: [ActionBuilder](/docs/reference/public-api/action-builder.md)

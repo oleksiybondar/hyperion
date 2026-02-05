@@ -1,7 +1,10 @@
 # 5.1 WebPage
 
-← [/docs/index.md](/docs/index.md)  
-→ [/docs/reference/public-api/mobilescreen.md](/docs/reference/public-api/mobilescreen.md)
+---
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Logging and Reporting](/docs/how-to/logging-and-reports.md)  
+→ Next: [MobileScreen](/docs/reference/public-api/mobilescreen.md)
 
 ---
 
@@ -211,5 +214,6 @@ class ProductPage(WebPage):
 
 ---
 
-← [/docs/index.md](/docs/index.md)  
-→ [/docs/reference/public-api/mobilescreen.md](/docs/reference/public-api/mobilescreen.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Logging and Reporting](/docs/how-to/logging-and-reports.md)  
+→ Next: [MobileScreen](/docs/reference/public-api/mobilescreen.md)

@@ -1,4 +1,8 @@
-[← Widget](/docs/reference/public-api/widget.md) | [Elements →](/docs/reference/public-api/elements.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [WebView](/docs/reference/public-api/webview.md)  
+→ Next: [Elements](/docs/reference/public-api/elements.md)
+
+---
 
 # Element
 
@@ -443,4 +447,6 @@ Within EQL attribute resolution, `Element` supports:
 
 ---
 
-[← Widget](/docs/reference/public-api/widget.md) | [Elements →](/docs/reference/public-api/elements.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [WebView](/docs/reference/public-api/webview.md)  
+→ Next: [Elements](/docs/reference/public-api/elements.md)

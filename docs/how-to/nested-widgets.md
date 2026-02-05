@@ -1,6 +1,10 @@
 # 4.7 Nested Widgets
 
-← [/docs/tutorials/widgets-101.md](/docs/tutorials/widgets-101.md)
+---
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Platform-Agnostic Locators](/docs/how-to/platform-agnostic-locators.md)  
+→ Next: [Working with iFrames](/docs/how-to/work-with-iframes.md)
 
 ---
 
@@ -288,4 +292,7 @@ Or explore:
 - [/docs/how-to/eql-recipes.md](/docs/how-to/eql-recipes.md)
 
 ---
-← [/docs/tutorials/widgets-101.md](/docs/tutorials/widgets-101.md)
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Platform-Agnostic Locators](/docs/how-to/platform-agnostic-locators.md)  
+→ Next: [Working with iFrames](/docs/how-to/work-with-iframes.md)

@@ -1,6 +1,10 @@
 # 4.15 Logging and Reporting
 
-← [/docs/how-to/eql-recipes.md](/docs/how-to/eql-recipes.md)
+---
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Elements Query Language (EQL) Recipes](/docs/how-to/eql-recipes.md)  
+→ Next: [WebPage](/docs/reference/public-api/webpage.md)
 
 ---
 
@@ -243,4 +247,7 @@ If you are debugging selection-heavy tests, also see:
 - [/docs/tutorials/expect-vs-verify.md](/docs/tutorials/expect-vs-verify.md)
 
 ---
-← [/docs/how-to/eql-recipes.md](/docs/how-to/eql-recipes.md)
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Elements Query Language (EQL) Recipes](/docs/how-to/eql-recipes.md)  
+→ Next: [WebPage](/docs/reference/public-api/webpage.md)

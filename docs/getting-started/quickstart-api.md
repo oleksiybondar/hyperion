@@ -1,4 +1,5 @@
 ← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Quickstart: Web UI Testing](/docs/getting-started/quickstart-web.md)  
 → Next: [Quickstart: CLI Testing](/docs/getting-started/quickstart-cli.md)
 
 ---
@@ -122,4 +123,5 @@ def test_get_post_schema(posts_api):
 ---
 
 ← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Quickstart: Web UI Testing](/docs/getting-started/quickstart-web.md)  
 → Next: [Quickstart: CLI Testing](/docs/getting-started/quickstart-cli.md)

@@ -1,4 +1,8 @@
-[← Element](/docs/reference/public-api/element.md) | [IFrame →](/docs/reference/public-api/iframe.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Element](/docs/reference/public-api/element.md)  
+→ Next: [By](/docs/reference/public-api/by.md)
+
+---
 
 # Elements
 
@@ -289,4 +293,6 @@ def test_first_row_text(results_page):
 
 ---
 
-[← Element](/docs/reference/public-api/element.md) | [IFrame →](/docs/reference/public-api/iframe.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Element](/docs/reference/public-api/element.md)  
+→ Next: [By](/docs/reference/public-api/by.md)

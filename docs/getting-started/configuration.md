@@ -1,4 +1,5 @@
 ← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Project Setup (pytest)](/docs/getting-started/project-setup-pytest.md)  
 → Next: [Quickstart: Web UI Testing](/docs/getting-started/quickstart-web.md)
 
 ---
@@ -175,4 +176,5 @@ Once configuration is in place, you are ready to run end-to-end tests.
 ---
 
 ← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Project Setup (pytest)](/docs/getting-started/project-setup-pytest.md)  
 → Next: [Quickstart: Web UI Testing](/docs/getting-started/quickstart-web.md)

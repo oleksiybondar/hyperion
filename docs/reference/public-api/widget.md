@@ -1,7 +1,10 @@
 # 5.4 Widget
 
-← [/docs/reference/public-api/desktopwindow.md](/docs/reference/public-api/desktopwindow.md)  
-→ [/docs/reference/public-api/iframe.md](/docs/reference/public-api/iframe.md)
+---
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [DesktopWindow](/docs/reference/public-api/desktopwindow.md)  
+→ Next: [IFrame](/docs/reference/public-api/iframe.md)
 
 ---
 
@@ -201,5 +204,6 @@ For interaction methods and waits, see:
 
 ---
 
-← [/docs/reference/public-api/desktopwindow.md](/docs/reference/public-api/desktopwindow.md)  
-→ [/docs/reference/public-api/iframe.md](/docs/reference/public-api/iframe.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [DesktopWindow](/docs/reference/public-api/desktopwindow.md)  
+→ Next: [IFrame](/docs/reference/public-api/iframe.md)

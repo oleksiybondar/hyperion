@@ -1,4 +1,8 @@
-[← Elements](/docs/reference/public-api/elements.md) | [Verify →](/docs/reference/public-api/verify.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [ActionBuilder](/docs/reference/public-api/action-builder.md)  
+→ Next: [Verify](/docs/reference/public-api/verify.md)
+
+---
 
 # Expect
 
@@ -498,4 +502,6 @@ def test_example(value):
 
 ---
 
-[← Elements](/docs/reference/public-api/elements.md) | [Verify →](/docs/reference/public-api/verify.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [ActionBuilder](/docs/reference/public-api/action-builder.md)  
+→ Next: [Verify](/docs/reference/public-api/verify.md)

@@ -1,4 +1,5 @@
 ← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Quickstart: API Testing](/docs/getting-started/quickstart-api.md)  
 → Next: [Quickstart: Visual Testing](/docs/getting-started/quickstart-visual.md)
 
 ---
@@ -117,4 +118,5 @@ def test_cli_real_session(cli):
 ---
 
 ← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Quickstart: API Testing](/docs/getting-started/quickstart-api.md)  
 → Next: [Quickstart: Visual Testing](/docs/getting-started/quickstart-visual.md)

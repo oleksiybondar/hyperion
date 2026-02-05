@@ -1,4 +1,8 @@
-← [/docs/reference/public-api/by.md](/docs/reference/public-api/by.md) | [/docs/reference/public-api/expect.md](/docs/reference/public-api/expect.md) →
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [By](/docs/reference/public-api/by.md)  
+→ Next: [Expect](/docs/reference/public-api/expect.md)
+
+---
 
 # ActionBuilder
 
@@ -290,4 +294,6 @@ page.status_label.assert_visible()
 
 ---
 
-← [/docs/reference/public-api/by.md](/docs/reference/public-api/by.md) | [/docs/reference/public-api/expect.md](/docs/reference/public-api/expect.md) →
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [By](/docs/reference/public-api/by.md)  
+→ Next: [Expect](/docs/reference/public-api/expect.md)

@@ -1,7 +1,10 @@
 # 5.2 MobileScreen
 
-← [/docs/reference/public-api/webpage.md](/docs/reference/public-api/webpage.md)  
-→ [/docs/reference/public-api/desktopwindow.md](/docs/reference/public-api/desktopwindow.md)
+---
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [WebPage](/docs/reference/public-api/webpage.md)  
+→ Next: [DesktopWindow](/docs/reference/public-api/desktopwindow.md)
 
 ---
 
@@ -211,5 +214,6 @@ def test_login():
 
 ---
 
-← [/docs/reference/public-api/webpage.md](/docs/reference/public-api/webpage.md)  
-→ [/docs/reference/public-api/desktopwindow.md](/docs/reference/public-api/desktopwindow.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [WebPage](/docs/reference/public-api/webpage.md)  
+→ Next: [DesktopWindow](/docs/reference/public-api/desktopwindow.md)

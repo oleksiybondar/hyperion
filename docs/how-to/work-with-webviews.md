@@ -1,6 +1,10 @@
 # 4.9 Working with WebViews
 
-← [/docs/how-to/work-with-iframes.md](/docs/how-to/work-with-iframes.md)
+---
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Working with iFrames](/docs/how-to/work-with-iframes.md)  
+→ Next: [REST API Testing](/docs/how-to/api-testing-rest-client.md)
 
 ---
 
@@ -262,4 +266,7 @@ Continue with:
 - [/docs/how-to/logging-and-reports.md](/docs/how-to/logging-and-reports.md)
 
 ---
-← [/docs/how-to/work-with-iframes.md](/docs/how-to/work-with-iframes.md)
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Working with iFrames](/docs/how-to/work-with-iframes.md)  
+→ Next: [REST API Testing](/docs/how-to/api-testing-rest-client.md)

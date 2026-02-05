@@ -1,4 +1,5 @@
 ← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Quickstart: CLI Testing](/docs/getting-started/quickstart-cli.md)  
 → Next: [Hyperion Page Object Model (POM)](/docs/core-concepts/pom.md)
 
 ---
@@ -133,4 +134,5 @@ Without additional configuration, this Quickstart exercised:
 ---
 
 ← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Quickstart: CLI Testing](/docs/getting-started/quickstart-cli.md)  
 → Next: [Hyperion Page Object Model (POM)](/docs/core-concepts/pom.md)

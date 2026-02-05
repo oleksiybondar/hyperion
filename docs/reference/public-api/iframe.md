@@ -1,4 +1,8 @@
-[← Elements](/docs/reference/public-api/elements.md) | [WebView →](/docs/reference/public-api/webview.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Widget](/docs/reference/public-api/widget.md)  
+→ Next: [WebView](/docs/reference/public-api/webview.md)
+
+---
 
 # IFrame
 
@@ -308,4 +312,6 @@ From a test author’s perspective, iframe interactions are **no different** fro
 
 ---
 
-[← Elements](/docs/reference/public-api/elements.md) | [WebView →](/docs/reference/public-api/webview.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Widget](/docs/reference/public-api/widget.md)  
+→ Next: [WebView](/docs/reference/public-api/webview.md)

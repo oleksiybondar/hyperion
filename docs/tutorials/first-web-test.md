@@ -1,6 +1,8 @@
 # 3.1 Your First Web Test
 
-← [/docs/core-concepts/pom.md](/docs/core-concepts/pom.md)
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Stale Element Recovery and Retries](/docs/core-concepts/retry-and-recovery.md)  
+→ Next: [Page Objects 101](/docs/tutorials/page-objects-101.md)
 
 ---
 
@@ -195,4 +197,7 @@ Next, we’ll refactor tests to rely entirely on Page Object behavior and APIs:
 → [/docs/tutorials/page-objects-101.md](/docs/tutorials/page-objects-101.md)
 
 ---
-← [/docs/core-concepts/pom.md](/docs/core-concepts/pom.md)
+
+← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Stale Element Recovery and Retries](/docs/core-concepts/retry-and-recovery.md)  
+→ Next: [Page Objects 101](/docs/tutorials/page-objects-101.md)

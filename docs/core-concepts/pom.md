@@ -1,4 +1,5 @@
 ← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Quickstart: Visual Testing](/docs/getting-started/quickstart-visual.md)  
 → Next: [Pages, Widgets, and Nested Structures](/docs/core-concepts/pages-and-widgets.md)
 
 ---
@@ -199,4 +200,5 @@ A useful rule of thumb:
 ---
 
 ← [Back to Documentation Index](/docs/index.md)  
+← Previous: [Quickstart: Visual Testing](/docs/getting-started/quickstart-visual.md)  
 → Next: [Pages, Widgets, and Nested Structures](/docs/core-concepts/pages-and-widgets.md)
