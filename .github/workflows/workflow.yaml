@@ -97,6 +97,9 @@ jobs:
       - name: Install browsers
         uses: ./.github/workflows/actions/setup_browsers
 
+      - name: Install msedgedriver
+        uses: ./.github/workflows/actions/setup_msedgedriver
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -107,8 +110,10 @@ jobs:
           cd tests
           sh ./install_web_dependencies.sh
 
-      - name: Initialize Playwright
-        run: playwright install
+      - name: Install Playwright browsers + OS deps
+        run: |
+          python -m playwright install-deps
+          python -m playwright install
 
       - name: Extend PYTHONPATH
         run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src:$(pwd)/tests" >> $GITHUB_ENV
@@ -137,6 +142,9 @@ jobs:
       - name: Install browsers
         uses: ./.github/workflows/actions/setup_browsers
 
+      - name: Install msedgedriver
+        uses: ./.github/workflows/actions/setup_msedgedriver
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -147,8 +155,10 @@ jobs:
           cd tests
           sh ./install_web_dependencies.sh
 
-      - name: Initialize Playwright
-        run: playwright install
+      - name: Install Playwright browsers + OS deps
+        run: |
+          python -m playwright install-deps
+          python -m playwright install
 
       - name: Extend PYTHONPATH
         run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src:$(pwd)/tests" >> $GITHUB_ENV

@@ -13,3 +13,5 @@ runs:
 
     - name: Set up Edge
       uses: browser-actions/setup-edge@v1
+      with:
+        edge-version: stable
