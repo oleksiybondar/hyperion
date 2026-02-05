@@ -1,134 +1,187 @@
-[← Element](/docs/reference/public-api/element.md) [IFrame →](/docs/reference/public-api/iframe.md)
+[← Element](/docs/reference/public-api/element.md) | [IFrame →](/docs/reference/public-api/iframe.md)
 
 # Elements
 
 `Elements` represents a **collection of `Element` objects** resolved from a single locator.
 
-- Use it when a locator matches **multiple nodes** (rows, items, cards, chips, etc.).
-- Iterating or indexing yields regular `Element` instances (with the full `Element` interaction/wait/assert/verify API).
-- `Elements` also supports **EQL-powered selection** via string indexing.
+Use it when a locator matches **multiple nodes** (rows, items, cards, chips, etc.).
+
+Key characteristics:
+- indexing and iteration yield regular `Element` instances (full `Element` API)
+- collection-level waits operate on **count and presence**
+- supports **EQL-powered selection** via string indexing
 
 > `Elements` is a collection of leaves — it is not a structural container like `Widget`.
 
 ---
 
-## Creating `Elements`
+## Conceptual role
 
-You typically define an `Elements` field on a `WebPage`/`Widget`/`IFrame`/`WebView` using a locator that matches multiple items.
+| Aspect | Meaning |
+|---|---|
+| Structural container | No (collection of leaves) |
+| Hierarchical | Yes (belongs to a parent container) |
+| Item type | `Element` |
+| Context boundary | No (inherits context from parent container) |
+| Stability model | Retries + recovery are applied automatically |
 
-{codeblock}
-from hyperiontf import WebPage
-from hyperiontf.ui import By
+---
+
+## Declaring Elements in Page Objects
+
+`Elements` is usually declared via `@elements` on a `WebPage`, `Widget`, `IFrame`, or `WebView`.
+
+```python
+from hyperiontf import WebPage, elements, By
+
 
 class ResultsPage(WebPage):
-    rows = By.css(".result-row").elements("Result rows")
-{codeblock}
+
+    @elements
+    def rows(self):
+        return By.css(".result-row")
+```
 
 ---
 
 ## Collection behavior
 
-### Length
+### __len__() -> int
 
-| Operation | Result |
-|---|---|
-| `len(elements)` | number of currently resolved items |
+`len(elements)` returns the number of currently resolved items.
 
-{codeblock}
-assert len(page.rows) >= 1
-{codeblock}
+```python
+def test_results_present(results_page):
+    results_page.rows.wait_until_found()
+    assert len(results_page.rows) >= 1
+```
 
-### Iteration
+### __iter__() -> Iterator[Element]
 
-`Elements` is iterable and yields `Element` items.
+Iterating yields `Element` items.
 
-{codeblock}
-for row in page.rows:
-    row.assert_visible()
-{codeblock}
+```python
+def test_all_rows_visible(results_page):
+    results_page.rows.wait_until_found()
 
-### Indexing
+    for row in results_page.rows:
+        row.assert_visible()
+```
 
-| Operation | Result |
-|---|---|
-| `elements[0]` | first `Element` |
-| `elements[-1]` | last `Element` |
-| `elements[i]` | `Element` at index `i` |
+### __getitem__(index: int) -> Element
 
-{codeblock}
-page.rows[0].click()
-page.rows[-1].scroll_into_view()
-{codeblock}
+Indexing yields the item at the given position.
 
-### Membership and list-like helpers
+- supports negative indices (`-1` is the last item)
 
-`Elements` exposes list-like helpers over the cached item list.
+```python
+def test_first_row_clickable(results_page):
+    results_page.rows.wait_until_found()
 
-| Method | Meaning |
-|---|---|
-| `item in elements` | membership test |
-| `elements.index(item)` | index of a specific `Element` instance |
-| `elements.count(item)` | count of a specific `Element` instance |
-| `elements.sort(key=..., reverse=...)` | sort cached items (does not change DOM order) |
+    results_page.rows[0].click()
+    results_page.rows[-1].scroll_into_view()
+
+    results_page.status_banner.assert_visible()
+```
 
 ---
 
 ## Presence
 
-| Property | Type | Meaning |
-|---|---:|---|
-| `is_present` | `bool` | `True` if at least one item is present, otherwise `False` |
+### is_present: bool
 
-**Notes**
-- `is_present` answers “is there at least one match right now?”
-- For “wait until at least one exists”, use `wait_until_found()`.
+`True` if at least one item is present, otherwise `False`.
+
+This answers:
+
+- “is there at least one match right now?”
+
+It does **not** wait.  
+Use waits when you need synchronization.
 
 ---
 
 ## Cache and refresh behavior
 
-`Elements` caches resolved items and refreshes the cache when the underlying result count changes.
+`Elements` caches resolved items and may refresh internally when the underlying result set changes.
 
-| Method | Behavior |
-|---|---|
-| `force_refresh()` | clears internal cache and re-finds the collection |
+### force_refresh() -> None
 
-Use `force_refresh()` when the UI updates and you want to re-evaluate matches immediately (for example, after applying filters).
+Clears the internal cache and re-finds the collection immediately.
+
+Use `force_refresh()` after a UI change when you want to re-evaluate matches right away (for example, after applying filters).
 
 ---
 
-## Waits on collections
+## Collection waits
 
 All waits are **interactive** (polling + retries), not passive sleeping.
 
-| Method | Waits for |
-|---|---|
-| `wait_until_found()` | at least one item exists |
-| `wait_until_missing()` | no items exist |
-| `wait_until_items_count(expected_count)` | item count equals `expected_count` |
-| `wait_until_items_decrease()` | item count decreases compared to the previous observation |
-| `wait_until_items_increase()` | item count increases compared to the previous observation |
-| `wait_until_items_change()` | item count changes (increase or decrease) compared to the previous observation |
+### wait_until_found() -> None
 
-### Example: wait for results to load
+Waits until at least one item exists.
 
-{codeblock}
-page.rows.wait_until_found()
-assert len(page.rows) > 0
-{codeblock}
+### wait_until_missing() -> None
 
-### Example: wait for list to refresh after filtering
+Waits until no items exist.
 
-{codeblock}
-page.filter_button.click()
+### wait_until_items_count(expected_count: int) -> None
 
-# wait until the result count changes (either up or down)
-page.rows.wait_until_items_change()
+Waits until item count equals the expected count.
 
-# end with explicit assertions
-assert len(page.rows) >= 1
-page.rows[0].assert_visible()
-{codeblock}
+- `expected_count`: expected number of items
+
+### wait_until_items_decrease() -> None
+
+Waits until the item count decreases compared to the previous observation.
+
+### wait_until_items_increase() -> None
+
+Waits until the item count increases compared to the previous observation.
+
+### wait_until_items_change() -> None
+
+Waits until the item count changes (increase or decrease) compared to the previous observation.
+
+#### Example: wait for results to load
+
+```python
+def test_results_load(results_page):
+    results_page.rows.wait_until_found()
+    assert len(results_page.rows) > 0
+```
+
+#### Example: wait for list to refresh after filtering
+
+```python
+from hyperiontf import WebPage, element, elements, By
+
+
+class ResultsPage(WebPage):
+
+    @element
+    def filter_button(self):
+        return By.id("filter")
+
+    @elements
+    def rows(self):
+        return By.css(".result-row")
+
+
+def test_filter_refresh(results_page: ResultsPage):
+    results_page.rows.wait_until_found()
+    before = len(results_page.rows)
+
+    results_page.filter_button.click()
+    results_page.rows.wait_until_items_change()
+
+    after = len(results_page.rows)
+
+    # Explicit outcome checks
+    assert after != before
+    assert after >= 1
+    results_page.rows[0].assert_visible()
+```
 
 ---
 
@@ -137,13 +190,13 @@ page.rows[0].assert_visible()
 `Elements` supports **EQL-powered lookup** via string indexing:
 
 - `elements["<EQL query>"] -> Element | None`
-- The query is evaluated against each item.
-- The first match is returned.
-- If nothing matches, `None` is returned.
+- the query is evaluated against each item
+- the first match is returned
+- if nothing matches, `None` is returned
 
-This enables **semantic selection** within a collection, avoiding brittle index-based tests.
+This enables semantic selection (“the row with title X”) instead of brittle index-based selection.
 
-### Supported element attributes in EQL
+### Supported Element attributes in EQL
 
 When evaluating an EQL expression against an `Element`, Hyperion resolves:
 
@@ -153,67 +206,86 @@ When evaluating an EQL expression against an `Element`, Hyperion resolves:
 | `style.<name>` | `Element.get_style(<name>)` |
 | `<attribute_name>` | `Element.get_attribute(<attribute_name>)` |
 
-> EQL syntax itself (operators, grouping, etc.) is defined by the EQL language. In API reference pages we document the integration points and supported attributes.
+> EQL syntax itself (operators, grouping, etc.) is defined by the EQL language. This page documents the integration points and supported attributes.
 
-### Example: select a row by visible text
+### __getitem__(query: str) -> Element | None
 
-{codeblock}
-row = page.rows['text == "Coffee Mug"']
-assert row is not None
+Select the first matching element using an EQL query.
 
-row.click()
-{codeblock}
+#### Example: select by visible text
 
-### Example: select by attribute (stable test id)
+```python
+def test_select_row_by_text(results_page):
+    results_page.rows.wait_until_found()
 
-{codeblock}
-item = page.rows['data_test_id == "result-42"']
-assert item is not None
+    row = results_page.rows['text == "Coffee Mug"']
+    assert row is not None
 
-item.assert_visible()
-{codeblock}
+    row.click()
+    results_page.toast.assert_visible()
+```
 
-### Example: select by computed style
+#### Example: select by attribute (stable test id)
 
-{codeblock}
-# Example: select an item that is visually marked as "active"
-active = page.rows['style.color == "rgba(0, 0, 0, 1)"']
-assert active is not None
+```python
+def test_select_row_by_test_id(results_page):
+    results_page.rows.wait_until_found()
 
-active.click()
-{codeblock}
+    item = results_page.rows['data_test_id == "result-42"']
+    assert item is not None
 
-### Guidance for EQL in tests
+    item.assert_visible()
+```
 
-- Prefer EQL for **meaningful selection** (“the row with title X”), especially when list order is unstable.
-- Handle the “not found” case explicitly:
-  - assert that a match was found (`assert match is not None`)
-  - or branch intentionally using `if match: ...` (then still end with explicit assertions)
+#### Example: select by computed style
 
-{codeblock}
-target = page.rows['text == "Admin"']
+```python
+def test_select_active_row(results_page):
+    results_page.rows.wait_until_found()
 
-if target:
-    target.click()
-    page.toast.assert_text("Role selected")
-else:
-    page.rows.wait_until_found()
-    assert target is not None  # explicit test outcome
-{codeblock}
+    active = results_page.rows['style.color == "rgba(0, 0, 0, 1)"']
+    assert active is not None
+
+    active.click()
+    results_page.details_panel.assert_visible()
+```
+
+### Guidance for EQL usage
+
+- Prefer EQL when list order is unstable and selection should be meaning-based.
+- Handle “not found” explicitly:
+  - assert a match exists (`assert match is not None`)
+  - or branch intentionally (`if match:`), then still end with explicit assertions.
+
+```python
+def test_select_role_if_present(results_page):
+    results_page.rows.wait_until_found()
+
+    target = results_page.rows['text == "Admin"']
+
+    if target:
+        target.click()
+        results_page.toast.assert_text("Role selected")
+    else:
+        # Explicit outcome for the test contract
+        assert target is not None
+```
 
 ---
 
-## Relationship to `Element`
+## Relationship to Element
 
-- `Elements` provides collection-level operations and waits.
-- **All interactions, assertions, verifications, and visual checks** are performed on individual items (`Element`) obtained from the collection.
+`Elements` provides collection-level behavior (iteration, count-based waits, refresh).  
+All interaction and validation is performed on the **individual `Element` items**.
 
-{codeblock}
-page.rows.wait_until_found()
+```python
+def test_first_row_text(results_page):
+    results_page.rows.wait_until_found()
 
-page.rows[0].assert_visible()
-page.rows[0].assert_text("First row")
-{codeblock}
+    first = results_page.rows[0]
+    first.assert_visible()
+    first.assert_text("First row")
+```
 
 ---
 

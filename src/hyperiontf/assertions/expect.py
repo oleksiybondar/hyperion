@@ -145,6 +145,31 @@ class Expect:
         return self.strategy.to_contain(expected_value)  # type: ignore
 
     @auto_log
+    @type_check(supported_strategies=[StringStrategy, ArrayStrategy])
+    def not_to_contain(self, expected_value: Union[str, Any]) -> ExpectationResult:
+        """
+        Asserts that the actual value does NOT contain the expected value. For strings, this means
+        the actual string does not include the expected substring. For collections (e.g., lists,
+        sets, tuples), it verifies that the expected item is absent from the collection.
+
+        This method is applicable to strings and collection-like types, enabling negative assertions
+        related to content exclusion.
+
+        Args:
+            expected_value (Union[str, Any]): The item or substring that must not be present within
+                                              the actual value.
+
+        Returns:
+            Expect: The Expect instance to allow for method chaining.
+
+        Note:
+            The interpretation of "containment" depends on the type of the actual value. For precise
+            behavior and limitations, refer to the documentation of the specific strategy classes
+            applicable to the actual value's type.
+        """
+        return self.strategy.not_to_contain(expected_value)  # type: ignore
+
+    @auto_log
     def not_to_be(self, expected_value: Any) -> Type[ExpectationResult]:
         """
         Asserts that the actual value is not equal to the expected value. The interpretation of inequality
