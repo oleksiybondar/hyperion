@@ -25,7 +25,7 @@ For background on the resolution model, see:
 
 Platforms in Hyperion use a fixed set of identifiers.
 
-{codeblock}python
+```python
 from typing import Literal
 
 PlatformType = Literal[
@@ -33,7 +33,7 @@ PlatformType = Literal[
     "mobile",
     "desktop",
 ]
-{codeblock}
+```
 
 Platform-agnostic locators often do not need to mention these keys at all.
 
@@ -43,7 +43,7 @@ Platform-agnostic locators often do not need to mention these keys at all.
 
 If a locator does not declare variation, it is treated as static.
 
-{codeblock}python
+```python
 from selenium.webdriver.common.by import By
 from hyperiontf.pages.decorators import element
 
@@ -51,7 +51,7 @@ class LoginPage:
     @element
     def username(self):
         return By.id("<shared username id>")
-{codeblock}
+```
 
 This is platform-agnostic if it applies everywhere the Page Object is used.
 
@@ -83,7 +83,7 @@ Widgets are often the best place for agnostic locators because they map to UI co
 
 If a widget can use stable selectors across platforms, it becomes broadly reusable.
 
-{codeblock}python
+```python
 from selenium.webdriver.common.by import By
 from hyperiontf.pages.decorators import elements
 from hyperiontf.widgets import Widget
@@ -92,7 +92,7 @@ class Tabs(Widget):
     @elements
     def items(self):
         return By.css_selector("<stable selector for tabs>")
-{codeblock}
+```
 
 If later one platform diverges, you can introduce platform/OS mapping inside the widget without changing the public widget API.
 
