@@ -11,6 +11,7 @@ from hyperiontf.typing import (
 )
 import json
 import xml.dom.minidom
+from xml.parsers.expat import ExpatError
 from typing import Union, Any
 from hyperiontf.assertions.expect import Expect
 
@@ -114,7 +115,7 @@ class Response:
 
         try:
             return parser(self.raw_body)  # type: ignore
-        except (ValueError, xml.parsers.expat.ExpatError):
+        except (ValueError, ExpatError):
             return self.raw_body
 
     @property

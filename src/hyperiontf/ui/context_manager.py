@@ -1,7 +1,9 @@
 import time
+from typing import Optional
+
 from hyperiontf.logging import getLogger, Logger
 
-from hyperiontf.typing import AnyContextContainer, Context
+from hyperiontf.typing import AnyContextContainer, Context, ContextType
 from .automation_adapter_manager import AutomationAdaptersManager
 
 
@@ -28,13 +30,13 @@ class ContextManager:
             self._current_context = Context.NATIVE
 
     @property
-    def _current_context(self):
+    def _current_context(self) -> Optional[ContextType]:
         return self.adapters_manager.get_meta(
             self.owner.automation_adapter, "current_context"
         )
 
     @_current_context.setter
-    def _current_context(self, context: Context):
+    def _current_context(self, context: ContextType):
         self.adapters_manager.set_meta(
             self.owner.automation_adapter, "current_context", context
         )
