@@ -10,7 +10,6 @@ from hyperiontf.typing import (
 from hyperiontf.configuration.config import config
 import time
 
-
 EXIT_CODES_COMMANDS = {
     "cmd": "echo %ERRORLEVEL%",
     "powershell": "echo $LASTEXITCODE",

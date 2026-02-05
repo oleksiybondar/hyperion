@@ -153,7 +153,8 @@ class Page:
 
         # Set headless mode if specified
         if "headless" in caps and caps["headless"]:
-            firefox_options.headless = True
+            # firefox_options.headless = True
+            firefox_options.add_argument("--headless")
 
         return firefox_options
 

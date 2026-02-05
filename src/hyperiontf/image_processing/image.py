@@ -220,7 +220,7 @@ class Image(File):
             raise ValueError("No image loaded to rotate.")
 
         # Get the image dimensions, necessary for calculating the rotation matrix
-        (height, width) = self.image.shape[:2]
+        height, width = self.image.shape[:2]
         # Get the center of the image to create the rotation matrix
         center = (width / 2, height / 2)
 
