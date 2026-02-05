@@ -494,6 +494,28 @@ class BaseShell:
     def _prepare_verify_object(self, value):
         return self._prepare_expect_object(value, False)
 
+    def read_output(self) -> str:
+        """
+        Reads and caches all currently available output from the session.
+
+        This method performs an immediate, non-blocking read of the session's output
+        buffer and appends the retrieved data to the internal output cache. Unlike
+        `wait()`, it does not wait for the action prompt or any specific pattern —
+        it simply collects whatever output is available at the moment of the call.
+
+        This is especially useful for:
+        - Polling long-running commands
+        - Inspecting intermediate output in interactive sessions
+        - Ensuring output is captured even when no explicit wait is performed
+
+        The method relies on the subclass implementation of `_read_output_buffer()`
+        to retrieve data from the underlying session.
+
+        :return: The full cached output after reading newly available data.
+        """
+        self._cache_output()
+        return self.output
+
     @staticmethod
     def alarm_handler(signum, frame):
         """

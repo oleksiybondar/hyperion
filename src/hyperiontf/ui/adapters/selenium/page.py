@@ -29,6 +29,8 @@ BROWSER_START_METHODS = {
     Browser.REMOTE: "start_remote_browser",
 }
 
+DRIVER_DOWNLOAD_FAILURE_FLAG = "!!!FAILED-TO-DOWNLOAD!!!"
+
 
 class Page:
     chrome_driver = None
@@ -40,33 +42,72 @@ class Page:
         if Page.chrome_driver is not None:
             return Page.chrome_driver
 
-        from webdriver_manager.chrome import ChromeDriverManager
+        if Page.chrome_driver == DRIVER_DOWNLOAD_FAILURE_FLAG:
+            return None
 
-        Page.chrome_driver = ChromeDriverManager().install()
+        Page.chrome_driver = Page.download_chrome_driver()
+
+        if Page.chrome_driver == DRIVER_DOWNLOAD_FAILURE_FLAG:
+            return None
 
         return Page.chrome_driver
 
     @staticmethod
+    def download_chrome_driver():
+        try:
+            from webdriver_manager.chrome import ChromeDriverManager
+
+            return ChromeDriverManager().install()
+        except Exception:
+            return DRIVER_DOWNLOAD_FAILURE_FLAG
+
+    @staticmethod
     def get_firefox_driver_bin():
+        if Page.firefox_driver == DRIVER_DOWNLOAD_FAILURE_FLAG:
+            return None
+
         if Page.firefox_driver is not None:
             return Page.firefox_driver
 
-        from webdriver_manager.firefox import GeckoDriverManager
+        Page.firefox_driver = Page.download_firefox_driver()
 
-        Page.firefox_driver = GeckoDriverManager().install()
+        if Page.firefox_driver == DRIVER_DOWNLOAD_FAILURE_FLAG:
+            return None
 
         return Page.firefox_driver
 
     @staticmethod
+    def download_firefox_driver():
+        try:
+            from webdriver_manager.firefox import GeckoDriverManager
+
+            return GeckoDriverManager().install()
+        except Exception:
+            return DRIVER_DOWNLOAD_FAILURE_FLAG
+
+    @staticmethod
     def get_edge_driver_bin():
+        if Page.edge_driver == DRIVER_DOWNLOAD_FAILURE_FLAG:
+            return None
+
         if Page.edge_driver is not None:
             return Page.edge_driver
 
-        from webdriver_manager.microsoft import EdgeChromiumDriverManager
+        Page.edge_driver = Page.download_edge_driver()
 
-        Page.edge_driver = EdgeChromiumDriverManager().install()
+        if Page.edge_driver == DRIVER_DOWNLOAD_FAILURE_FLAG:
+            return None
 
         return Page.edge_driver
+
+    @staticmethod
+    def download_edge_driver():
+        try:
+            from webdriver_manager.microsoft import EdgeChromiumDriverManager
+
+            return EdgeChromiumDriverManager().install()
+        except Exception:
+            return DRIVER_DOWNLOAD_FAILURE_FLAG
 
     def __init__(self, driver: Any):
         self.automation_type = AutomationTool.SELENIUM
@@ -153,7 +194,8 @@ class Page:
 
         # Set headless mode if specified
         if "headless" in caps and caps["headless"]:
-            firefox_options.headless = True
+            # firefox_options.headless = True
+            firefox_options.add_argument("--headless")
 
         return firefox_options
 

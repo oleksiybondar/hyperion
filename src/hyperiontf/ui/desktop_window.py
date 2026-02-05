@@ -9,7 +9,6 @@ from .window_manager import WindowManager
 from .automation_adapter_manager import AutomationAdaptersManager
 import platform
 
-
 logger = getLogger("DesktopWindow")
 
 

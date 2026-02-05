@@ -1,0 +1,57 @@
+name: "Set up msedgedriver"
+description: "Install msedgedriver matching installed Microsoft Edge"
+runs:
+  using: "composite"
+  steps:
+    - name: Install msedgedriver
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        BASE_URL="${MSEDGEDRIVER_BASE_URL:-https://msedgedriver.microsoft.com}"
+
+        echo "Edge version:"
+        EDGE_VER="$( (msedge --version 2>/dev/null || true) ; (microsoft-edge --version 2>/dev/null || true) | head -n1 )"
+        echo "$EDGE_VER"
+
+        EDGE_FULL="$(echo "$EDGE_VER" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -n1)"
+        EDGE_MAJOR="$(echo "$EDGE_VER" | grep -oE '[0-9]+' | head -n1)"
+
+        if [ -z "${EDGE_MAJOR:-}" ]; then
+          echo "Could not detect Edge version" >&2
+          exit 1
+        fi
+
+        echo "BASE_URL=$BASE_URL"
+        echo "EDGE_FULL=${EDGE_FULL:-<none>}"
+        echo "EDGE_MAJOR=$EDGE_MAJOR"
+
+        # Prefer exact Edge version URL first (most deterministic)
+        DRIVER_VER=""
+        if [ -n "${EDGE_FULL:-}" ]; then
+          DRIVER_VER="$EDGE_FULL"
+          echo "Trying exact driver version: $DRIVER_VER"
+          if ! curl -fsSI --retry 5 --retry-delay 2 --retry-all-errors \
+              "${BASE_URL}/${DRIVER_VER}/edgedriver_linux64.zip" >/dev/null; then
+            echo "Exact version not found, will fall back to LATEST_RELEASE_${EDGE_MAJOR}_LINUX"
+            DRIVER_VER=""
+          fi
+        fi
+
+        # Fallback: query latest for major
+        if [ -z "$DRIVER_VER" ]; then
+          DRIVER_VER="$(curl -fsSL --retry 5 --retry-delay 2 --retry-all-errors \
+            "${BASE_URL}/LATEST_RELEASE_${EDGE_MAJOR}_LINUX")"
+          echo "Resolved driver version: $DRIVER_VER"
+        fi
+
+        curl -fsSL --retry 5 --retry-delay 2 --retry-all-errors \
+          -o /tmp/edgedriver.zip \
+          "${BASE_URL}/${DRIVER_VER}/edgedriver_linux64.zip"
+
+        unzip -q /tmp/edgedriver.zip -d /tmp/edgedriver
+        chmod +x /tmp/edgedriver/msedgedriver
+        sudo mv /tmp/edgedriver/msedgedriver /usr/local/bin/msedgedriver
+
+        echo "Installed driver:"
+        /usr/local/bin/msedgedriver --version
