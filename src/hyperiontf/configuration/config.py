@@ -10,8 +10,12 @@ from hyperiontf.configuration.sections import (
     CLI,
 )
 from hyperiontf.configuration.sections import Rest, MobileCapabilities
+from hyperiontf.helpers.config_pickup import find_default_config_file
 
 import os
+
+CFG_EXTENSIONS = {".cfg", ".ini", ".conf"}
+YML_EXTENSIONS = {".yml", ".yaml"}
 
 
 @Singleton
@@ -34,6 +38,28 @@ class Config:
         self.rest = Rest()
         self.visual = Visual()
         self.cli = CLI()
+
+        self._auto_pickup_default_config()
+
+    def _auto_pickup_default_config(self) -> None:
+        """
+        Auto-load a default config file on first Config instantiation.
+
+        Deterministic lookup order:
+          1) PWD/<default filenames>
+          2) PWD/config/<default filenames>
+
+        If no default file exists, this is a no-op.
+        """
+        if getattr(self, "_did_auto_pickup", False):
+            return
+        self._did_auto_pickup = True
+
+        cfg_path = find_default_config_file()
+        if cfg_path is None:
+            return
+
+        self.update_from_cfg_file(str(cfg_path))
 
     def _parse_config_data(self, data):
         """
@@ -63,11 +89,11 @@ class Config:
         """
         _, file_extension = os.path.splitext(cfg_file)
 
-        if file_extension == ".cfg":
+        if file_extension in CFG_EXTENSIONS:
             self._update_from_cfg_file(cfg_file)
         elif file_extension == ".json":
             self._update_from_json_file(cfg_file)
-        elif file_extension == ".yml" or file_extension == ".yaml":
+        elif file_extension in YML_EXTENSIONS:
             self._update_from_yml_file(cfg_file)
 
     def _update_from_cfg_file(self, cfg_file):

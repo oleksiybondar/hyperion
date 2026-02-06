@@ -18,35 +18,84 @@ from hyperiontf.configuration import config
 from .file_handler import FileHandler
 import re
 import os
+from pathlib import Path
 
 
 def generate_test_log_filename(test_name: str) -> str:
     """
-    Generate a test-specific log filename based on the provided test name.
+    Generate a unique, test-specific HTML log file path.
 
-    The generated filename includes the test name and an index, if necessary, to ensure uniqueness in case multiple tests
-    have the same name.
+    This function:
+    - derives a filesystem-safe name from the provided test name
+    - uses `config.logger.log_folder` as the base directory
+    - supports both absolute and relative log folder paths
+    - ensures the log directory exists
+    - guarantees uniqueness by appending a numeric index suffix
 
-    :param test_name: The name of the test for which the log file needs to be generated.
-    :type test_name: str
+    The returned path always points to a non-existing file at the time of generation.
 
-    :return: The generated test-specific log filename.
-    :rtype: str
+    Parameters:
+        test_name (str): Name of the test for which the log file is generated.
+
+    Returns:
+        str: Absolute path to a unique HTML log file.
     """
-    index = 0
     escaped_test_name = re.sub(r"\W", "_", test_name)
 
-    def generate_name():
-        return (
-            f"{os.getcwd()}/{config.logger.log_folder}/{escaped_test_name}-{index}.html"
-        )
+    log_dir = Path(config.logger.log_folder)
 
-    filename = generate_name()
-    while os.path.exists(filename):
+    # Defensive: if log_folder ever becomes relative, resolve it under PWD.
+    if not log_dir.is_absolute():
+        log_dir = Path(os.getcwd()) / log_dir
+
+    # Defensive: ensure the folder exists even if logger init did not run as expected.
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    return str(enumerate_valid_log_path(log_dir, escaped_test_name))
+
+
+def enumerate_valid_log_path(log_dir: Path, name: str):
+    """
+    Enumerate a non-existing log file path within a directory.
+
+    The function checks for existing files and increments a numeric suffix
+    until a free filename is found.
+
+    Example:
+        name-0.html
+        name-1.html
+        name-2.html
+        ...
+
+    Parameters:
+        log_dir (Path): Directory where log files are stored.
+        name (str): Base filename (without index or extension).
+
+    Returns:
+        str: Path to a non-existing log file.
+    """
+    index = 0
+    path = generate_path(log_dir, name, index)
+    while path.exists():
         index += 1
-        filename = generate_name()
+        path = generate_path(log_dir, name, index)
 
-    return filename
+    return str(path)
+
+
+def generate_path(log_dir: Path, name: str, i: int) -> Path:
+    """
+    Construct a log file path using a base name and numeric index.
+
+    Parameters:
+        log_dir (Path): Directory where the log file will be created.
+        name (str): Base filename (already sanitized).
+        i (int): Index used to ensure filename uniqueness.
+
+    Returns:
+        Path: Full path to the indexed HTML log file.
+    """
+    return log_dir / f"{name}-{i}.html"
 
 
 def init_test_log(test_name: str):
