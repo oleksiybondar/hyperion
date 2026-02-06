@@ -6,172 +6,177 @@
 
 # 1.3 Basic Configuration
 
-This section explains the **basic configuration model** used by Hyperion.
+Hyperion is designed so that **configuration is optional**.
 
-Hyperion is designed so that:
-- sensible defaults work out of the box
-- configuration is **optional**
-- you only override what you actually need
+You can start writing and running tests immediately using built-in defaults.  
+Configuration is only needed when you want to customize behavior.
 
-You can start writing tests without touching configuration at all.
+This section explains:
+- how configuration is discovered and loaded
+- where configuration files can live
+- how environment variables override configuration
+- how to override configuration at runtime
 
 ---
 
-## Where configuration lives
+## Configuration access
 
-All configuration is exposed via the `hyperiontf.config` module.
-
-Configuration is:
-- global for the test run
-- declarative
-- usually set once (for example in `conftest.py`)
+All configuration is exposed through the global `config` object:
 
 ```python
 from hyperiontf import config
 ```
 
-You do not need to instantiate or initialize anything manually.
+You never need to instantiate or initialize configuration manually.
 
 ---
 
-## Capabilities and automation backends
+## Automatic configuration loading
 
-Capabilities define **how browsers or applications are started**.
+On first access, Hyperion automatically attempts to load a default configuration file  
+**if one exists**.
 
-In Hyperion, capabilities are:
-- plain Python dictionaries
-- backend-agnostic at the framework level
-- passed through to the underlying automation engine
+### Lookup locations (in order)
 
-Hyperion consumes a small set of framework-level keys  
-(e.g. `automation`, `browser`, `remote_url`) and forwards all other values as-is.
+1. Project working directory (`PWD`)
+2. `PWD/config/`
+
+### Supported filenames
+
+The first matching file is loaded:
+
+- `hyperion.ini`
+- `hyperion.conf`
+- `hyperion.cfg`
+- `hyperion.json`
+- `hyperion.yml`
+- `hyperion.yaml`
+
+If no configuration file is found, Hyperion continues using default values.
+
+No error is raised.
 
 ---
 
-### Minimal web example (Selenium)
+## Configuration formats
 
-This is the smallest useful web configuration.
+Hyperion supports multiple configuration formats:
+
+- **INI / CONF / CFG** — parsed using `configparser`
+- **JSON**
+- **YAML**
+
+All formats map to the same internal configuration model.
+
+---
+
+## Environment variable overrides
+
+Environment variables have **higher precedence** than configuration files.
+
+This is especially useful for CI pipelines and containerized environments.
+
+Currently supported environment variables:
+
+- `HYPERION_LOG_FOLDER` → `config.logger.log_folder`
+- `HYPERION_VISUAL_MODE` → `config.visual.mode`
+
+If an environment variable is set, it overrides the value from any configuration file.
+
+---
+
+## Runtime configuration overrides
+
+Explicit runtime assignments always have the **highest priority**.
 
 ```python
 from hyperiontf import config
 
-config.web_capabilities = {
-    "automation": "selenium",
-    "browser": "chrome",
-    "headless": True,
-}
+config.logger.log_folder = "custom_logs"
 ```
 
-Notes:
-- only keys you care about need to be defined
-- everything else uses defaults
-- browsers and drivers must exist on the system
+Runtime overrides replace:
+- environment variable values
+- configuration file values
+- defaults
 
 ---
 
-### Playwright example (optional)
-
-Playwright is supported but not required.
-
-```python
-from hyperiontf import config
-
-config.web_capabilities = {
-    "automation": "playwright",
-    "browser": "webkit",
-}
-```
-
-Important:
-- Playwright browser binaries are **not** installed automatically
-- see [1.1 Installation](/docs/getting-started/installation.md) for setup
-
----
-
-### Mobile / desktop example (Appium)
-
-Mobile and desktop automation is configured the same way:  
-by providing an Appium-compatible capability dictionary.
-
-The example below is **illustrative only**.
-
-```python
-from hyperiontf import config
-
-config.mobile_capabilities = {
-    "automation": "appium",
-    "automationName": "XCUITest",
-    "platformName": "iOS",
-    "deviceName": "iPhone 14",
-    "bundleId": "com.apple.mobilesafari",
-}
-```
-
-All additional keys are passed directly to Appium.
-
----
-
-## Logging configuration (optional)
+## Logging configuration
 
 Logging is enabled by default.
 
-You may optionally change where logs are written:
+You may configure the log output directory:
 
 ```python
 from hyperiontf import config
 
-config.log.log_folder = "logs"
+config.logger.log_folder = "logs"
 ```
 
-Most projects do not need additional logging configuration at the start.
+Behavior:
+- the directory is created automatically if it does not exist
+- relative paths are resolved against the project working directory
+- absolute paths and `~/` paths are respected as-is
 
 ---
 
-## Timing, waits, and retries
+## Visual testing mode
 
-Hyperion ships with **preconfigured timing defaults** for:
-- element lookup
-- waits
-- retries
-- stale recovery
+Visual testing supports two modes:
 
-You can override them if needed:
+- `compare` (default)
+- `collect`
+
+You can control the mode via environment variable:
+
+```bash
+export HYPERION_VISUAL_MODE=collect
+```
+
+Or at runtime:
 
 ```python
 from hyperiontf import config
 
-config.element.wait_timeout = 30
-config.element.search_attempts = 3
+config.visual.mode = "collect"
 ```
-
-For early usage, it is recommended to **keep the defaults**.
 
 ---
 
-## What you can safely ignore for now
+## Capabilities overview
 
-When getting started, you do **not** need to configure:
+Capabilities define how automation tools are started.
 
-- locator resolution rules
-- retry semantics
-- context switching behavior
-- logging formatters
-- advanced backend options
+They are configured via dedicated sections such as:
 
-These topics are covered later in the documentation.
+- `web_capabilities`
+- `mobile_capabilities`
+- `desktop_capabilities`
+
+Only values you explicitly set are overridden; all others use defaults.
+
+Example (Selenium):
+
+```python
+from hyperiontf import config
+
+config.web_capabilities.automation = "selenium"
+config.web_capabilities.browser = "chrome"
+config.web_capabilities.headless = True
+```
 
 ---
 
 ## Summary
 
-For basic usage:
+- Configuration is optional
+- Defaults are safe and intentional
+- Configuration files are loaded automatically if present
+- Environment variables override configuration files
+- Runtime assignments override everything
 
-- configuration is optional
-- capabilities are simple dictionaries
-- defaults are safe and intentional
-- only override what you understand and need
-
-Once configuration is in place, you are ready to run end-to-end tests.
+With configuration in place (or not), you are ready to start writing tests.
 
 ---
 
