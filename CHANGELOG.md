@@ -13,6 +13,18 @@ It is important to acknowledge that versions prior to v1.0.0 are considered to b
 
 From its first version, our framework has included a dedicated REST client equipped with extensive, built-in logging features, alongside a UI harness that simplifies page object creation. This harness supports a unified API compatible with Selenium, Appium, and Playwright, ensuring a seamless and efficient testing process.
 
+## [0.6.23] - 2026-02-06
+
+### Added
+
+- Automatic default configuration file loading on first initialization.
+- Environment variable overrides for selected configuration options.
+
+#### Features
+
+- Automatic config load from project directory.
+
+
 ## [0.6.22] - 2026-02-05
 
 No major changes.
