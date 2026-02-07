@@ -85,6 +85,12 @@ Task-oriented guides for real-world problems.
 - [4.14 Elements Query Language (EQL) Recipes](/docs/how-to/eql-recipes.md)
 - [4.15 Logging and Reporting](/docs/how-to/logging-and-reports.md)
 
+### Complex reusable UI components (a prebuild widgets)
+
+- [4.16 Radiogroup](/docs/how-to/radiogroup.md)
+- [4.17 DropDown](/docs/how-to/dropdown.md)
+- [4.18 Table](/docs/how-to/table.md)
+
 ---
 
 ## 5. API Reference
@@ -163,3 +169,6 @@ These chapters describe how Hyperion is built internally and how it behaves at r
 ## License
 
 Hyperion Testing Framework is licensed under the Apache License 2.0.
+
+
+## [Coming next](/docs/to-do.md)

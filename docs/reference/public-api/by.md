@@ -3,7 +3,6 @@
 → Next: [ActionBuilder](/docs/reference/public-api/action-builder.md)
 
 ---
-
 # By
 
 `By` represents a **typed locator descriptor** used by Hyperion to identify elements in the UI.
@@ -51,7 +50,7 @@ A raw string cannot reliably carry this information.
 
 ---
 
-## Context awareness and root control
+## Context awareness and hierarchy scoping
 
 By default, a `By` locator is resolved **relative to the current hierarchy context**.
 
@@ -62,14 +61,56 @@ This means:
 
 This behavior is automatic and requires no user action.
 
-In advanced cases, `By` may explicitly define a **root locator**.
-This allows Hyperion to:
-- intentionally bypass the current hierarchy
-- restart resolution from a known root
-- keep this decision explicit and logged
+Context handling is derived from the Page Object hierarchy —  
+tests should not manage it manually.
 
-This capability exists to support complex real-world UIs —  
-**not** to encourage manual context management in tests.
+---
+
+## Explicit document-scoped resolution
+
+In advanced UI structures, elements may exist **outside the current hierarchy**.
+
+Examples include:
+- dropdown menus rendered in portals
+- overlays attached directly to the document body
+- detached popups or global menus
+
+To support these cases, `By` provides a way to **explicitly restart resolution from the document root**.
+
+### `from_document()`
+
+`from_document()` marks a locator as **document-scoped**.
+
+When used:
+- Hyperion intentionally bypasses the current hierarchy
+- resolution starts from the active document root
+- the decision is explicit and visible in logs
+
+```python
+from hyperiontf import By
+
+By.css(".MuiMenuItem-root").from_document()
+```
+
+This is functionally similar to using XPath with `//`,
+but makes the scope decision **explicit and declarative**.
+
+---
+
+## When to use `from_document()`
+
+Use document-scoped locators **only when hierarchy scoping is insufficient**, such as:
+
+- options rendered outside a dropdown trigger subtree
+- UI frameworks that use portals or overlays
+- elements intentionally detached from their logical owner
+
+Do **not** use `from_document()`:
+- to bypass poor Page Object design
+- as a replacement for proper widget composition
+- for convenience when relative locators are sufficient
+
+This API exists to model **real-world UI constraints**, not to encourage manual scoping.
 
 ---
 
