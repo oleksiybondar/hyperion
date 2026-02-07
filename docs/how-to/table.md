@@ -1,4 +1,3 @@
-
 ← [Back to Documentation Index](/docs/index.md)  
 ← Previous: [Component: Dropdown](/docs/how-to/dropdown.md)  
 → Next: [WebPage](/docs/reference/public-api/webpage.md)
@@ -8,7 +7,7 @@
 # Table
 
 This guide describes how to model **reusable Table widgets** in Hyperion using
-a **declarative locator specification** and a **policy-based slot resolution model**.
+a **declarative locator specification** and a **policy-by-ordering slot model**.
 
 It focuses on **Page Object structure and locator design**, not on test logic
 or Table interaction APIs.
@@ -58,6 +57,12 @@ Virtualized tables are supported implicitly: only rows present in the DOM are mo
 Cells are located **structurally** within a row.
 What a cell *becomes* (Element vs Widget) is decided separately via a policy.
 
+### Header cells (optional)
+Some tables provide header cells that can be used to derive column identity or index mappings.
+
+In Hyperion, `header_cells` (when provided) should point **directly to header cell elements**
+(e.g. `thead > td` or equivalent). It is optional and not required for index-based tables.
+
 ---
 
 ## Slot policies (brief introduction)
@@ -67,7 +72,7 @@ Some Table behaviors depend on **column position or identity**:
 - “second column is image”
 - “all cells are inputs except the last one”
 
-Hyperion models this using a **slot policy**.
+Hyperion models this using a **slot policy** (`slot_policy`).
 
 A slot policy is:
 - an **ordered list of rules**
@@ -76,11 +81,13 @@ A slot policy is:
 
 Each rule defines:
 - **which slot it applies to** (by index, key, or fixed keyword)
-- **what the slot should materialize as**
+- **what the slot should materialize as** (a target widget class)
 
 If no rule matches, the cell defaults to a plain `Element`.
 
-This mechanism is called **policy-by-ordering** and is intentionally simple and explicit.
+Notes:
+- Rule kind inference is deterministic (`int` -> index; reserved keywords -> predicate; other strings -> key).
+- EQL rules (Hyperion Element Query Language) must be explicitly declared and are never inferred automatically.
 
 ---
 
@@ -136,7 +143,7 @@ In this case, all cells materialize as plain Elements.
 - use `slot_policy` to override cell materialization
 
 ```python
-from hyperiontf import SlotPolicyRule, ActionsCell, TableBySpec
+from hyperiontf import SlotPolicyRule, ActionsCell, TableBySpec, By
 
 
 TableBySpec(
@@ -166,7 +173,7 @@ Explanation:
 ### Modeling approach
 
 ```python
-from hyperiontf import SlotPolicyRule, ActionsCell, TableBySpec
+from hyperiontf import SlotPolicyRule, ActionsCell, InputCell, TableBySpec, By
 
 
 TableBySpec(
@@ -192,7 +199,7 @@ This “last match wins” behavior is intentional and deterministic.
 
 In some tables, columns have stable identities (e.g. logical names).
 
-When available, a Table may define a header to support **key-based slot rules**.
+When available, a Table may define `header_cells` to support **key-based slot rules**.
 This is optional and not required for index-based tables.
 
 Key-based selection is useful when:
@@ -221,7 +228,7 @@ Table modeling in Hyperion is:
 
 - declarative
 - index-first
-- policy-driven
+- policy-by-ordering
 - extensible without subclassing
 
 By separating structure from behavior, tables remain reusable even when

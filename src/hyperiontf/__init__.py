@@ -19,6 +19,7 @@ from .ui import (
     webview,
     Color,
 )
+from .ui.components import SlotPolicyRule, DropdownBySpec, TableBySpec, RadioGroupBySpec
 from .cli import CLIClient, SSHClient
 from .logging import getLogger
 from .assertions import expect, verify
@@ -57,4 +58,8 @@ __all__ = [
     "Image",
     "CLIClient",
     "SSHClient",
+    "SlotPolicyRule",
+    "DropdownBySpec",
+    "TableBySpec",
+    "RadioGroupBySpec",
 ]

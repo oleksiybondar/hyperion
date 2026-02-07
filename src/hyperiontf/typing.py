@@ -1,4 +1,4 @@
-from typing import Type, Union, TypeVar, Literal
+from typing import Type, Union, TypeVar, Literal, TypeAlias, Mapping
 from .exception import HyperionException
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -168,6 +168,28 @@ class LocatorStrategies:
     ELEMENTS_ITEM: LocatorStrategiesType = "elements item"
     UNSUPPORTED: LocatorStrategiesType = "unsupported"
 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Locator Tree Section
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# A small, 3-level "locator specification tree" used to describe nested locator structure.
+# Leaves may be either:
+# - By: a typed locator descriptor
+# - str: a context-defined string token (e.g., column key, slot key, etc.)
+By = TypeVar("By")
+LocatorTree: TypeAlias = Union[
+    By,
+    Mapping[
+        str,
+        Union[
+            By,
+            Mapping[str, Union[str, By]],
+        ],
+    ],
+]
+ComponentSpec = TypeVar("ComponentSpec")
+LocatorOrComponentSpec = Union[LocatorTree, Type[ComponentSpec]]
 
 Element = TypeVar("Element")
 Elements = TypeVar("Elements")

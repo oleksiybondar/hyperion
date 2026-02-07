@@ -6,7 +6,7 @@ from hyperiontf.typing import (
     HyperionUIException,
     NoSuchElementException,
 )
-from hyperiontf.typing import LocatorStrategies
+from hyperiontf.typing import LocatorStrategies, LocatorOrComponentSpec
 
 import time
 from typing import Any, Sized, cast, Dict, Union
@@ -27,8 +27,9 @@ class LocatableElement:
 
     Attributes:
         parent (object): The parent element or container that contains this element.
-        locator (By | dict): The locator strategy used to identify the element. It can be a `By` object or a dictionary
-                             of locators categorized by platform, operating system, and viewport.
+        locator (LocatorOrComponentSpec): The locator strategy used to identify the element. It can be a `By` object or
+                                          a dictionary of locators categorized by platform, operating system, and
+                                          viewport.
         name (str): A descriptive name for the element used for logging and identification purposes.
 
     Public Properties:
@@ -56,14 +57,15 @@ class LocatableElement:
     # Define a sentinel object to represent "not searched yet"
     _NOT_SEARCHED_YET = object()
 
-    def __init__(self, parent, locator: By | dict, name: str):
+    def __init__(self, parent, locator: LocatorOrComponentSpec, name: str):
         """
         Initialize a LocatableElement instance.
 
         Args:
             parent (object): The parent element or container that contains this element.
-            locator (By | dict): The locator strategy used to identify the element. It can be a `By` object or a
-                                 dictionary of locators categorized by platform, operating system, and viewport.
+            locator (LocatorOrComponentSpec): The locator strategy used to identify the element. It can be a `By`
+                                              object or a dictionary of locators categorized by platform, operating
+                                              system, and viewport.
             name (str): A descriptive name for the element used for logging and identification purposes.
         """
         self.parent = parent
