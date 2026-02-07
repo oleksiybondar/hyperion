@@ -1,5 +1,5 @@
 from hyperiontf.typing import LocatorTree
-from hyperiontf.ui.components.component_specification import ComponentSpec
+from hyperiontf.ui.components.spec import ComponentSpec
 
 
 class DropdownBySpec(ComponentSpec):

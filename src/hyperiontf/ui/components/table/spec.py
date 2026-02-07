@@ -1,7 +1,7 @@
 from typing import Optional
 
 from hyperiontf.typing import LocatorTree
-from hyperiontf.ui.components.component_specification import ComponentSpec
+from hyperiontf.ui.components.spec import ComponentSpec
 from hyperiontf.ui.components.typing import SlotPolicyType
 
 
