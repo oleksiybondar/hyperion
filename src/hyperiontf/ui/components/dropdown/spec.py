@@ -1,39 +1,58 @@
+from typing import Optional
+
 from hyperiontf.typing import LocatorTree
-from hyperiontf.ui.components.spec import ComponentSpec
+from hyperiontf.ui.components.button.spec import ButtonBySpec
 
 
-class DropdownBySpec(ComponentSpec):
+class DropdownBySpec(ButtonBySpec):
     """
     Specification object for a Dropdown component.
 
-    DropdownBySpec describes the structural locators required to model a dropdown
-    as a reusable UI component.
+    DropdownBySpec extends ButtonBySpec to model a dropdown as a
+    **clickable trigger with externally resolved options**.
+
+    By inheriting from ButtonBySpec, a dropdown explicitly separates:
+    - the interaction target (root / trigger)
+    - the identity or visible label (label, optional)
 
     In Hyperion terms, a dropdown consists of:
-    - a root element that acts as both the trigger and the selected-value source
-    - a collection of option elements that may be located anywhere in the DOM
+    - a trigger element that opens the dropdown and reflects the current selection
+    - a collection of option elements that may be rendered anywhere in the UI tree
 
     Parameters:
         root:
-            Locator tree describing the dropdown trigger.
-            This element is responsible for opening the dropdown and reflecting
-            the currently selected value.
+            Locator tree describing the dropdown trigger element.
+            This element is responsible for opening the dropdown and receiving
+            interaction events.
 
         options:
             Locator tree describing the dropdown options.
             Options are modeled as a flat collection and are not required to be
-            children of the root element. They may be rendered as siblings,
-            overlays, or in a document-level portal.
+            children of the trigger element. They may be rendered as siblings,
+            overlays, portals, or at document scope.
+
+        label:
+            Optional locator tree describing where the dropdown label or selected
+            value should be resolved from.
+
+            When omitted, the trigger element itself is treated as the label
+            source by default.
 
     Notes:
         - DropdownBySpec is a declarative description only; it performs no
-          interaction or state management.
+          interaction, state resolution, or selection logic by itself.
         - Option scoping is entirely controlled by the locator definition;
-          no implicit parent-child relationship is assumed.
-        - Slot policies are not required for Dropdown and are therefore not
-          part of this specification.
+          no implicit parent-child relationship between trigger and options
+          is assumed.
+        - Slot policies are not required for Dropdown components and are
+          therefore not part of this specification.
     """
 
-    def __init__(self, root: LocatorTree, options: LocatorTree):
-        super().__init__(root)
+    def __init__(
+        self,
+        root: LocatorTree,
+        options: LocatorTree,
+        label: Optional[LocatorTree] = None,
+    ):
+        super().__init__(root, label)
         self.options = options
