@@ -19,7 +19,17 @@ from .ui import (
     webview,
     Color,
 )
-from .ui.components import SlotPolicyRule, DropdownBySpec, TableBySpec, RadioGroupBySpec
+from .ui.components import (
+    SlotPolicyRule,
+    ButtonBySpec,
+    DropdownBySpec,
+    TableBySpec,
+    RadioGroupBySpec,
+    button,
+    Button,
+    dropdown,
+    Dropdown,
+)
 from .cli import CLIClient, SSHClient
 from .logging import getLogger
 from .assertions import expect, verify
@@ -59,7 +69,12 @@ __all__ = [
     "CLIClient",
     "SSHClient",
     "SlotPolicyRule",
+    "ButtonBySpec",
     "DropdownBySpec",
     "TableBySpec",
     "RadioGroupBySpec",
+    "button",
+    "Button",
+    "dropdown",
+    "Dropdown",
 ]
