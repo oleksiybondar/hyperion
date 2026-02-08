@@ -1,6 +1,6 @@
 ← [Back to Documentation Index](/docs/index.md)  
-← Previous: [Logger](/docs/reference/public-api/logger.md)  
-→ Next: [Context Switching Rules](/docs/reference/behavior-contracts/context-switching.md)
+← Previous: [Components: Tabs](/docs/reference/public-api/tabs.md)  
+→ Next: [Behavior Contracts: Context Switching Rules](/docs/reference/behavior-contracts/context-switching.md)
 
 ---
 
@@ -122,5 +122,5 @@ Notes:
 ---
 
 ← [Back to Documentation Index](/docs/index.md)  
-← Previous: [Logger](/docs/reference/public-api/logger.md)  
-→ Next: [Context Switching Rules](/docs/reference/behavior-contracts/context-switching.md)
+← Previous: [Components: Tabs](/docs/reference/public-api/tabs.md)  
+→ Next: [Behavior Contracts: Context Switching Rules](/docs/reference/behavior-contracts/context-switching.md)

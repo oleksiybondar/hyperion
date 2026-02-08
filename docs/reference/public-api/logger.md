@@ -1,6 +1,6 @@
 ← [Back to Documentation Index](/docs/index.md)  
 ← Previous: [Exceptions](/docs/reference/public-api/exceptions.md)  
-→ Next: [Locator Resolution Order](/docs/reference/behavior-contracts/locator-resolution.md)
+→ Next: [Components: Button Specification](/docs/reference/public-api/button-by-spec.md)
 
 ---
 
@@ -180,4 +180,4 @@ external_logger.info("This message appears in the Hyperion test log")
 
 ← [Back to Documentation Index](/docs/index.md)  
 ← Previous: [Exceptions](/docs/reference/public-api/exceptions.md)  
-→ Next: [Locator Resolution Order](/docs/reference/behavior-contracts/locator-resolution.md)
+→ Next: [Components: Button Specification](/docs/reference/public-api/button-by-spec.md)
