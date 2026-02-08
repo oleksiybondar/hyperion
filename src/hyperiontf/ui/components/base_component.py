@@ -1,7 +1,8 @@
-from typing import Type
-
+from hyperiontf.logging.logger import getLogger
 from hyperiontf.ui.widget import Widget
-from hyperiontf.ui.components.spec import ComponentSpec
+
+
+logger = getLogger("Component")
 
 
 class BaseComponent(Widget):
@@ -39,7 +40,8 @@ class BaseComponent(Widget):
           `root` to ensure correct scoping during resolution.
     """
 
-    def __init__(self, parent, locator: Type[ComponentSpec], name: str):
+    def __init__(self, parent, locator, name: str):
         super().__init__(parent, locator, name)
-        self.component_spec: Type[ComponentSpec] = locator
+        self.component_spec = locator
         self._locator = self.component_spec.root
+        self._logger = logger
