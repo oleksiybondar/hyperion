@@ -1,60 +1,79 @@
 from typing import Optional
 
 from hyperiontf.typing import LocatorTree
-from hyperiontf.ui.components.spec import ComponentSpec
+from hyperiontf.ui.components.button.spec import ButtonBySpec
 
 
-class RadioGroupBySpec(ComponentSpec):
+class RadioGroupBySpec(ButtonBySpec):
     """
     Specification object for a RadioGroup component.
 
-    RadioGroupBySpec describes the structural locators required to model a group
-    of radio options as a reusable UI component.
+    RadioGroupBySpec defines the **declarative structure** required to model
+    a group of radio options in a backend-agnostic and DOM-agnostic way.
 
-    A RadioGroup consists of:
+    The specification intentionally supports real-world UI variability where:
+    - a dedicated item wrapper may or may not exist
+    - the radio input may or may not be directly addressable
+    - the clickable label and the state source may be different elements
+
+    A RadioGroup specification consists of:
     - a logical root that scopes the group
     - a collection of radio items
-    - an input element used as the state source
-    - an optional label element used as the interaction target and text source
+    - an optional radio input locator used as the authoritative state source
+    - an optional label locator (inherited) used as the preferred interaction
+      target and identity source
 
     Parameters:
         root:
             Locator tree describing the logical scope of the radio group.
-            This may be a form, fieldset, or any meaningful container.
+            This may be a form, fieldset, container, or any meaningful grouping
+            element.
 
         items:
             Locator tree describing the collection of radio items.
-            Items may represent inputs, labels, or wrapper elements depending
-            on the DOM structure.
+            Each resolved item represents a logical radio option and serves
+            as the relative scope for resolving `input` and `label`.
+
+            Depending on the UI structure, an item may represent:
+            - a wrapper element
+            - a label element
+            - an input element itself
 
         input:
-            Locator tree describing the radio input element relative to each item.
-            The input is treated as the authoritative state source.
+            Optional locator tree describing the radio input element relative
+            to each item.
+
+            When provided, the input element is treated as the **authoritative
+            state source** for checked/unchecked evaluation.
+
+            When omitted, the consuming component is expected to fall back to
+            evaluating state from the item root itself.
 
         label:
-            Optional locator tree describing the label element relative to each item.
-            When provided, the label is typically used as the interaction target
-            and identity source. When omitted, the item root itself may serve
-            as the identity source.
+            Optional locator tree describing the label element relative to each
+            item.
+
+            This field is inherited from ButtonBySpec and represents the
+            preferred interaction target and text/identity source when present.
+
+            When omitted, the item root may be treated as the interaction and
+            identity source.
 
     Notes:
-        - RadioGroupBySpec is a declarative description only; it performs no
-          interaction or state resolution by itself.
-        - The specification supports common real-world patterns, including:
-            - label wrapping input
-            - input/label sibling relationships
-            - absence of a dedicated item wrapper
-        - Interpretation of item structure is controlled entirely by locator design.
+        - RadioGroupBySpec is a declarative specification only; it performs no
+          element resolution, interaction, or state evaluation.
+        - No assumptions are made about DOM nesting or element ordering.
+        - Interpretation of item, input, and label relationships is entirely
+          controlled by locator design and consuming component behavior.
     """
 
     def __init__(
         self,
         root: LocatorTree,
         items: LocatorTree,
-        input: LocatorTree,
-        label: Optional[LocatorTree],
+        input: Optional[LocatorTree] = None,
+        label: Optional[LocatorTree] = None,
     ):
-        super().__init__(root)
+        super().__init__(root, label)
         self.items = items
         self.input = input
-        self.label = label

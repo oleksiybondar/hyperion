@@ -9,28 +9,31 @@
 This guide describes how to model **reusable Dropdown widgets** in Hyperion using
 **typed locator specification objects** and a **high-level intent decorator**.
 
-It focuses on **Page Object structure and locator design**, not on test logic or
-Dropdown interaction APIs.
+It focuses on **Page Object structure and locator design**, not on test logic
+or Dropdown interaction APIs.
 
 Readers are expected to be familiar with Hyperion Page Objects, `By` locators,
 relative selector scoping, and advanced DOM modeling concepts.
 
 > This document describes the intended usage pattern for reusable Dropdown widgets.  
-> The underlying implementation will follow this contract.
+> The underlying implementation follows this contract.
 
 ---
 
 ## What a Dropdown represents
 
-In Hyperion terms, a **Dropdown** is defined as:
+In Hyperion terms, a **Dropdown** is a control composed of:
 
-- a **trigger** that:
-  - opens the menu
-  - displays the currently selected value
+- a **trigger element** that:
+  - receives interaction
+  - opens and closes the menu
 - a collection of **options** that:
   - may appear anywhere in the DOM
   - are not required to be children of the trigger
   - are resolved explicitly via locators
+
+Optionally, a Dropdown may also define a **label source** that is separate from
+the trigger element.
 
 Anything that does not follow this mental model (e.g. searchable inputs,
 autocomplete fields, async selectors) is **not considered a Dropdown** and should
@@ -41,18 +44,18 @@ be modeled as a different widget.
 ## Core concepts
 
 ### Dropdown
-A **Dropdown** is a logical control with a single root.
+A **Dropdown** is a logical control with a single trigger.
 
 - Declared on a Page Object using the `@dropdown` decorator
 - Configured via a `DropdownBySpec` returned from the property
-- The root element:
-  - is the click target
-  - is the selected value source
+- The trigger element:
+  - is the interaction target
+  - may or may not be the selected value source
 
 ### Dropdown options
 Dropdown options are modeled as a **flat collection of elements**.
 
-- Options do **not** need to be children of the root
+- Options do **not** need to be children of the trigger
 - Options may be:
   - inline
   - siblings
@@ -71,6 +74,7 @@ A Dropdown is declared by returning a `DropdownBySpec` from a Page Object proper
 Conceptually:
 - `root` defines the trigger
 - `options` defines how option elements are located
+- `label` (optional) defines where the selected value text is resolved from
 
 ```python
 from hyperiontf import By, dropdown, DropdownBySpec, WebPage
@@ -134,11 +138,11 @@ This is the simplest case and works with pure relative scoping.
 </ul>
 ```
 
-### Why CSS is not enough here
+### Why CSS alone may not work
 
 By default, Hyperion resolves locators **relative to the widget root**.
-If `root` is the trigger button, then `By.css(".menu .language-option")` would be searched
-*inside the button*, which cannot work.
+If `root` is the trigger button, then a relative CSS selector would be evaluated
+inside the button subtree, which cannot work.
 
 ### Modeling approaches
 
@@ -147,25 +151,30 @@ If `root` is the trigger button, then `By.css(".menu .language-option")` would b
 ```python
 DropdownBySpec(
     root=By.id("language-select"),
-    options=By.xpath("./following-sibling::ul[contains(@class, 'menu')]//li[contains(@class, 'language-option')]"),
+    options=By.xpath(
+        "./following-sibling::ul[contains(@class, 'menu')]"
+        "//li[contains(@class, 'language-option')]"
+    ),
 )
 ```
 
-This keeps the locator anchored near the trigger and works when the menu is a sibling.
+This keeps the locator anchored near the trigger and works when the menu
+is a direct sibling.
 
 #### B) Use document-scoped XPath (global)
 
 ```python
 DropdownBySpec(
     root=By.id("language-select"),
-    options=By.xpath("//ul[contains(@class, 'menu')]//li[contains(@class, 'language-option')]"),
+    options=By.xpath(
+        "//ul[contains(@class, 'menu')]"
+        "//li[contains(@class, 'language-option')]"
+    ),
 )
 ```
 
-This works regardless of where the menu is rendered, but the locator must be specific enough
-to avoid matching unrelated menus.
-
----
+This works regardless of where the menu is rendered, but the locator must be
+specific enough to avoid matching unrelated menus.
 
 ---
 
@@ -190,10 +199,10 @@ elsewhere in the DOM.
 
 ### Modeling approaches
 
-#### A) Use document-scoped XPath (global)
+#### A) Use document-scoped XPath
 
-Because options are detached from the trigger subtree, you can use XPath with `//`
-to query from the document root:
+Because options are detached from the trigger subtree, XPath with `//`
+can be used to query from the document root:
 
 ```python
 DropdownBySpec(
@@ -202,12 +211,9 @@ DropdownBySpec(
 )
 ```
 
-This works regardless of where the menu is rendered, but the locator must be specific enough
-to avoid matching unrelated menus.
+#### B) Use an explicit document-scoped locator (when available)
 
-#### B) Use an explicit document-scoped locator (recommended when available)
-
-Hyperion may provide an explicit way to resolve a locator from the document root, for example:
+Hyperion may provide an explicit way to declare document-level scope:
 
 ```python
 DropdownBySpec(
@@ -216,24 +222,27 @@ DropdownBySpec(
 )
 ```
 
-This makes “document scope” an explicit modeling decision instead of relying on XPath `//`.
-
-In this model:
-- the Dropdown does **not** guess where options live
-- the locator explicitly defines global scope
-- only one open menu is assumed, as is common UX practice
+This makes global resolution an **explicit modeling decision**, rather than
+an implicit XPath side effect.
 
 ---
 
 ## Selected value source
 
-The selected value is always read from the **root element**.
+By default, the selected value is resolved from the **trigger element**.
 
-Depending on the UI, this may come from:
-- visible text
-- an attribute (`value`, `aria-label`, `data-*`)
+If the UI renders the selected value elsewhere, a separate `label` locator
+should be defined in `DropdownBySpec`.
 
-Which source is appropriate should be decided per project and documented
+```python
+DropdownBySpec(
+    root=By.id("language-select"),
+    label=By.css(".selected-value"),
+    options=By.css(".menu .option"),
+)
+```
+
+Which source is appropriate is a **modeling decision** and should be documented
 alongside the Page Object.
 
 ---
@@ -243,18 +252,18 @@ alongside the Page Object.
 - Treat Dropdown as a **control**, not a container
 - Do not assume options are children of the trigger
 - Prefer explicit locators over implicit hierarchy
-- Avoid introducing artificial wrappers for modeling convenience
+- Avoid artificial wrappers for modeling convenience
 - If multiple dropdowns can coexist, ensure option locators are sufficiently specific
 
 ---
 
 ## Summary
 
-Dropdown modeling in Hyperion is intentionally simple:
+Dropdown modeling in Hyperion is intentionally explicit:
 
 - one trigger
 - one flat collection of options
-- explicit locators
+- optional decoupled label source
 - no hierarchy assumptions
 
 This approach supports real-world UI frameworks while keeping Page Objects
@@ -263,5 +272,5 @@ readable, reusable, and deterministic.
 ---
 
 ← [Back to Documentation Index](/docs/index.md)  
-← Previous:[Component: RadioGroup](/docs/how-to/radiogroup.md)
+← Previous: [Component: RadioGroup](/docs/how-to/radiogroup.md)
 → Next: [Component: Table](/docs/how-to/table.md)
