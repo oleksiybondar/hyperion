@@ -172,7 +172,7 @@ class Element(LocatableElement):
         Returns:
             str: The value of the specified attribute.
         """
-        text = self.element_adapter.attribute(attr_name).strip()
+        text = (self.element_adapter.attribute(attr_name) or "").strip()
         if log:
             logger.info(
                 f"[{self.__full_name__}] getting element's '{attr_name}' attribute value:\n{text}"

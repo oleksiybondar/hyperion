@@ -9,9 +9,72 @@ from hyperiontf.typing import (
     UnsupportedLocatorException,
     NoSuchElementException,
 )
+from playwright.sync_api import TimeoutError
 from selenium.webdriver.common.by import By as SeleniumBy
 
-SPECIAL_ATTRS = ["value"]
+SPECIAL_ATTRS = ["value", "tagName"]
+SPECIAL_ATTRS_AS_IS = ["value", "tagName"]
+
+NATIVE_SELECT_HEADLESS_WORKAROUND = """
+(opt) => {
+  /**
+   * Playwright headless workaround for native <select>.
+   *
+   * We cannot "click" an <option> because the dropdown is rendered by
+   * browser UI, not DOM. Instead we replicate what the browser does
+   * after a real user selection.
+   *
+   * Contract:
+   *   option must belong to either:
+   *     select > option
+   *     select > optgroup > option
+   */
+
+  const parent = opt.parentElement;
+  if (!parent)
+    throw new Error("Option has no parentElement");
+
+  let select = null;
+
+  // Direct child of <select>
+  if (parent.tagName.toLowerCase() === 'select') {
+    select = parent;
+  }
+  // Inside <optgroup>
+  else if (parent.tagName.toLowerCase() === 'optgroup') {
+    const grand = parent.parentElement;
+    if (grand && grand.tagName.toLowerCase() === 'select')
+      select = grand;
+    else
+      throw new Error("Invalid DOM: <optgroup> is not inside <select>");
+  }
+  else {
+    throw new Error(
+      `Invalid DOM: option parent is <${parent.tagName.toLowerCase()}>`
+    );
+  }
+
+  /**
+   * Perform actual selection.
+   * We use selectedIndex because:
+   *  - value may be empty
+   *  - labels may duplicate
+   *  - index uniquely identifies the option node
+   */
+  select.selectedIndex = opt.index;
+
+  // Keep individual option flags consistent
+  for (const o of select.options)
+    o.selected = (o.index === opt.index);
+
+  /**
+   * Fire events expected by applications and frameworks.
+   * Without these, UI/state may not update.
+   */
+  select.dispatchEvent(new Event('input',  { bubbles: true }));
+  select.dispatchEvent(new Event('change', { bubbles: true }));
+}
+"""
 
 
 class Element:
@@ -258,12 +321,43 @@ class Element:
     @assert_stale_reference
     def click(self):
         """
-        Perform a click action on the element.
+        Click the element using real user interaction when possible.
 
-        Raises:
-            HyperionException: If any exception occurs during the click action.
+        Special handling exists for native HTML <option> elements:
+
+        Problem
+        -------
+        In Playwright (especially headless), clicking an <option> fails
+        because the option list belongs to browser UI, not DOM layout.
+        Playwright therefore times out waiting for visibility.
+
+        Selenium historically allowed this because drivers set the
+        selected value internally instead of performing a real click.
+
+        Solution
+        --------
+        We attempt a normal click first (fast timeout).
+        If Playwright reports visibility failure and the target is an <option>,
+        we programmatically update the parent <select>'s selection and fire
+        the expected DOM events (input/change).
+
+        This preserves Selenium-style behavior without rewriting tests
+        to use `select_option()`.
+
+        This is intentionally an adapter compatibility layer,
+        not recommended Playwright practice for new code.
         """
-        self.element.click()
+        try:
+            # Try real user click first (fail fast)
+            self.element.click(timeout=1000)
+        except TimeoutError as e:
+            if "element is not visible" in e.message:
+                tag = self.element.evaluate("element => element.tagName.toLowerCase()")
+                if tag == "option":
+                    # Fallback: emulate selection through DOM state change
+                    return self.element.evaluate(NATIVE_SELECT_HEADLESS_WORKAROUND)
+
+            raise e
 
     @map_exception
     @assert_stale_reference
@@ -285,8 +379,8 @@ class Element:
         return self.element.get_attribute(name)
 
     def _get_special_attr(self, name):
-        if name == "value":
-            return self.element.evaluate("element => element.value")
+        if name in SPECIAL_ATTRS_AS_IS:
+            return self.element.evaluate(f"element => element.{name}")
 
         return ""
 
