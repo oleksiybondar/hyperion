@@ -1,5 +1,5 @@
 ← [Back to Documentation Index](/docs/index.md)  
-← Previous: [Component: RadioGroup](/docs/how-to/radiogroup.md)
+← Previous: [Component: RadioGroup](/docs/how-to/radiogroup.md)  
 → Next: [Component: Table](/docs/how-to/table.md)
 
 ---
@@ -32,8 +32,10 @@ In Hyperion terms, a **Dropdown** is a control composed of:
   - are not required to be children of the trigger
   - are resolved explicitly via locators
 
-Optionally, a Dropdown may also define a **label source** that is separate from
-the trigger element.
+Optionally, a Dropdown may also define:
+- a **label source** that is separate from the trigger element
+- a **selected value resolution strategy** that controls how the current value
+  is read from the UI
 
 Anything that does not follow this mental model (e.g. searchable inputs,
 autocomplete fields, async selectors) is **not considered a Dropdown** and should
@@ -44,15 +46,20 @@ be modeled as a different widget.
 ## Core concepts
 
 ### Dropdown
+
 A **Dropdown** is a logical control with a single trigger.
 
 - Declared on a Page Object using the `@dropdown` decorator
 - Configured via a `DropdownBySpec` returned from the property
 - The trigger element:
   - is the interaction target
-  - may or may not be the selected value source
+  - may or may not be the selected value source, depending on the
+    selected value resolution strategy
+
+---
 
 ### Dropdown options
+
 Dropdown options are modeled as a **flat collection of elements**.
 
 - Options do **not** need to be children of the trigger
@@ -141,12 +148,12 @@ This is the simplest case and works with pure relative scoping.
 ### Why CSS alone may not work
 
 By default, Hyperion resolves locators **relative to the widget root**.
-If `root` is the trigger button, then a relative CSS selector would be evaluated
+If `root` is the trigger button, a relative CSS selector would be evaluated
 inside the button subtree, which cannot work.
 
 ### Modeling approaches
 
-#### A) Use a relative XPath from the trigger (sibling traversal)
+#### A) Use a relative XPath from the trigger
 
 ```python
 DropdownBySpec(
@@ -158,10 +165,7 @@ DropdownBySpec(
 )
 ```
 
-This keeps the locator anchored near the trigger and works when the menu
-is a direct sibling.
-
-#### B) Use document-scoped XPath (global)
+#### B) Use document-scoped XPath
 
 ```python
 DropdownBySpec(
@@ -173,22 +177,15 @@ DropdownBySpec(
 )
 ```
 
-This works regardless of where the menu is rendered, but the locator must be
-specific enough to avoid matching unrelated menus.
-
 ---
 
 ## Scenario 3: Detached options (portal / overlay)
-
-This is common in modern UI frameworks such as MUI, where menus are rendered
-elsewhere in the DOM.
 
 ### DOM shape
 
 ```html
 <button id="language-select">English</button>
 
-<!-- rendered under <body> -->
 <div class="MuiPopover-root">
   <ul>
     <li class="MuiMenuItem-root">English</li>
@@ -199,10 +196,7 @@ elsewhere in the DOM.
 
 ### Modeling approaches
 
-#### A) Use document-scoped XPath
-
-Because options are detached from the trigger subtree, XPath with `//`
-can be used to query from the document root:
+#### A) Document-scoped XPath
 
 ```python
 DropdownBySpec(
@@ -211,9 +205,7 @@ DropdownBySpec(
 )
 ```
 
-#### B) Use an explicit document-scoped locator (when available)
-
-Hyperion may provide an explicit way to declare document-level scope:
+#### B) Explicit document-scoped locator (recommended)
 
 ```python
 DropdownBySpec(
@@ -222,28 +214,72 @@ DropdownBySpec(
 )
 ```
 
-This makes global resolution an **explicit modeling decision**, rather than
-an implicit XPath side effect.
+This makes global resolution an **explicit modeling decision**, rather than an
+implicit XPath side effect.
 
 ---
 
-## Selected value source
+## Selected value resolution
 
-By default, the selected value is resolved from the **trigger element**.
+Dropdown implementations differ significantly in how the selected value is exposed.
 
-If the UI renders the selected value elsewhere, a separate `label` locator
-should be defined in `DropdownBySpec`.
+Hyperion models this explicitly using the `value_attribute` field on
+`DropdownBySpec`.
+
+This controls how `selected_value`, `assert_selected_value`, and related APIs
+resolve the current dropdown value.
+
+---
+
+### Resolution strategies
+
+#### `"AUTO"` (default)
+
+Heuristic resolution based on the underlying control.
+
+Typical behavior:
+- native `<select>` or `<input>`  
+  → resolve selected value via the `"value"` attribute
+- JavaScript-driven dropdowns  
+  → resolve visible text from `label` or `trigger`
+
+```python
+DropdownBySpec(
+    root=By.id("language-select"),
+    options=By.css(".option"),
+)
+```
+
+---
+
+#### `"text"`
+
+Always resolve the selected value using visible text.
 
 ```python
 DropdownBySpec(
     root=By.id("language-select"),
     label=By.css(".selected-value"),
-    options=By.css(".menu .option"),
+    options=By.css(".option"),
+    value_attribute="text",
 )
 ```
 
-Which source is appropriate is a **modeling decision** and should be documented
-alongside the Page Object.
+---
+
+#### Explicit DOM attribute
+
+Resolve the selected value from a specific DOM attribute.
+
+Common examples include `"value"`, `"aria-label"`, or `"data-value"`.
+
+```python
+DropdownBySpec(
+    root=By.id("language-select"),
+    options=By.css(".option"),
+    value_attribute="value",
+)
+```
 
 ---
 
@@ -252,8 +288,8 @@ alongside the Page Object.
 - Treat Dropdown as a **control**, not a container
 - Do not assume options are children of the trigger
 - Prefer explicit locators over implicit hierarchy
-- Avoid artificial wrappers for modeling convenience
-- If multiple dropdowns can coexist, ensure option locators are sufficiently specific
+- Prefer `value_attribute="AUTO"` unless a specific override is required
+- If multiple dropdowns coexist, ensure option locators are sufficiently specific
 
 ---
 
@@ -263,7 +299,8 @@ Dropdown modeling in Hyperion is intentionally explicit:
 
 - one trigger
 - one flat collection of options
-- optional decoupled label source
+- optional decoupled label
+- explicit selected value resolution strategy
 - no hierarchy assumptions
 
 This approach supports real-world UI frameworks while keeping Page Objects
@@ -272,5 +309,5 @@ readable, reusable, and deterministic.
 ---
 
 ← [Back to Documentation Index](/docs/index.md)  
-← Previous: [Component: RadioGroup](/docs/how-to/radiogroup.md)
+← Previous: [Component: RadioGroup](/docs/how-to/radiogroup.md)  
 → Next: [Component: Table](/docs/how-to/table.md)

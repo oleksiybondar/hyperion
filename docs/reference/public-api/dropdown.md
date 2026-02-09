@@ -16,6 +16,7 @@ It represents a control composed of:
 - explicit open / close semantics
 - option discovery and selection
 - expressive selection via index, text, or pattern
+- configurable selected value resolution
 - verification and assertion helpers
 
 ---
@@ -48,7 +49,10 @@ class SettingsPage(WebPage):
 - supports decoupled label sources
 - behaves like an ordinary clickable element where applicable
 
-In addition, `Dropdown` manages a dynamic options collection and selection logic.
+In addition, `Dropdown`:
+- manages a dynamic options collection
+- resolves the currently selected value according to the specification
+- exposes selection-specific APIs
 
 ---
 
@@ -116,6 +120,30 @@ This allows expressive matching without exposing EQL as a required user concept.
 
 ## Selected value inspection
 
+Dropdown exposes two complementary inspection APIs:
+- **selected value** (semantic state)
+- **selected option index** (structural position)
+
+---
+
+### `selected_value -> Optional[str]`
+
+Returns the currently selected value as resolved by the dropdown.
+
+Resolution behavior is controlled by `DropdownBySpec.value_attribute`:
+
+- `"AUTO"` (default):
+  - native `<select>` / `<input>` → resolve via `"value"` attribute
+  - custom dropdowns → resolve visible text from label or trigger
+- `"text"`:
+  - always resolve visible text
+- explicit attribute name:
+  - resolve selected value from that DOM attribute
+
+Returns `None` or an empty value if no selection is currently present.
+
+---
+
 ### `selected_option_index -> Optional[int]`
 
 Returns the index of the currently selected option, if resolvable.
@@ -123,7 +151,8 @@ Returns the index of the currently selected option, if resolvable.
 The dropdown may be temporarily opened to ensure options are rendered
 (e.g. for portal-based dropdowns).
 
-Returns `None` if no matching option is found.
+Returns `None` if no matching option can be determined
+(e.g. placeholder or unselected state).
 
 ---
 
@@ -160,6 +189,7 @@ These methods:
 
 Hyperion guarantees:
 - Dropdown resolves its structure exclusively from `DropdownBySpec`
+- selected value resolution follows the declared or heuristic strategy
 - options may be detached from the trigger hierarchy
 - selection logic is deterministic and explicit
 - open/close behavior is handled internally when required
@@ -172,14 +202,6 @@ Dropdown does **not**:
 
 Controls that do not match the “trigger + flat options” model
 should be implemented as different components.
-
----
-
-## See also
-
-- [Components: DropDown Specification](/docs/reference/public-api/dropdown-by-spec.md)
-- [Components: Button](/docs/reference/public-api/button.md)
-- [How-To: Dropdown](/docs/how-to/dropdown.md)
 
 ---
 
