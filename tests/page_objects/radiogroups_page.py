@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-from hyperiontf import By, WebPage, radiogroup, RadioGroupBySpec
+from hyperiontf import By, WebPage, radiogroup, RadioGroupBySpec  # type: ignore[attr-defined]
 
 
 class RadioGroupsPage(WebPage):
     """
     Page Object for `radiogroups.html`.
 
-    Covers three common DOM shapes:
+    Covers four common DOM shapes:
     - wrapper item nodes with separate input + label
     - label wrapping input (label is the item root)
     - sibling input + label with no dedicated item wrapper
+    - JavaScript-only radios with no native inputs
     """
 
     @radiogroup
@@ -73,4 +74,31 @@ class RadioGroupsPage(WebPage):
             root=By.id("rg-siblings"),
             items=By.css("input[type='radio']"),
             label=By.xpath("./following-sibling::label[1]"),
+        )
+
+    @radiogroup
+    def js_only_group(self) -> RadioGroupBySpec:
+        """
+        Scenario 4: JavaScript-only radios (no native inputs).
+
+        DOM:
+          <div id="rg-js-only">
+            <div class="js-radio"
+                 data-selected="true|false"
+                 aria-checked="true|false">
+              Text...
+            </div>
+            ...
+          </div>
+
+        There are no <input type="radio"> elements.
+        Selection is driven entirely by JavaScript and exposed via attributes.
+
+        The checked state is evaluated using `checked_expression`, which is applied
+        directly to each item node.
+        """
+        return RadioGroupBySpec(
+            root=By.id("rg-js-only"),
+            items=By.css("#rg-js-only .js-radio"),
+            checked_expression="attribute:data-selected == true",
         )

@@ -16,6 +16,22 @@
     .radio-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: #fafafa; border: 1px solid #eee; }
     .inline { display: inline-flex; align-items: center; gap: 10px; padding: 6px 0; }
     .muted { color: #666; font-size: 0.92rem; }
+
+     /* Scenario 4: JS-only radio items (no input/label) */
+    .js-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .js-radio {
+      user-select: none;
+      cursor: pointer;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 2px solid #e5e5e5;
+      background: #f7f7f7;
+      transition: background 120ms ease, border-color 120ms ease;
+    }
+    .js-radio.is-selected {
+      border-color: #3b82f6;
+      background: #e8f1ff;
+  }
   </style>
 </head>
 
@@ -122,5 +138,83 @@
       Suggested modeling: items = <code>input[type=radio]</code>; input = <code>.</code> (self); label = following-sibling label (XPath) or <code>label[for=...]</code> strategy.
     </p>
   </section>
+
+    <!-- =============================================== -->
+  <!-- Scenario 4: JS-only div radios (no inputs at all) -->
+  <!-- =============================================== -->
+  <section class="card" id="section-rg-js-only">
+    <h2>Scenario 4: JS-only radios (div items, style-based selection)</h2>
+    <p class="note">
+      There are no native inputs. Selection is handled entirely by JavaScript and
+      indicated via background/border styling.
+      <br/>
+      For automation, the selected item also exposes <code>data-selected="true"</code>.
+    </p>
+
+    <div class="js-group" id="rg-js-only" role="radiogroup" aria-label="JS Only Group">
+      <div class="js-radio is-selected"
+           role="radio"
+           tabindex="0"
+           data-value="JS A"
+           data-selected="true"
+           aria-checked="true"
+           id="rg-js-only-item-1">
+        JS A (unique)
+      </div>
+
+      <div class="js-radio"
+           role="radio"
+           tabindex="0"
+           data-value="JS B"
+           data-selected="false"
+           aria-checked="false"
+           id="rg-js-only-item-2">
+        JS B (unique)
+      </div>
+
+      <div class="js-radio"
+           role="radio"
+           tabindex="0"
+           data-value="JS C"
+           data-selected="false"
+           aria-checked="false"
+           id="rg-js-only-item-3">
+        JS C (unique)
+      </div>
+    </div>
+
+    <p class="muted">
+      Suggested modeling: items = <code>.js-radio</code>; no input/label; checked via
+      <code>checked_expression="attribute:data-selected == true"</code> (or <code>attribute:aria-checked == true</code>)
+    </p>
+  </section>
+
+  <script>
+    (function () {
+      const group = document.getElementById("rg-js-only");
+      if (!group) return;
+
+      const items = Array.from(group.querySelectorAll(".js-radio"));
+
+      function selectItem(target) {
+        items.forEach((el) => {
+          const selected = el === target;
+          el.classList.toggle("is-selected", selected);
+          el.setAttribute("data-selected", selected ? "true" : "false");
+          el.setAttribute("aria-checked", selected ? "true" : "false");
+        });
+      }
+
+      items.forEach((el) => {
+        el.addEventListener("click", () => selectItem(el));
+        el.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            selectItem(el);
+          }
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

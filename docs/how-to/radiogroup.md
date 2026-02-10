@@ -27,6 +27,7 @@ applications:
 - `<label>` may wrap `<input>` or be a sibling
 - groups may or may not have a dedicated container
 - React fragments often remove otherwise useful structure
+- some radios are implemented **without native inputs at all**
 
 Because of this variability, a reusable RadioGroup cannot assume a fixed internal layout.
 
@@ -38,6 +39,7 @@ Hyperion models RadioGroup structure explicitly via a **typed locator specificat
 ## Core concepts
 
 ### RadioGroup
+
 A **RadioGroup** represents a logical group of radio options.
 
 - Declared on a Page Object using the `@radiogroup` decorator
@@ -45,11 +47,12 @@ A **RadioGroup** represents a logical group of radio options.
 - Scoped by a meaningful group root (form, fieldset, section, etc.)
 
 ### RadioItem
+
 A **RadioItem** represents one logical option in the group.
 
 A RadioItem consists of:
-- a **state source** (the radio input)
-- an optional **label** (click target and text source)
+- a **state source** (input, wrapper, or item root)
+- an optional **label** (click target and text/identity source)
 
 A RadioItem **does not require a wrapper element**.
 
@@ -64,6 +67,7 @@ Conceptually:
 - `root` defines the group scope
 - `items` defines how individual radio items are located
 - `input` and `label` are resolved **relative to each item**
+- `checked_expression` (optional) defines how checked state is evaluated for custom radios
 
 ```python
 from hyperiontf import By, radiogroup, RadioGroupBySpec, WebPage
@@ -161,8 +165,6 @@ RadioGroupBySpec(
 )
 ```
 
-This works regardless of whether the input is before or after the text.
-
 > XPath `./` is the most reliable cross-backend way to reference the current element.  
 > CSS does not provide a universally supported equivalent.
 
@@ -182,8 +184,6 @@ This works regardless of whether the input is before or after the text.
 </form>
 ```
 
-This is common in real applications and React output.
-
 ### Modeling constraints
 
 - There is **no item wrapper**
@@ -194,7 +194,7 @@ This is common in real applications and React output.
 
 - `root` scopes the group
 - `items` selects **inputs**
-- input is the RadioItem root
+- the input is the RadioItem root
 - label is resolved via sibling XPath
 
 ```python
@@ -209,10 +209,55 @@ RadioGroupBySpec(
 Notes:
 - XPath indices are **1-based**
 - `following-sibling::label[1]` selects the nearest matching label
-- The input is always the **state source**
+- The input is the authoritative state source
 
-The reverse pattern (label before input) can be handled with
-`preceding-sibling::label[1]`.
+---
+
+## Scenario 4: JavaScript-only radios (no native inputs)
+
+Some applications implement radio groups without `<input type="radio">` elements at all.
+Items are plain elements (for example `<div>`), and selection is driven entirely by
+JavaScript.
+
+Selection is often indicated visually (background color, border, icon), but for automation
+the state is typically exposed via attributes such as:
+
+- `data-selected="true"`
+- `aria-checked="true"`
+
+### DOM shape (example)
+
+```html
+<div id="notifications">
+  <div class="js-radio" data-selected="true">Email</div>
+  <div class="js-radio" data-selected="false">SMS</div>
+</div>
+```
+
+### Modeling approach
+
+- `items` selects the radio elements directly
+- no `input` or `label` is defined
+- checked state is evaluated using `checked_expression`
+
+```python
+RadioGroupBySpec(
+    root=By.id("notifications"),
+    items=By.css(".js-radio"),
+    checked_expression="attribute:data-selected == true",
+)
+```
+
+### Important: checked expression target
+
+`checked_expression` is evaluated against a **deterministic target node**:
+
+- If `input` is defined, the expression is evaluated against the resolved input node
+- Otherwise, it is evaluated against the item root itself
+
+Because of this, do **not** write expressions that assume an `input` child exists
+(e.g. `input.attribute:...`).  
+If `input` is defined, the expression already runs *on* the input node.
 
 ---
 
@@ -241,21 +286,24 @@ alongside the Page Object.
 - Choose the RadioItem root based on DOM reality, not ideal markup
 - Use XPath relative selectors (`./`, `following-sibling::`) when structure demands it
 - Avoid introducing pseudo wrappers just to satisfy modeling
+- For custom radios, expose a deterministic checked attribute in the DOM
 
 ---
 
 ## Summary
 
 RadioGroup modeling in Hyperion is:
+
 - explicit
 - spec-driven
 - resilient to real-world DOM variations
 
-By choosing the correct item root and using relative locators, you can model even
-non-ideal markup cleanly while keeping Page Objects readable and reusable.
+By choosing the correct item root, using relative locators, and leveraging
+`checked_expression` when needed, you can model even non-native, JavaScript-driven
+radio groups cleanly while keeping Page Objects readable and reusable.
 
 ---
 
 ← [Back to Documentation Index](/docs/index.md)  
-← Previous: [Logging and Reporting](/docs/how-to/logging-and-reports.md) 
+← Previous: [Logging and Reporting](/docs/how-to/logging-and-reports.md)  
 → Next: [Component: Dropdown](/docs/how-to/dropdown.md)
