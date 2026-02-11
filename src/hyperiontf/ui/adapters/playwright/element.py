@@ -12,8 +12,8 @@ from hyperiontf.typing import (
 from playwright.sync_api import TimeoutError
 from selenium.webdriver.common.by import By as SeleniumBy
 
-SPECIAL_ATTRS = ["value", "tagName"]
-SPECIAL_ATTRS_AS_IS = ["value", "tagName"]
+SPECIAL_ATTRS = ["value", "tagName", "checked"]
+SPECIAL_ATTRS_AS_IS = ["value", "tagName", "checked"]
 
 NATIVE_SELECT_HEADLESS_WORKAROUND = """
 (opt) => {
@@ -380,7 +380,13 @@ class Element:
 
     def _get_special_attr(self, name):
         if name in SPECIAL_ATTRS_AS_IS:
-            return self.element.evaluate(f"element => element.{name}")
+            data = self.element.evaluate(f"element => element.{name}")
+            if isinstance(data, bool):
+                return str(data).lower()
+            elif isinstance(data, str):
+                return data
+
+            str(data)
 
         return ""
 

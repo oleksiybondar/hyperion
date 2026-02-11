@@ -77,12 +77,12 @@ class Radiogroup(BaseComponent):
         Returns:
             The spec-defined `checked_expression` if provided,
             otherwise the default native-radio predicate:
-            ``attribute:checked == true``.
+            ``attribute:checked == 'true'``.
         """
         if self.component_spec.checked_expression:
             return self.component_spec.checked_expression
 
-        return "attribute:checked == true"
+        return "attribute:checked == 'true'"
 
     def select(self, item: Union[int, str, re.Pattern]):
         """
@@ -302,7 +302,7 @@ class Radiogroup(BaseComponent):
         """
         Assert that no radio option is currently selected.
         """
-        selected = self.radio_items.selsect_all(self.checked_expression)
+        selected = self.radio_items.select_all(self.checked_expression)
         verify = prepare_expect_object(
             self,
             selected,
@@ -316,7 +316,7 @@ class Radiogroup(BaseComponent):
         """
         Assert that exactly one radio option is currently selected.
         """
-        selected = self.radio_items.selsect_all(self.checked_expression)
+        selected = self.radio_items.select_all(self.checked_expression)
         verify = prepare_expect_object(
             self,
             selected,
@@ -333,7 +333,7 @@ class Radiogroup(BaseComponent):
         This enforces the mutual-exclusion invariant of a radio group
         without requiring that a selection must exist.
         """
-        selected = self.radio_items.selsect_all(self.checked_expression)
+        selected = self.radio_items.select_all(self.checked_expression)
         verify = prepare_expect_object(
             self,
             len(selected),

@@ -5,10 +5,10 @@ webkit_playwright_caps = {"automation": "playwright", "browser": "webkit"}
 chrome_playwright_caps = {"automation": "playwright", "browser": "chrome"}
 firefox_playwright_caps = {"automation": "playwright", "browser": "firefox"}
 caps_variants = [
-    firefox_caps,
+    # firefox_caps,
     chrome_caps,
-    edge_caps,
-    webkit_playwright_caps,
-    chrome_playwright_caps,
-    firefox_playwright_caps,
+    # edge_caps,
+    # webkit_playwright_caps,
+    # chrome_playwright_caps,
+    # firefox_playwright_caps,
 ]
