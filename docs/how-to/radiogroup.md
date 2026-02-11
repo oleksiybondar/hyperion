@@ -14,7 +14,7 @@ Readers are expected to be familiar with Hyperion Page Objects, `By` locators, a
 selector scoping.
 
 > This document describes the intended usage pattern for reusable RadioGroup widgets.  
-> The underlying implementation will follow this contract.
+> The underlying implementation follows this contract.
 
 ---
 
@@ -51,6 +51,7 @@ A **RadioGroup** represents a logical group of radio options.
 A **RadioItem** represents one logical option in the group.
 
 A RadioItem consists of:
+
 - a **state source** (input, wrapper, or item root)
 - an optional **label** (click target and text/identity source)
 
@@ -85,7 +86,7 @@ class SettingsPage(WebPage):
         )
 ```
 
-The exact behavior API is documented elsewhere.  
+The behavior API (selecting, asserting, etc.) is documented separately.
 This guide focuses only on **how to model the structure correctly**.
 
 ---
@@ -145,6 +146,7 @@ This is the most straightforward case and requires no XPath tricks.
 ### Key idea: choose the correct item root
 
 In this structure:
+
 - the `<label>` *is* the RadioItem
 - the label text is the identity
 - the input is nested inside
@@ -207,6 +209,7 @@ RadioGroupBySpec(
 ```
 
 Notes:
+
 - XPath indices are **1-based**
 - `following-sibling::label[1]` selects the nearest matching label
 - The input is the authoritative state source
@@ -244,11 +247,35 @@ the state is typically exposed via attributes such as:
 RadioGroupBySpec(
     root=By.id("notifications"),
     items=By.css(".js-radio"),
-    checked_expression="attribute:data-selected == true",
+    checked_expression="attribute:data-selected == \"true\"",
 )
 ```
 
-### Important: checked expression target
+---
+
+## Important: Boolean comparison in EQL
+
+Currently, EQL converts types such as `Color`, `int`, and `float`, but boolean coercion is
+out of scope.
+
+This means boolean-like DOM attributes (for example `data-selected` and `aria-checked`)
+must be compared as **strings**:
+
+```text
+attribute:data-selected == "true"
+attribute:aria-checked == "true"
+```
+
+Do not use boolean literals in comparisons:
+
+```text
+attribute:data-selected == true
+attribute:aria-checked == true
+```
+
+---
+
+## Checked expression evaluation target
 
 `checked_expression` is evaluated against a **deterministic target node**:
 
@@ -264,6 +291,7 @@ If `input` is defined, the expression already runs *on* the input node.
 ## Label is optional
 
 In some UIs:
+
 - radios have no visible `<label>`
 - identity comes from attributes (`value`, `aria-label`, `data-*`)
 - or the root element text itself
@@ -271,6 +299,7 @@ In some UIs:
 RadioGroup supports this by treating `label` as optional.
 
 If no label is defined:
+
 - the item root becomes the identity source
 - text-based selection relies on the root element
 
