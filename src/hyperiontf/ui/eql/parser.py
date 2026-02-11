@@ -85,20 +85,47 @@ def p_element_chain_query(p):
 
 def p_segment(p):
     """segment : identifier
-    | identifier COLON attribute_type
-    | identifier LBRACKET index RBRACKET"""
-    p[0] = {"name": p[1]}
-    length = len(p)
-    if length == 4:
-        p[0]["attr_type"] = p[3]
-        p[0]["type"] = AST.ATTRIBUTE
-    elif length == 5:
-        p[0]["type"] = AST.ELEMENT
-        p[0] = [p[0], {"index": p[3], "type": AST.ELEMENT}]
+    | identifier LBRACKET index RBRACKET
+    | attribute_selector
+    | attribute_selector LBRACKET index RBRACKET
+    """
+    if len(p) == 2:
+        if isinstance(p[1], str):
+            p[0] = {"name": p[1]}
+        else:
+            p[0] = p[1]
+        return
+
+    base = p[1]
+    idx = p[3]
+
+    if isinstance(base, str):
+        base = {"name": base}
+
+    base["type"] = AST.ELEMENT
+    p[0] = [base, {"index": idx, "type": AST.ELEMENT}]
+
+
+def p_attribute_selector(p):
+    """attribute_selector : ATTRIBUTE COLON attr_name
+    | STYLE COLON attr_name
+    """
+    p[0] = {
+        "type": AST.ATTRIBUTE,
+        "attr_type": p[1],
+        "name": p[3],
+    }
+
+
+def p_attr_name(p):
+    """attr_name : ITEM_NAME"""
+    p[0] = p[1]
 
 
 def p_identifier(p):
-    """identifier : ITEM_NAME"""
+    """identifier : ITEM_NAME
+    | ATTRIBUTE
+    | STYLE"""
     p[0] = p[1]
 
 
