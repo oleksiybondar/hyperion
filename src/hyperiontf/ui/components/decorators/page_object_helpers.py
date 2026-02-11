@@ -1,5 +1,6 @@
 from typing import Optional, Callable, Any
 
+from hyperiontf.ui.components.radiogroup.radigroup import Radiogroup
 from hyperiontf.ui.decorators.element_accessor import element_property
 from hyperiontf.ui.components.button.button import Button
 from hyperiontf.ui.components.dropdown.dropdown import Dropdown
@@ -33,3 +34,40 @@ def dropdown(
     :return: Property that returns an instance of the `Element` class.
     """
     return element_property(source_function=locator_getter, klass=Dropdown)
+
+
+def radiogroup(
+    locator_getter: Optional[Callable] = None,
+) -> Any:
+    """
+    Decorator for declaring a reusable RadioGroup component on a Page Object.
+
+    This decorator creates a read-only property that returns an instance of
+    the `Radiogroup` component. The decorated method must return a
+    `RadioGroupBySpec` instance describing the structure of the group.
+
+    Usage:
+
+        @radiogroup
+        def notifications(self) -> RadioGroupBySpec:
+            return RadioGroupBySpec(
+                root=By.id("notifications"),
+                items=By.css(".radio-item"),
+                input=By.css("input[type='radio']"),
+                label=By.css("label"),
+            )
+
+    The resulting property:
+
+        - Is resolved lazily
+        - Is scoped to the owning Page Object
+        - Uses the provided specification to model item structure and state logic
+
+    :param locator_getter:
+        Optional function to decorate when used without parentheses.
+        (default: None)
+
+    :return:
+        A property that returns an instance of the `Radiogroup` component.
+    """
+    return element_property(source_function=locator_getter, klass=Radiogroup)

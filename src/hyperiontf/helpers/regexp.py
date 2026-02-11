@@ -1,5 +1,6 @@
 from typing import Union
 import re
+from hyperiontf.assertions.expect import Expect
 
 _REGEX_LITERAL = re.compile(r"^/(.*?)/$")  # /pattern/
 _REGEX_INLINE_FLAGS = re.compile(r"^\(\?[aiLmsux-]+\)")  # (?i) (?im) (?s) ...
@@ -62,3 +63,19 @@ def regexp_to_eql(value: Union[str, re.Pattern]) -> str:
         return value
 
     return f"/{value}/"
+
+
+def regexp_to_match_to_pattern(value: Union[str, re.Pattern]):
+    if isinstance(value, re.Pattern):
+        return value.pattern
+
+    if not isinstance(value, str):
+        raise TypeError(f"Expected str or re.Pattern, got {type(value)!r}")
+
+    return value
+
+
+def verify_semantic_match(verify: Expect, expected: Union[str, re.Pattern]):
+    if is_regex(expected):
+        return verify.to_match(expected)
+    return verify.to_be(expected)

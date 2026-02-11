@@ -1,11 +1,12 @@
 import re
 from typing import Optional, Union
 
+from hyperiontf.helpers.regexp import verify_semantic_match
 from hyperiontf.typing import NoSuchElementException
 from hyperiontf.ui.components.button.button import Button
 from hyperiontf.ui.decorators.page_object_helpers import elements
 from hyperiontf.ui.helpers.prepare_expect_object import prepare_expect_object
-from hyperiontf.helpers.regexp import is_regex, regexp_to_eql
+from hyperiontf.ui.components.helpers.make_eql_selector import make_eql_selector
 
 
 class Dropdown(Button):
@@ -159,25 +160,8 @@ class Dropdown(Button):
             Element | None:
                 The first matching option element, or None if not found.
         """
-        eql = self._expression_to_eql(expression)
+        eql = make_eql_selector(expression)
         return self.dropdown_options[eql]
-
-    @staticmethod
-    def _expression_to_eql(expression: Union[str, re.Pattern]) -> str:
-        """
-        Convert a string or compiled regex into an EQL selector.
-
-        Parameters:
-            expression:
-                A string for exact match, or a compiled regex pattern.
-
-        Returns:
-            str:
-                EQL selector string.
-        """
-        if is_regex(expression):
-            return f"text ~= {regexp_to_eql(expression)}"
-        return f'text == "{expression}"'
 
     @property
     def selected_value(self) -> Optional[str]:
@@ -239,7 +223,7 @@ class Dropdown(Button):
             "Verifying currently selected value",
             self._logger,
         )
-        return verify.to_be(expected)
+        return verify_semantic_match(verify, expected)
 
     def assert_selected_value(self, expected):
         """
@@ -263,7 +247,7 @@ class Dropdown(Button):
             "Asserting currently selected value",
             self._logger,
         )
-        return verify.to_be(expected)
+        return verify_semantic_match(verify, expected)
 
     def _get_option(self, expression: Union[str, re.Pattern]):
         """
