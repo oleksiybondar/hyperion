@@ -7,95 +7,166 @@
 # Table
 
 This guide describes how to model **reusable Table widgets** in Hyperion using
-a **declarative locator specification** and a **policy-by-ordering slot model**.
+a **declarative locator specification** (`TableBySpec`) and a
+**policy-by-ordering slot model**.
 
 It focuses on **Page Object structure and locator design**, not on test logic
-or Table interaction APIs.
+or the runtime Table interaction API.
 
-Readers are expected to be familiar with Hyperion Page Objects, `By` locators,
-and basic widget composition concepts.
+Readers are expected to be familiar with:
 
-> This document describes the intended usage pattern for reusable Table widgets.  
-> The underlying implementation will follow this contract.
+- Hyperion Page Objects
+- `By` locators
+- Component decorators
+- Basic widget composition
+
+> The runtime behavior described here is implemented by the `Table` component.
 
 ---
 
-## What a Table represents
+## What a Table Represents
 
 In Hyperion terms, a **Table** is:
 
-- a logical container of **rows**
-- where each row consists of **cells**
-- and each cell may represent **different kinds of content**
+- A logical container of **rows**
+- Where each row consists of **cells**
+- And each cell may represent **different kinds of content**
 
 Importantly:
-- a table cell is **not always a simple element**
-- cells may represent:
-  - plain text
-  - images
-  - action panels
-  - editable inputs
-  - composite widgets
+
+- A table cell is **not necessarily a simple element**
+- Cells may represent:
+  - Plain text
+  - Images
+  - Action panels
+  - Editable inputs
+  - Composite widgets
 
 For this reason, Table modeling separates:
-- **how cells are located** (structure)
-- **how cells are materialized** (behavior)
+
+- **Structure** → how rows and cells are located
+- **Behavior** → how cells are materialized (Element vs Widget)
+
+This separation keeps Page Objects declarative and reusable.
 
 ---
 
-## Core concepts
+# Core Concepts
 
-### Table
-A **Table** is a complex widget declared on a Page Object using the `@table` decorator
+## Table
+
+A **Table** is declared on a Page Object using the `@table` decorator
 and configured via a `TableBySpec`.
 
-### Rows
-Rows represent the repeatable, currently rendered table rows.
-Virtualized tables are supported implicitly: only rows present in the DOM are modeled.
-
-### Cells
-Cells are located **structurally** within a row.
-What a cell *becomes* (Element vs Widget) is decided separately via a policy.
-
-### Header cells (optional)
-Some tables provide header cells that can be used to derive column identity or index mappings.
-
-In Hyperion, `header_cells` (when provided) should point **directly to header cell elements**
-(e.g. `thead > td` or equivalent). It is optional and not required for index-based tables.
+The decorator converts a specification into a lazily constructed
+`Table` component.
 
 ---
 
-## Slot policies (brief introduction)
+## Rows
 
-Some Table behaviors depend on **column position or identity**:
-- “last column is actions”
-- “second column is image”
-- “all cells are inputs except the last one”
+Rows represent the repeatable, currently rendered table rows.
+
+Important:
+
+- Only rows present in the DOM are modeled.
+- Virtualized tables are supported implicitly.
+- No automatic scrolling or virtualization handling is performed.
+
+---
+
+## Cells
+
+Cells are located **structurally** within each row using the `cells` locator
+defined in `TableBySpec`.
+
+The `cells` locator:
+
+- Must identify the **root element of each cell**
+- Should not contain behavior assumptions
+- Is purely structural
+
+What a cell *becomes* at runtime (plain `Element` vs custom `Widget`)
+is determined separately via `slot_policy`.
+
+Cells are:
+
+- Materialized lazily
+- Resolved on first access
+- Cached per row
+
+---
+
+## Header Cells (Optional)
+
+Some tables expose header cells that define column identity.
+
+When provided, `header_cells` should point **directly to header cell elements**
+(e.g. `thead > th`).
+
+When configured, headers enable:
+
+- Key-based cell access (`row["Status"]`)
+- Key-based slot policy rules
+- Column name assertions at runtime
+
+When omitted:
+
+- Only index-based access is available
+- Key-based slot rules may never match
+
+Headers are optional and not required for index-based tables.
+
+---
+
+# Slot Policies
+
+Some Table behaviors depend on **column position or identity**, for example:
+
+- “Last column is actions”
+- “Second column is image”
+- “All cells are inputs except the last one”
 
 Hyperion models this using a **slot policy** (`slot_policy`).
 
 A slot policy is:
-- an **ordered list of rules**
-- evaluated in order
-- **last matching rule wins**
+
+- An **ordered list of rules**
+- Evaluated in order
+- **Last matching rule wins**
 
 Each rule defines:
-- **which slot it applies to** (by index, key, or fixed keyword)
-- **what the slot should materialize as** (a target widget class)
+
+- Which slot it applies to  
+  (index, predicate keyword, key, or explicit EQL expression)
+- What wrapper class the slot should materialize as
 
 If no rule matches, the cell defaults to a plain `Element`.
 
-Notes:
-- Rule kind inference is deterministic (`int` -> index; reserved keywords -> predicate; other strings -> key).
-- EQL rules (Hyperion Element Query Language) must be explicitly declared and are never inferred automatically.
+---
+
+## Rule Types
+
+Rule kind inference is deterministic:
+
+- `int` → index rule  
+  - Supports negative indices (`-1` last, `-2` second-to-last)
+- Reserved keywords → predicate rule  
+  - `"ALL"`, `"FIRST"`, `"LAST"`
+- Other strings → key-based rule  
+  - Resolved via header name → column index mapping
+- Explicit `kind=SlotRuleKind.EQL` → EQL rule  
+  - Evaluated against the cell element
+
+Key-based rules require `header_cells` to be configured.
 
 ---
 
-## Declaring a simple table (index-based)
+# Declaring a Simple Table (Index-Based)
 
-### DOM shape
+## DOM Shape
 
-```html
+{codeblock}html
 <table id="users">
   <tr>
     <td>Alice</td>
@@ -103,18 +174,17 @@ Notes:
     <td><button>Edit</button></td>
   </tr>
 </table>
-```
+{codeblock}
 
-### Modeling approach
+## Modeling Approach
 
 - `root` scopes the table
 - `rows` locates table rows
-- `cells` locates all cells within a row
-- no slot policy is required for simple tables
+- `cells` locates cells within a row
+- No slot policy is required
 
-```python
+{codeblock}python
 from hyperiontf import By, table, TableBySpec, WebPage
-
 
 class UsersPage(WebPage):
 
@@ -125,56 +195,55 @@ class UsersPage(WebPage):
             rows=By.css("tr"),
             cells=By.css("td"),
         )
-```
+{codeblock}
 
-In this case, all cells materialize as plain Elements.
+All cells materialize as plain `Element` instances.
 
 ---
 
-## Mixed cell types using a slot policy
+# Mixed Cell Types Using Slot Policy
 
-### Use case
-- last column contains action buttons
-- other columns are simple data cells
+## Use Case
 
-### Modeling approach
+- Last column contains action buttons
+- Other columns are simple data cells
 
-- keep `cells` purely structural
-- use `slot_policy` to override cell materialization
+## Modeling Approach
 
-```python
+Keep `cells` purely structural and override materialization via `slot_policy`.
+
+{codeblock}python
 from hyperiontf import SlotPolicyRule, ActionsCell, TableBySpec, By
-
 
 TableBySpec(
     root=By.id("users"),
     rows=By.css("tr"),
     cells=By.css("td"),
     slot_policy=[
-        SlotPolicyRule(-1, ActionsCell),  # last column
+        SlotPolicyRule(-1, ActionsCell),
     ],
 )
-```
+{codeblock}
 
 Explanation:
-- `-1` refers to the last cell in a row
-- that cell materializes as `ActionsCell`
-- all other cells remain plain Elements
+
+- `-1` refers to the last column
+- That cell materializes as `ActionsCell`
+- All other cells remain plain `Element`
 
 ---
 
-## Editable tables (policy layering)
+# Editable Tables (Policy Layering)
 
-### Use case
-- table is editable
-- all cells are inputs
-- last column is a save/apply button
+## Use Case
 
-### Modeling approach
+- All cells are editable inputs
+- Last column contains action buttons
 
-```python
+## Modeling Approach
+
+{codeblock}python
 from hyperiontf import SlotPolicyRule, ActionsCell, InputCell, TableBySpec, By
-
 
 TableBySpec(
     root=By.id("settings"),
@@ -185,51 +254,75 @@ TableBySpec(
         SlotPolicyRule(-1, ActionsCell),
     ],
 )
-```
+{codeblock}
 
-Because rules are evaluated in order:
-- `"ALL"` applies first
-- `-1` overrides it for the last column
+Explanation:
 
-This “last match wins” behavior is intentional and deterministic.
-
----
-
-## Column keys and headers (optional)
-
-In some tables, columns have stable identities (e.g. logical names).
-
-When available, a Table may define `header_cells` to support **key-based slot rules**.
-This is optional and not required for index-based tables.
-
-Key-based selection is useful when:
-- column order changes
-- columns are conditionally hidden
-- semantic identity matters more than position
-
-Exact header mapping strategies are documented separately.
+- `"ALL"` applies to every cell
+- `-1` overrides for the last column
+- Rule ordering guarantees deterministic resolution
 
 ---
 
-## Design guidelines
+# Column Keys and Headers
+
+Key-based rules are useful when:
+
+- Column order changes
+- Columns are conditionally hidden
+- Semantic identity matters more than index
+
+When `header_cells` is defined:
+
+- Header text is used to derive column names
+- Key-based slot rules can match by name
+- Rows support key-based access (`row["Status"]`)
+
+If headers are not configured:
+
+- Key-based rules may never match
+- Only index-based rules are reliable
+
+---
+
+# Accessing Cells
+
+Cells can be accessed using index or key:
+
+{codeblock}python
+row = page.users[0]
+
+row[0]        # first column
+row[-1]       # last column
+row["Status"] # header-based access
+{codeblock}
+
+The returned object type depends on slot policy resolution.
+
+---
+
+# Design Guidelines
 
 - Treat Table as a **structural + behavioral composition**
 - Keep `cells` purely about *where* cells are
 - Use `slot_policy` to decide *what* cells become
 - Prefer index-based rules for simplicity
-- Layer rules instead of writing complex conditions
-- Do not assume all rows are rendered (virtualization)
+- Layer simple rules instead of complex logic
+- Do not assume all rows are rendered
+- Do not rely on wrapper type before accessing the cell
 
 ---
 
-## Summary
+# Summary
 
 Table modeling in Hyperion is:
 
-- declarative
-- index-first
-- policy-by-ordering
-- extensible without subclassing
+- Declarative
+- Index-first
+- Policy-by-ordering
+- Extensible via custom cell widgets
+- Lazy in resolution
+- Deterministic in materialization
 
 By separating structure from behavior, tables remain reusable even when
 cells contain complex, heterogeneous content.

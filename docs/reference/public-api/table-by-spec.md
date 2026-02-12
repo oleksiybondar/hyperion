@@ -6,28 +6,39 @@
 
 # Component Spec: TableBySpec
 
-`TableBySpec` defines the **declarative specification** for a table component.
+`TableBySpec` defines the **declarative specification** for a `Table` component.
 
 It is a **data-only specification object** used inside Page Objects to describe:
-- how table rows are enumerated
-- how cells are located within each row
-- optional header cell location
-- optional slot policy rules that control how cells are materialized
+
+- how table rows are enumerated  
+- how cells are located within each row  
+- optional header cell location  
+- optional slot policy rules that control how cells are materialized  
+
+`TableBySpec` describes **structure only**.  
+All runtime behavior (row access, cell access, assertions, slot resolution, etc.)
+is implemented by the `Table` component itself.
+
+---
+
+## Design Intent
 
 Table modeling intentionally separates:
-- **structure** (rows and cells locators)
-- **behavior** (cell materialization via slot policy)
 
-This enables reusable tables even when cell content is heterogeneous
+- **Structure** → row and cell locators  
+- **Behavior** → runtime materialization via slot policy  
+- **Interaction** → provided by returned cell wrappers (`Element` / `Widget`)  
+
+This separation enables reusable tables even when cell content is heterogeneous
 (text cells, action panels, editable inputs, composite widgets).
 
 ---
 
-## Public contract
+# Public Contract
 
-### Constructor
+## Constructor
 
-```python
+{codeblock}python
 TableBySpec(
     root: LocatorTree,
     rows: LocatorTree,
@@ -35,93 +46,133 @@ TableBySpec(
     header_cells: Optional[LocatorTree] = None,
     slot_policy: Optional[SlotPolicyType] = None,
 )
-```
+{codeblock}
 
 ---
 
-## Fields
+# Fields
 
-### `root`
+## `root`
 
 **Type:** `LocatorTree`  
 **Required:** yes  
 
 Defines the logical scope of the table.
 
-The consuming component uses `root` as the component anchor and as the default
-resolution scope for rows and header cells.
+The consuming `Table` component uses `root`:
+
+- as the component anchor
+- as the default resolution scope for rows
+- as the default resolution scope for header cells
+
+No element resolution occurs at spec construction time.
 
 ---
 
-### `rows`
+## `rows`
 
 **Type:** `LocatorTree`  
 **Required:** yes  
 
-Defines how to locate the table rows.
+Defines how to locate table rows.
 
-Rows represent the currently rendered rows in the UI. This supports virtualized
-tables implicitly: only rows present in the DOM are modeled.
+Rows represent the **currently rendered rows** in the UI.
+
+Virtualized tables are implicitly supported:
+only rows present in the DOM are modeled at runtime.
 
 ---
 
-### `cells`
+## `cells`
 
 **Type:** `LocatorTree`  
 **Required:** yes  
 
-Defines how to locate the table cells **within a row**.
+Defines how to locate table cells **within a row**.
 
-This locator is purely structural: it identifies the root element of each cell.
-Cell materialization (Element vs Widget) is controlled separately via `slot_policy`.
+This locator is purely structural:
+it identifies the root element of each cell.
+
+Cell materialization (plain `Element` vs specialized `Widget`)
+is controlled separately via `slot_policy`.
 
 ---
 
-### `header_cells`
+## `header_cells`
 
 **Type:** `Optional[LocatorTree]`  
 **Required:** no  
 
 Defines how to locate the table header cells.
 
-When provided, `header_cells` is expected to point **directly to header cell elements**
-(e.g. `thead > td` or equivalent), rather than to a header wrapper.
+When provided:
 
-Header cells may be used by the consuming component to derive column identity or
-index mappings, but are not required for index-based tables.
+- `header_cells` must point **directly to header cell elements**
+  (e.g. `thead > th` or equivalent)
+- The `Table` component may derive column names from header text
+- Key-based slot rules can resolve column names to indices
+- Row-level key access (`row["Status"]`) becomes available
+
+When omitted:
+
+- Column-name-based access is unavailable
+- Key-based slot rules may never match
+- Index-based access remains fully supported
 
 ---
 
-### `slot_policy`
+## `slot_policy`
 
 **Type:** `Optional[SlotPolicyType]`  
 **Required:** no  
 
-Defines an ordered list of slot policy rules controlling how cells are materialized.
+Defines an ordered list of slot policy rules controlling
+how cells are materialized.
 
-Slot policies follow a policy-by-ordering model:
-- rules are evaluated in order
-- the **last matching rule wins**
-- if no rule matches, a cell defaults to a plain `Element`
+Slot policies follow a **policy-by-ordering** model:
 
-Rule kinds are inferred deterministically:
-- `int` selector values represent index rules (supports negative indices, e.g. `-1`)
-- reserved keywords represent predicate rules (e.g. `"ALL"`, `"LAST"`)
-- other strings represent key-based rules (component-defined meaning)
+- Rules are evaluated in order
+- The **last matching rule wins**
+- If no rule matches, the cell defaults to a plain `Element`
 
-EQL rules (Hyperion Element Query Language) must be explicitly declared and are never inferred.
+Slot policies are evaluated at runtime by the `Table` component
+via a `SlotRuleResolver`.
 
 ---
 
-## Intended usage
+# Slot Rule Semantics
 
-`TableBySpec` is used inside Page Object declarations via the `@table` decorator.
+Rule kinds are inferred deterministically:
 
-### Simple table (index-based)
+- `int` → index rule  
+  - Supports negative indices (e.g. `-1` for last column)
+- Reserved keywords → predicate rule  
+  - e.g. `"ALL"`, `"FIRST"`, `"LAST"`
+- Other strings → key-based rule  
+  - Resolved via header name → index mapping
+- Explicit `kind=SlotRuleKind.EQL` → EQL rule  
+  - Expression evaluated against the cell element
 
-```python
+Key-based rules only match when:
+
+- `header_cells` is configured, and
+- the column name can be resolved to an index
+
+If header resolution fails, the rule does not match.
+
+---
+
+# Intended Usage
+
+`TableBySpec` is used inside Page Object declarations
+via the `@table` decorator.
+
+---
+
+## Simple table (index-based)
+
+{codeblock}python
 from hyperiontf import By, table, TableBySpec, WebPage
-
 
 class UsersPage(WebPage):
 
@@ -132,15 +183,16 @@ class UsersPage(WebPage):
             rows=By.css("tr"),
             cells=By.css("td"),
         )
-```
+{codeblock}
+
+All cells materialize as plain `Element` instances.
 
 ---
 
-### Table with header cells (optional)
+## Table with header cells
 
-```python
+{codeblock}python
 from hyperiontf import By, table, TableBySpec, WebPage
-
 
 class UsersPage(WebPage):
 
@@ -148,19 +200,24 @@ class UsersPage(WebPage):
     def users(self) -> TableBySpec:
         return TableBySpec(
             root=By.id("users"),
-            header_cells=By.css("thead td"),
+            header_cells=By.css("thead th"),
             rows=By.css("tbody tr"),
             cells=By.css("td"),
         )
-```
+{codeblock}
+
+This enables:
+
+- `row["ColumnName"]` access
+- Key-based slot rules
 
 ---
 
-### Mixed cell types via slot policy
+## Mixed cell types via slot policy
 
-```python
+{codeblock}python
 from hyperiontf import By, table, TableBySpec, SlotPolicyRule, WebPage
-
+from myproject.widgets import InputCell, ActionsCell
 
 class UsersPage(WebPage):
 
@@ -175,28 +232,37 @@ class UsersPage(WebPage):
                 SlotPolicyRule(-1, ActionsCell),
             ],
         )
-```
+{codeblock}
 
 In this configuration:
-- all cells are materialized as `InputCell`
-- the last column is overridden to `ActionsCell`
-- all matching is deterministic due to policy ordering
+
+- All cells materialize as `InputCell`
+- The last column overrides to `ActionsCell`
+- Matching is deterministic due to rule ordering
 
 ---
 
-## Guarantees and non-goals
+# Runtime Guarantees
 
 Hyperion guarantees:
+
 - `TableBySpec` is treated as a declarative specification
-- no element resolution occurs during Page Object construction
-- the specification is preserved for use by the Table component
+- No element resolution occurs during Page Object construction
+- Slot policy evaluation occurs lazily at runtime
+- Cell wrapper instantiation is cached after first resolution
+
+---
+
+# Non-Goals
 
 `TableBySpec` does **not**:
-- scroll tables
-- wait for virtualized rows to render
-- validate table structure
-- guarantee uniqueness of rows or cells
-- implement selection or cell access APIs
+
+- Scroll tables
+- Trigger rendering of virtualized rows
+- Validate DOM structure
+- Guarantee uniqueness of rows or cells
+- Provide row selection or filtering APIs
+- Perform any assertions
 
 Those responsibilities belong to the **Table component**.
 
