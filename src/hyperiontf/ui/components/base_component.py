@@ -1,7 +1,6 @@
 from hyperiontf.logging.logger import getLogger
 from hyperiontf.ui.widget import Widget
 
-
 logger = getLogger("Component")
 
 
