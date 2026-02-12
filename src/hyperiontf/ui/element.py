@@ -34,6 +34,7 @@ class Element(LocatableElement):
     def __init__(self, parent, locator, name):
         super().__init__(parent, locator, name)
         self._wait_previous_elements_rect: Optional[dict] = None
+        self._logger = logger
 
     def __resolve_eql_chain__(self, chain):
         if not self.__is_present__():
@@ -172,7 +173,7 @@ class Element(LocatableElement):
         Returns:
             str: The value of the specified attribute.
         """
-        text = self.element_adapter.attribute(attr_name).strip()
+        text = (self.element_adapter.attribute(attr_name) or "").strip()
         if log:
             logger.info(
                 f"[{self.__full_name__}] getting element's '{attr_name}' attribute value:\n{text}"

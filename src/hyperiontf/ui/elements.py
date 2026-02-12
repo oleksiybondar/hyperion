@@ -84,6 +84,12 @@ class Elements(LocatableElement):
 
         return None
 
+    def select_all(self, query: str):
+        parsed_query = parse(query)
+        return [
+            element for element in self._elements if evaluate(parsed_query, element)
+        ]
+
     def __iter__(self):
         return iter(self._elements)
 

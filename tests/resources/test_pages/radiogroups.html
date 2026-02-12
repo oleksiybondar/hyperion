@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hyperion Components - RadioGroups</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 24px; }
+    h1 { margin: 0 0 12px; }
+    p { margin: 6px 0 18px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin: 16px 0; }
+    .note { color: #555; font-size: 0.95rem; }
+    code { background: #f6f6f6; padding: 1px 6px; border-radius: 6px; }
+
+    .group { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+    .radio-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: #fafafa; border: 1px solid #eee; }
+    .inline { display: inline-flex; align-items: center; gap: 10px; padding: 6px 0; }
+    .muted { color: #666; font-size: 0.92rem; }
+
+     /* Scenario 4: JS-only radio items (no input/label) */
+    .js-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .js-radio {
+      user-select: none;
+      cursor: pointer;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 2px solid #e5e5e5;
+      background: #f7f7f7;
+      transition: background 120ms ease, border-color 120ms ease;
+    }
+    .js-radio.is-selected {
+      border-color: #3b82f6;
+      background: #e8f1ff;
+  }
+  </style>
+</head>
+
+<body>
+  <h1>RadioGroups (etalon)</h1>
+  <p class="note">
+    This page contains radio group variants for Hyperion component tests:
+    <br/>1) wrapper + separate input/label
+    <br/>2) label wraps input
+    <br/>3) sibling input and label (no item wrapper)
+  </p>
+
+  <!-- ======================================= -->
+  <!-- Scenario 1: wrapper + input/label split -->
+  <!-- ======================================= -->
+  <section class="card" id="section-rg-wrapper">
+    <h2>Scenario 1: Wrapper items</h2>
+    <p class="note">
+      Each item has a wrapper element. Input and label are separate.
+      Labels are bound using <code>for</code>.
+    </p>
+
+    <div class="group" id="rg-wrapper">
+      <div class="radio-item" id="rg-wrapper-item-1">
+        <input id="rgw-a" type="radio" name="rg-wrapper-name" value="Wrapper A" checked />
+        <label for="rgw-a">Wrapper A</label>
+      </div>
+
+      <div class="radio-item" id="rg-wrapper-item-2">
+        <input id="rgw-b" type="radio" name="rg-wrapper-name" value="Wrapper B" />
+        <label for="rgw-b">Wrapper B</label>
+      </div>
+
+      <div class="radio-item" id="rg-wrapper-item-3">
+        <input id="rgw-c" type="radio" name="rg-wrapper-name" value="Wrapper C" />
+        <label for="rgw-c">Wrapper C</label>
+      </div>
+    </div>
+
+    <p class="muted">
+      Suggested modeling: items = wrapper nodes; input = <code>input[type=radio]</code>; label = <code>label</code>
+    </p>
+  </section>
+
+  <!-- =================================== -->
+  <!-- Scenario 2: label wraps input (nest) -->
+  <!-- =================================== -->
+  <section class="card" id="section-rg-nested">
+    <h2>Scenario 2: Label wraps input</h2>
+    <p class="note">
+      The label is the item root and contains the input. Clicking the label toggles the input.
+    </p>
+
+    <div class="group" id="rg-nested">
+      <label class="radio-item" id="rg-nested-item-1">
+        <input id="rgn-a" type="radio" name="rg-nested-name" value="Nested A" checked />
+        Nested A
+      </label>
+
+      <label class="radio-item" id="rg-nested-item-2">
+        <input id="rgn-b" type="radio" name="rg-nested-name" value="Nested B" />
+        Nested B
+      </label>
+
+      <label class="radio-item" id="rg-nested-item-3">
+        <input id="rgn-c" type="radio" name="rg-nested-name" value="Nested C" />
+        Nested C
+      </label>
+    </div>
+
+    <p class="muted">
+      Suggested modeling: items = <code>label</code>; input = <code>input[type=radio]</code>; label may be <code>.</code> (self) if supported.
+    </p>
+  </section>
+
+  <!-- =========================================== -->
+  <!-- Scenario 3: input + label siblings (no item) -->
+  <!-- =========================================== -->
+  <section class="card" id="section-rg-siblings">
+    <h2>Scenario 3: Sibling input and label (no wrapper)</h2>
+    <p class="note">
+      Inputs and labels are siblings. Labels are bound using <code>for</code>.
+      There is no per-item wrapper element.
+    </p>
+
+    <div class="group" id="rg-siblings">
+      <div class="inline">
+        <input id="rgs-a" type="radio" name="rg-siblings-name" value="Sibling A" checked />
+        <label for="rgs-a">Sibling A</label>
+      </div>
+
+      <div class="inline">
+        <input id="rgs-b" type="radio" name="rg-siblings-name" value="Sibling B" />
+        <label for="rgs-b">Sibling B</label>
+      </div>
+
+      <div class="inline">
+        <input id="rgs-c" type="radio" name="rg-siblings-name" value="Sibling C" />
+        <label for="rgs-c">Sibling C</label>
+      </div>
+    </div>
+
+    <p class="muted">
+      Suggested modeling: items = <code>input[type=radio]</code>; input = <code>.</code> (self); label = following-sibling label (XPath) or <code>label[for=...]</code> strategy.
+    </p>
+  </section>
+
+    <!-- =============================================== -->
+  <!-- Scenario 4: JS-only div radios (no inputs at all) -->
+  <!-- =============================================== -->
+  <section class="card" id="section-rg-js-only">
+    <h2>Scenario 4: JS-only radios (div items, style-based selection)</h2>
+    <p class="note">
+      There are no native inputs. Selection is handled entirely by JavaScript and
+      indicated via background/border styling.
+      <br/>
+      For automation, the selected item also exposes <code>data-selected="true"</code>.
+    </p>
+
+    <div class="js-group" id="rg-js-only" role="radiogroup" aria-label="JS Only Group">
+      <div class="js-radio"
+           role="radio"
+           tabindex="0"
+           data-value="JS A"
+           data-selected="false"
+           aria-checked="false"
+           id="rg-js-only-item-1">
+        JS A
+      </div>
+
+      <div class="js-radio"
+           role="radio"
+           tabindex="0"
+           data-value="JS B"
+           data-selected="false"
+           aria-checked="false"
+           id="rg-js-only-item-2">
+        JS B
+      </div>
+
+      <div class="js-radio"
+           role="radio"
+           tabindex="0"
+           data-value="JS C"
+           data-selected="false"
+           aria-checked="false"
+           id="rg-js-only-item-3">
+        JS C
+      </div>
+    </div>
+
+    <p class="muted">
+      Suggested modeling: items = <code>.js-radio</code>; no input/label; checked via
+      <code>checked_expression="attribute:data-selected == true"</code> (or <code>attribute:aria-checked == true</code>)
+    </p>
+  </section>
+
+  <script>
+    (function () {
+      const group = document.getElementById("rg-js-only");
+      if (!group) return;
+
+      const items = Array.from(group.querySelectorAll(".js-radio"));
+
+      function selectItem(target) {
+        items.forEach((el) => {
+          const selected = el === target;
+          el.classList.toggle("is-selected", selected);
+          el.setAttribute("data-selected", selected ? "true" : "false");
+          el.setAttribute("aria-checked", selected ? "true" : "false");
+        });
+      }
+
+      items.forEach((el) => {
+        el.addEventListener("click", () => selectItem(el));
+        el.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            selectItem(el);
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

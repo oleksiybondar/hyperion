@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hyperion Components - Dropdowns</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 24px; }
+    h1 { margin: 0 0 12px; }
+    p { margin: 6px 0 18px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin: 16px 0; }
+    .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .note { color: #555; font-size: 0.95rem; }
+    code { background: #f6f6f6; padding: 1px 6px; border-radius: 6px; }
+
+    .trigger {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #999;
+      background: #f7f7f7;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .selected {
+      display: inline-block;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #f0f3ff;
+      border: 1px solid #c9d2ff;
+      min-width: 220px;
+    }
+
+    .menu {
+      margin-top: 8px;
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background: #fff;
+      min-width: 260px;
+      list-style: none;
+    }
+
+    .menu[hidden] { display: none; }
+
+    .option {
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .option:hover { background: #f2f2f2; }
+
+    /* Portal simulation */
+    #portal-root {
+      position: fixed;
+      inset: 0;
+      pointer-events: none; /* portal container doesn't block page */
+    }
+
+    .portal-menu {
+      pointer-events: auto;
+      position: fixed;
+      right: 24px;
+      top: 24px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Dropdowns (etalon)</h1>
+  <p class="note">
+    This page contains three dropdown variants for Hyperion component tests:
+    <br/>1) native select (baseline HTML control)
+    <br/>2) sibling options (menu is a sibling of trigger)
+    <br/>3) portal options (menu is rendered in a detached container)
+  </p>
+
+  <!-- ========================= -->
+  <!-- Scenario 1: native select  -->
+  <!-- ========================= -->
+  <section class="card" id="section-native-select">
+    <h2>Scenario 1: Native &lt;select&gt;</h2>
+    <p class="note">
+      Standard HTML select control. The browser handles open/close and selection.
+      No scripts are required for this control.
+    </p>
+
+    <div class="row" id="dd-native">
+      <label class="note" for="dd-native-select">Native:</label>
+
+      <select id="dd-native-select" >
+        <option value="Native A">Native A</option>
+        <option value="Native B">Native B</option>
+        <option value="Native C">Native C</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- ============================ -->
+  <!-- Scenario 2: sibling options  -->
+  <!-- ============================ -->
+  <section class="card" id="section-sibling">
+    <h2>Scenario 2: Sibling options</h2>
+    <p class="note">
+      Options menu is a sibling of the trigger element. Relative CSS from trigger
+      would not find options; use sibling XPath or document scope.
+    </p>
+
+    <div class="row" id="dd-sibling">
+      <button id="dd-sibling-trigger" class="trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+        <span id="dd-sibling-label" class="selected">Sibling A</span>
+      </button>
+
+      <ul id="dd-sibling-menu" class="menu" role="listbox" hidden>
+        <li class="option" role="option" data-value="Sibling A">Sibling A</li>
+        <li class="option" role="option" data-value="Sibling B">Sibling B</li>
+        <li class="option" role="option" data-value="Sibling C">Sibling C</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================= -->
+  <!-- Scenario 3: portal / detached -->
+  <!-- ============================= -->
+  <section class="card" id="section-portal">
+    <h2>Scenario 3: Detached options (portal)</h2>
+    <p class="note">
+      Options are rendered in a detached container (<code>#portal-root</code>).
+      Use document-scoped locators (XPath <code>//</code> or <code>.from_document()</code>).
+    </p>
+
+    <div class="row" id="dd-portal">
+      <button id="dd-portal-trigger" class="trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+        <span id="dd-portal-label" class="selected">Portal; selected: Portal A</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Detached container simulating a portal under <body> -->
+  <div id="portal-root" aria-hidden="true">
+    <ul id="dd-portal-menu" class="menu portal-menu" role="listbox" hidden>
+      <li class="option" role="option" data-value="Portal A">Portal A</li>
+      <li class="option" role="option" data-value="Portal B">Portal B</li>
+      <li class="option" role="option" data-value="Portal C">Portal C</li>
+    </ul>
+  </div>
+
+  <script>
+    (function () {
+      const select = document.getElementById("dd-native-select");
+      select.value = "";
+
+      function setExpanded(triggerEl, expanded) {
+        triggerEl.setAttribute("aria-expanded", expanded ? "true" : "false");
+      }
+
+      function openMenu(triggerEl, menuEl) {
+        menuEl.hidden = false;
+        setExpanded(triggerEl, true);
+      }
+
+      function closeMenu(triggerEl, menuEl) {
+        menuEl.hidden = true;
+        setExpanded(triggerEl, false);
+      }
+
+      function toggleMenu(triggerEl, menuEl) {
+        if (menuEl.hidden) openMenu(triggerEl, menuEl);
+        else closeMenu(triggerEl, menuEl);
+      }
+
+      function wireDropdown(opts) {
+        const triggerEl = document.getElementById(opts.triggerId);
+        const labelEl = document.getElementById(opts.labelId);
+        const menuEl = document.getElementById(opts.menuId);
+
+        if (!triggerEl || !labelEl || !menuEl) {
+          throw new Error("Dropdown wiring error: missing element(s).");
+        }
+
+        triggerEl.addEventListener("click", function () {
+          toggleMenu(triggerEl, menuEl);
+        });
+
+        triggerEl.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggleMenu(triggerEl, menuEl);
+          }
+        });
+
+        menuEl.addEventListener("click", function (e) {
+          const optionEl = e.target.closest(".option");
+          if (!optionEl) return;
+
+          const value = optionEl.getAttribute("data-value") || optionEl.textContent || "";
+          labelEl.textContent = opts.labelPrefix + value;
+          closeMenu(triggerEl, menuEl);
+        });
+
+        // Deterministic initial state
+        labelEl.textContent = opts.labelPrefix + opts.initialValue;
+        closeMenu(triggerEl, menuEl);
+      }
+
+      wireDropdown({
+        triggerId: "dd-sibling-trigger",
+        labelId: "dd-sibling-label",
+        menuId: "dd-sibling-menu",
+        labelPrefix: "",
+        initialValue: "Sibling A",
+      });
+
+      wireDropdown({
+        triggerId: "dd-portal-trigger",
+        labelId: "dd-portal-label",
+        menuId: "dd-portal-menu",
+        labelPrefix: "",
+        initialValue: "Portal A",
+      });
+    })();
+  </script>
+</body>
+</html>

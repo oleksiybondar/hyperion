@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hyperion Components - Buttons</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 24px; }
+    h1 { margin: 0 0 12px; }
+    p { margin: 6px 0 18px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin: 16px 0; }
+    .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    button { padding: 10px 14px; border-radius: 8px; border: 1px solid #999; background: #f7f7f7; cursor: pointer; }
+    button:active { transform: translateY(1px); }
+    .label { padding: 8px 10px; border-radius: 8px; background: #f0f3ff; border: 1px solid #c9d2ff; }
+    .note { color: #555; font-size: 0.95rem; }
+    code { background: #f6f6f6; padding: 1px 6px; border-radius: 6px; }
+  </style>
+</head>
+
+<body>
+  <h1>Buttons (etalon)</h1>
+  <p class="note">
+    This page contains two button variants for Hyperion component tests:
+    <br/>1) standard button (text on the clickable element)
+    <br/>2) decoupled label (click target and label are separate elements)
+  </p>
+
+  <!-- ========================= -->
+  <!-- Standard button variant   -->
+  <!-- ========================= -->
+  <section class="card" id="section-standard">
+    <h2>Standard button</h2>
+    <p class="note">
+      Click target and label are the same <code>&lt;button&gt;</code>.
+      Text is updated on each click.
+    </p>
+
+    <div class="row">
+      <button id="btn-standard" type="button">Button 1; clicks 0</button>
+    </div>
+  </section>
+
+  <!-- ========================= -->
+  <!-- Decoupled label variant   -->
+  <!-- ========================= -->
+  <section class="card" id="section-decoupled">
+    <h2>Decoupled label</h2>
+    <p class="note">
+      Click target is an (optionally empty) <code>&lt;button&gt;</code>,
+      while visible text is in a separate label element. This simulates backends
+      where the container’s <code>.text</code> can be empty.
+    </p>
+
+    <div class="row" id="decoupled-container">
+      <!-- Click target -->
+      <button id="btn-decoupled" type="button" aria-labelledby="btn-decoupled-label"></button>
+
+      <!-- Visible label / text source -->
+      <span class="label" id="btn-decoupled-label">Button 2; clicks 0</span>
+    </div>
+  </section>
+
+  <script>
+    (function () {
+      let standardClicks = 0;
+      let decoupledClicks = 0;
+
+      const btnStandard = document.getElementById("btn-standard");
+      const btnDecoupled = document.getElementById("btn-decoupled");
+      const lblDecoupled = document.getElementById("btn-decoupled-label");
+
+      function updateStandard() {
+        btnStandard.textContent = `Button 1; clicks ${standardClicks}`;
+      }
+
+      function updateDecoupled() {
+        lblDecoupled.textContent = `Button 2; clicks ${decoupledClicks}`;
+      }
+
+      btnStandard.addEventListener("click", function () {
+        standardClicks += 1;
+        updateStandard();
+      });
+
+      btnDecoupled.addEventListener("click", function () {
+        decoupledClicks += 1;
+        updateDecoupled();
+      });
+
+      // Ensure deterministic initial state even if browser reuses DOM somehow.
+      updateStandard();
+      updateDecoupled();
+    })();
+  </script>
+</body>
+</html>

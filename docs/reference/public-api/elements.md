@@ -90,6 +90,93 @@ def test_first_row_clickable(results_page):
 
 ---
 
+---
+
+## EQL multi-selection (select all)
+
+`Elements` also supports **EQL-powered multi-selection** via `select_all()`.
+
+- `elements.select_all("<EQL query>") -> list[Element]`
+- the query is evaluated against each item
+- **all matching elements** are returned
+- the result is a **snapshot list**, not a live `Elements` collection
+- if nothing matches, an empty list is returned
+
+This method is useful when multiple items are expected to match a semantic condition.
+
+> `select_all()` performs selection at call time.  
+> The returned list does **not** auto-refresh and does **not** support waits.
+
+---
+
+### select_all(query: str) -> list[Element]
+
+#### Example: select all rows with a given role
+
+```python
+def test_select_all_admins(results_page):
+    results_page.rows.wait_until_found()
+
+    admins = results_page.rows.select_all('text == "Admin"')
+
+    assert len(admins) >= 1
+
+    for admin in admins:
+        admin.assert_visible()
+```
+
+---
+
+#### Example: semantic bulk interaction
+
+```python
+def test_disable_all_active_items(results_page):
+    results_page.rows.wait_until_found()
+
+    active_items = results_page.rows.select_all(
+        'style.color == "rgba(0, 0, 0, 1)"'
+    )
+
+    assert active_items  # explicit test contract
+
+    for item in active_items:
+        item.click()
+
+    results_page.toast.assert_text("Items disabled")
+```
+
+---
+
+### Relationship to __getitem__
+
+`__getitem__` and `select_all()` form a **semantic pair**:
+
+| Operation | API | Result |
+|---|---|---|
+| Select first match | `elements["<EQL>"]` | `Element \| None` |
+| Select all matches | `elements.select_all("<EQL>")` | `list[Element]` |
+
+Use:
+- `__getitem__` when **exactly one logical item** is expected
+- `select_all()` when **multiple items** may match
+
+---
+
+### Design notes
+
+- `select_all()` intentionally returns a **plain list**
+- this avoids ambiguity around:
+  - waits
+  - refresh
+  - retries
+  - collection identity
+- live collection behavior remains the responsibility of `Elements` itself
+
+If synchronization is required, wait on the `Elements` collection **before** calling
+`select_all()`.
+
+---
+
 ## Presence
 
 ### is_present: bool

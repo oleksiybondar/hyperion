@@ -4,7 +4,7 @@
 
 ← [Back to Documentation Index](/docs/index.md)  
 ← Previous: [Elements Query Language (EQL) Recipes](/docs/how-to/eql-recipes.md)  
-→ Next: [WebPage](/docs/reference/public-api/webpage.md)
+→ Next: [Component: RadioGroup](/docs/how-to/radiogroup.md)
 
 ---
 
@@ -250,4 +250,4 @@ If you are debugging selection-heavy tests, also see:
 
 ← [Back to Documentation Index](/docs/index.md)  
 ← Previous: [Elements Query Language (EQL) Recipes](/docs/how-to/eql-recipes.md)  
-→ Next: [WebPage](/docs/reference/public-api/webpage.md)
+→ Next: [Component: RadioGroup](/docs/how-to/radiogroup.md)

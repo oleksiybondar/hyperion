@@ -85,6 +85,12 @@ Task-oriented guides for real-world problems.
 - [4.14 Elements Query Language (EQL) Recipes](/docs/how-to/eql-recipes.md)
 - [4.15 Logging and Reporting](/docs/how-to/logging-and-reports.md)
 
+### Complex reusable UI components (a prebuild widgets)
+
+- [4.16 Radiogroup](/docs/how-to/radiogroup.md)
+- [4.17 DropDown](/docs/how-to/dropdown.md)
+- [4.18 Table](/docs/how-to/table.md)
+
 ---
 
 ## 5. API Reference
@@ -120,6 +126,21 @@ Authoritative reference for Hyperion’s **public API**.
 - [5.18 Configuration](/docs/reference/public-api/configuration.md)
 - [5.19 Exceptions](/docs/reference/public-api/exceptions.md)
 - [5.20 Logger](/docs/reference/public-api/logger.md)
+
+### Components
+
+- [5.21 Button Specification(ButtonBySpec)](/docs/reference/public-api/button-by-spec.md)
+- [5.22 Button](/docs/reference/public-api/button.md)
+- [5.23 Drop down Specification(DropDownBySpec)](/docs/reference/public-api/dropdown-by-spec.md)
+- [5.24 DropDown](/docs/reference/public-api/dropdown.md)
+- [5.25 Radio group Specification(RadioGroupBySpec)](/docs/reference/public-api/radiogeoup-by-spec.md)
+- [5.26 RadioGroup](/docs/reference/public-api/radiogroup.md)
+- [5.27 Table Specification(TableBySpec)](/docs/reference/public-api/table-by-spec.md)
+- [5.28 Table](/docs/reference/public-api/table.md)
+- [5.29 Carousel Specification(CarouselBySpec)](/docs/reference/public-api/carousel-by-spec.md)
+- [5.30 Carousel](/docs/reference/public-api/carousel.md)
+- [5.31 Tabs Specification(TabsBySpec)](/docs/reference/public-api/tabs-by-spec.md)
+- [5.32 Tabs](/docs/reference/public-api/tabs.md)
 
 ---
 
@@ -163,3 +184,6 @@ These chapters describe how Hyperion is built internally and how it behaves at r
 ## License
 
 Hyperion Testing Framework is licensed under the Apache License 2.0.
+
+
+## [Coming next](/docs/to-do.md)

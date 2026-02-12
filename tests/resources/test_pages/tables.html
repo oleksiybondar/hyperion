@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hyperion Components - Tables</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 24px; }
+    h1 { margin: 0 0 12px; }
+    p { margin: 6px 0 18px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin: 16px 0; }
+    .note { color: #555; font-size: 0.95rem; }
+    code { background: #f6f6f6; padding: 1px 6px; border-radius: 6px; }
+
+    /* Standard tables */
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    thead th { background: #f5f5f5; }
+
+    /* Custom tables (div grid) */
+    .ht-table { width: 100%; margin-top: 10px; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; }
+    .ht-header, .ht-row {
+      display: grid;
+      gap: 0;
+      align-items: center;
+    }
+    .ht-header { background: #f5f5f5; font-weight: 600; }
+    .ht-cell {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      border-right: 1px solid #eee;
+    }
+    .ht-header .ht-cell { border-bottom: 1px solid #ddd; }
+    .ht-row:last-child .ht-cell { border-bottom: none; }
+    .ht-cell:last-child { border-right: none; }
+
+    .ht-actions { display: inline-flex; gap: 8px; }
+    .btn {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid #999;
+      background: #f7f7f7;
+      cursor: pointer;
+    }
+    .btn:active { transform: translateY(1px); }
+
+    .icon-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .icon {
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      border-radius: 4px;
+      background: #cfe3ff;
+      border: 1px solid #9fc3ff;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #bbb;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Tables (etalon)</h1>
+  <p class="note">
+    This page contains four table variants for Hyperion table component tests:
+    <br/>1) standard HTML table (no header)
+    <br/>2) standard HTML table (with header)
+    <br/>3) custom div/grid table (editable: first text, middle inputs, last actions)
+    <br/>4) custom div/grid table (mixed: text + icon + keyed input column + actions)
+  </p>
+
+  <!-- ===================================== -->
+  <!-- Table 1: Standard HTML (no header)     -->
+  <!-- ===================================== -->
+  <section class="card" id="section-table-standard-no-header">
+    <h2>Table 1: Standard HTML table (no header)</h2>
+    <p class="note">Pure <code>&lt;table&gt;</code> with <code>&lt;tbody&gt;</code> only.</p>
+
+    <table id="tbl-standard-no-header">
+      <tbody>
+        <tr data-row="0">
+          <td data-col="0">StdNH R1C1</td>
+          <td data-col="1">StdNH R1C2</td>
+          <td data-col="2">StdNH R1C3</td>
+        </tr>
+        <tr data-row="1">
+          <td data-col="0">StdNH R2C1</td>
+          <td data-col="1">StdNH R2C2</td>
+          <td data-col="2">StdNH R2C3</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ===================================== -->
+  <!-- Table 2: Standard HTML (with header)   -->
+  <!-- ===================================== -->
+  <section class="card" id="section-table-standard-with-header">
+    <h2>Table 2: Standard HTML table (with header)</h2>
+    <p class="note">Includes <code>&lt;thead&gt;</code> header cells.</p>
+
+    <table id="tbl-standard-with-header">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-row="0">
+          <td data-col="0">Alice</td>
+          <td data-col="1">Admin</td>
+          <td data-col="2">Active</td>
+        </tr>
+        <tr data-row="1">
+          <td data-col="0">Bob</td>
+          <td data-col="1">Editor</td>
+          <td data-col="2">Pending</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ===================================================== -->
+  <!-- Table 3: Custom div/grid (slot policy: inputs/actions) -->
+  <!-- ===================================================== -->
+  <section class="card" id="section-table-custom-editable">
+    <h2>Table 3: Custom table (editable + actions)</h2>
+    <p class="note">
+      Header present. Slot intent:
+      <br/>- first column is text
+      <br/>- middle columns are inputs
+      <br/>- last column is action buttons
+    </p>
+
+    <div id="tbl-custom-editable" class="ht-table">
+      <div class="ht-header ht-row" style="grid-template-columns: 1.2fr 1fr 1fr 1fr;">
+        <div class="ht-cell" data-col="Name">Name</div>
+        <div class="ht-cell" data-col="Email">Email</div>
+        <div class="ht-cell" data-col="Department">Department</div>
+        <div class="ht-cell" data-col="Actions">Actions</div>
+      </div>
+
+      <div class="ht-row" data-row="0" style="grid-template-columns: 1.2fr 1fr 1fr 1fr;">
+        <div class="ht-cell" data-col="Name">Editable Row1 Name</div>
+        <div class="ht-cell" data-col="Email"><input type="text" value="row1.email@unique.test" /></div>
+        <div class="ht-cell" data-col="Department"><input type="text" value="Dept A" /></div>
+        <div class="ht-cell" data-col="Actions">
+          <div class="ht-actions">
+            <button type="button" class="btn">Edit</button>
+            <button type="button" class="btn">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ht-row" data-row="1" style="grid-template-columns: 1.2fr 1fr 1fr 1fr;">
+        <div class="ht-cell" data-col="Name">Editable Row2 Name</div>
+        <div class="ht-cell" data-col="Email"><input type="text" value="row2.email@unique.test" /></div>
+        <div class="ht-cell" data-col="Department"><input type="text" value="Dept B" /></div>
+        <div class="ht-cell" data-col="Actions">
+          <div class="ht-actions">
+            <button type="button" class="btn">Edit</button>
+            <button type="button" class="btn">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================== -->
+  <!-- Table 4: Custom div/grid (mixed slots + key-based test) -->
+  <!-- ===================================================== -->
+  <section class="card" id="section-table-custom-mixed">
+    <h2>Table 4: Custom table (mixed slots + key-based)</h2>
+    <p class="note">
+      Header present. Slot intent:
+      <br/>- default: text cells
+      <br/>- second column: icon cell
+      <br/>- a middle column with header key <strong>Input Cell</strong>: input cell
+      <br/>- last column: action buttons
+    </p>
+
+    <div id="tbl-custom-mixed" class="ht-table">
+      <div class="ht-header ht-row" style="grid-template-columns: 1.2fr 0.8fr 1fr 1fr 1fr;">
+        <div class="ht-cell" data-col="Title">Title</div>
+        <div class="ht-cell" data-col="Icon">Icon</div>
+        <div class="ht-cell" data-col="Input Cell">Input Cell</div>
+        <div class="ht-cell" data-col="Notes">Notes</div>
+        <div class="ht-cell" data-col="Actions">Actions</div>
+      </div>
+
+      <div class="ht-row" data-row="0" style="grid-template-columns: 1.2fr 0.8fr 1fr 1fr 1fr;">
+        <div class="ht-cell" data-col="Title">Mixed Row1 Title</div>
+        <div class="ht-cell" data-col="Icon">
+          <span class="icon-cell"><span class="icon" aria-hidden="true"></span>Icon A</span>
+        </div>
+        <div class="ht-cell" data-col="Input Cell">
+          <input type="text" value="Input A" />
+        </div>
+        <div class="ht-cell" data-col="Notes">Notes A</div>
+        <div class="ht-cell" data-col="Actions">
+          <div class="ht-actions">
+            <button type="button" class="btn">Open</button>
+            <button type="button" class="btn">Remove</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ht-row" data-row="1" style="grid-template-columns: 1.2fr 0.8fr 1fr 1fr 1fr;">
+        <div class="ht-cell" data-col="Title">Mixed Row2 Title</div>
+        <div class="ht-cell" data-col="Icon">
+          <span class="icon-cell"><span class="icon" aria-hidden="true"></span>Icon B</span>
+        </div>
+        <div class="ht-cell" data-col="Input Cell">
+          <input type="text" value="Input B" />
+        </div>
+        <div class="ht-cell" data-col="Notes">Notes B</div>
+        <div class="ht-cell" data-col="Actions">
+          <div class="ht-actions">
+            <button type="button" class="btn">Open</button>
+            <button type="button" class="btn">Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="note">
+      Hint for locators:
+      <br/>- rows: <code>.ht-row[data-row]</code> (skip the header row)
+      <br/>- cells: <code>.ht-cell</code>
+      <br/>- header_cells: <code>.ht-header .ht-cell</code>
+    </p>
+  </section>
+</body>
+</html>

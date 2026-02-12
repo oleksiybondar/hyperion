@@ -134,7 +134,7 @@ positive = [
     # Segment with attribute type
     # 9
     {
-        "eql": 'metadata:attribute == "1.0.0"',
+        "eql": 'attribute:metadata == "1.0.0"',
         "ast": {
             "type": "comparison",
             "left": {
@@ -169,7 +169,7 @@ positive = [
     # Complex chain with mix of elements and attributes
     # 11
     {
-        "eql": 'person.contacts[1].email.backgroundColor:style == "example@email.com"',
+        "eql": 'person.contacts[1].email.style:backgroundColor == "example@email.com"',
         "ast": {
             "type": "comparison",
             "left": {
