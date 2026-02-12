@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 from hyperiontf.assertions.expectation_result import ExpectationResult
 from hyperiontf.ui.components.slot_rule_resolver import SlotRuleResolver
 from hyperiontf.ui.components.table.row import Row
-from hyperiontf.ui.decorators.page_object_helpers import elements, widget
+from hyperiontf.ui.decorators.page_object_helpers import elements, widgets
 from hyperiontf.ui.components.base_component import BaseComponent
 from hyperiontf.ui.helpers.prepare_expect_object import prepare_expect_object
 
@@ -93,9 +93,9 @@ class Table(BaseComponent):
         List[str]
             Column names in header order. Returns an empty list when header cells are not configured.
         """
-        if self.component_spec.header_cells is not None:
+        if self.component_spec.header_cells is None:
             return []
-        if len(self._column_names) > 0:
+        if len(self._column_names) == 0:
             self._column_names = [header.get_text() for header in self.headers]
         return self._column_names
 
@@ -118,7 +118,7 @@ class Table(BaseComponent):
         except ValueError:
             return None
 
-    @widget(klass=Row)
+    @widgets(klass=Row)
     def rows(self):
         """
         Return the table's rows collection.
@@ -323,7 +323,7 @@ class Table(BaseComponent):
         When headers are configured, the header count is used as the expected cell count.
         Otherwise, the first row cell count is used.
         """
-        if self.component_spec.header_cells is None:
+        if self.component_spec.header_cells is not None:
             return len(self.headers)
         else:
             return len(self.rows[0])

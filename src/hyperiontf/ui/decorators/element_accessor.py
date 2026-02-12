@@ -37,6 +37,7 @@ def _create_element_instance(
     locator: Any,
     name: str,
     is_list: bool,
+    list_klass=Elements,
 ) -> AnyElement:
     """
     Creates and returns an instance of an element based on the given class and other parameters.
@@ -52,7 +53,7 @@ def _create_element_instance(
         klass = klass()
 
     if is_list:
-        return Elements(parent, locator, name, klass)
+        return list_klass(parent, locator, name, klass)
     else:
         return klass(parent, locator, name)
 
@@ -64,6 +65,7 @@ def element_property(
     ] = Element,
     is_list: bool = False,
     is_memorized: bool = True,
+    list_klass=Elements,
 ) -> Union[Callable[[Callable[..., Tuple]], property], property]:
     """
     A parametrized decorator to convert a method into a read-only property returning an instance of an element.
@@ -117,7 +119,7 @@ def element_property(
                 return getattr(parent, inner_name)
 
             element_instance = _create_element_instance(
-                klass, parent, locator, name, is_list
+                klass, parent, locator, name, is_list, list_klass
             )
 
             if is_memorized:

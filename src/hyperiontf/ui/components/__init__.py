@@ -7,8 +7,9 @@ from .table.spec import TableBySpec
 from .button.button import Button
 from .dropdown.dropdown import Dropdown
 from .radiogroup.radigroup import Radiogroup
+from .table.table import Table
 
-from .decorators.page_object_helpers import button, dropdown, radiogroup
+from .decorators.page_object_helpers import button, dropdown, radiogroup, table
 
 __all__ = [
     "SlotPolicyRule",
@@ -22,4 +23,6 @@ __all__ = [
     "button",
     "dropdown",
     "radiogroup",
+    "table",
+    "Table",
 ]

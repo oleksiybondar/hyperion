@@ -31,6 +31,8 @@ from .ui.components import (
     Dropdown,
     radiogroup,
     Radiogroup,
+    table,
+    Table,
 )
 from .cli import CLIClient, SSHClient
 from .logging import getLogger
@@ -81,4 +83,6 @@ __all__ = [
     "Dropdown",
     "radiogroup",
     "Radiogroup",
+    "table",
+    "Table",
 ]

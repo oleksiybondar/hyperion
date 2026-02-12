@@ -1,9 +1,10 @@
 from typing import Type
 
 from hyperiontf.assertions.expectation_result import ExpectationResult
-from hyperiontf.ui.components.decorators.page_object_helpers import slots
+from hyperiontf.ui.components.decorators.slots import slots
 from hyperiontf.ui.helpers.prepare_expect_object import prepare_expect_object
 from hyperiontf.ui.widget import Widget
+from hyperiontf.ui.components.table.cells import Cells
 
 
 class Row(Widget):
@@ -64,7 +65,7 @@ class Row(Widget):
         """Return the table's component specification (TableBySpec)."""
         return self.table.component_spec
 
-    @slots
+    @slots(klass=Cells)
     def cells(self):
         """
         Return the row's cells as a slot-materialized collection.
