@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hyperion Carousel Test Page</title>
+  <style>
+    body { font-family: sans-serif; padding: 16px; }
+    .demo { border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin-bottom: 18px; }
+    .demo h2 { margin: 0 0 10px 0; font-size: 18px; }
+
+    .carousel { display: grid; gap: 10px; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .btn {
+      border: 1px solid #999; border-radius: 6px; padding: 6px 10px; cursor: pointer;
+      background: #fff; user-select: none;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .viewport {
+      border: 1px dashed #bbb; border-radius: 8px; padding: 10px;
+      overflow: hidden;
+      position: relative;
+      background: #fafafa;
+    }
+
+    /* Slides (shared) */
+    .slide {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    /* Convenience state styling only */
+    .slide[data-active="true"] { outline: 2px solid rgba(34, 187, 102, 0.35); border-color: #2b6; }
+    .carousel[data-animating="true"] .viewport { outline: 2px solid rgba(255, 165, 0, 0.35); }
+
+    /* Pagination dots */
+    .dots { display: flex; gap: 6px; flex-wrap: wrap; }
+    .dot {
+      width: 10px; height: 10px; border-radius: 999px;
+      border: 1px solid #999; background: #fff; cursor: pointer;
+    }
+    .dot[data-active="true"] { background: #333; }
+
+    /* Track carousel styles */
+    .track {
+      display: flex;
+      will-change: transform;
+      transition: transform 320ms ease;
+      gap: 10px;
+    }
+
+    /* Drag hint */
+    .drag-hint { font-size: 12px; opacity: 0.75; }
+
+    /* Multi-item card layout */
+    .item-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      background: #fff;
+      min-width: 0;
+    }
+    .item-card[data-selected="true"] { outline: 2px solid rgba(0,0,0,0.2); }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       A) Classic: all slides in DOM, visibility toggle
+       - Prev/Next
+       - Pagination dots
+       - No animation (instant)
+       ============================================================ -->
+  <section class="demo" id="demo-carousel-classic">
+    <h2>Carousel A: classic (visibility toggle + buttons + dots)</h2>
+
+    <div class="carousel" id="carousel-classic" data-animating="false" data-kind="classic">
+      <div class="controls">
+        <button class="btn" type="button" id="carousel-classic-prev">Prev</button>
+        <button class="btn" type="button" id="carousel-classic-next">Next</button>
+        <span class="drag-hint">Active slide is marked with <code>data-active</code> (convenience).</span>
+      </div>
+
+      <div class="viewport" id="carousel-classic-viewport">
+        <div class="slide" id="carousel-classic-slide-0" data-index="0">Classic Slide 1</div>
+        <div class="slide" id="carousel-classic-slide-1" data-index="1" hidden>Classic Slide 2</div>
+        <div class="slide" id="carousel-classic-slide-2" data-index="2" hidden>Classic Slide 3</div>
+        <div class="slide" id="carousel-classic-slide-3" data-index="3" hidden>Classic Slide 4</div>
+      </div>
+
+      <div class="dots" id="carousel-classic-dots" aria-label="pagination">
+        <div class="dot" data-index="0" role="button" tabindex="0"></div>
+        <div class="dot" data-index="1" role="button" tabindex="0"></div>
+        <div class="dot" data-index="2" role="button" tabindex="0"></div>
+        <div class="dot" data-index="3" role="button" tabindex="0"></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       B) Track + transform + animated transitions
+       - All slides in DOM
+       - Movement by translateX
+       - data-animating toggled during motion (transition)
+       ============================================================ -->
+  <section class="demo" id="demo-carousel-animated">
+    <h2>Carousel B: track + transform (animated transitions)</h2>
+
+    <div class="carousel" id="carousel-animated" data-animating="false" data-kind="animated">
+      <div class="controls">
+        <button class="btn" type="button" id="carousel-animated-prev">Prev</button>
+        <button class="btn" type="button" id="carousel-animated-next">Next</button>
+        <button class="btn" type="button" id="carousel-animated-toggle-loop">Loop: OFF</button>
+        <span class="drag-hint">Animation sets <code>data-animating="true"</code> until transitionend.</span>
+      </div>
+
+      <div class="viewport" id="carousel-animated-viewport">
+        <div class="track" id="carousel-animated-track">
+          <div class="slide" data-index="0">Animated Slide 1</div>
+          <div class="slide" data-index="1">Animated Slide 2</div>
+          <div class="slide" data-index="2">Animated Slide 3</div>
+          <div class="slide" data-index="3">Animated Slide 4</div>
+          <div class="slide" data-index="4">Animated Slide 5</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       C) Dynamic slides: add/remove while running
+       - Visibility toggle style for simplicity
+       - Add Slide / Remove Active Slide
+       - Exercises refresh/re-resolve patterns later
+       ============================================================ -->
+  <section class="demo" id="demo-carousel-dynamic">
+    <h2>Carousel C: dynamic slides (add/remove)</h2>
+
+    <div class="carousel" id="carousel-dynamic" data-animating="false" data-kind="dynamic">
+      <div class="controls">
+        <button class="btn" type="button" id="carousel-dynamic-prev">Prev</button>
+        <button class="btn" type="button" id="carousel-dynamic-next">Next</button>
+        <button class="btn" type="button" id="carousel-dynamic-add">Add slide</button>
+        <button class="btn" type="button" id="carousel-dynamic-remove">Remove active</button>
+        <span class="drag-hint">Slides are created/removed at runtime.</span>
+      </div>
+
+      <div class="viewport" id="carousel-dynamic-viewport">
+        <div class="slide" data-index="0">Dynamic Slide 1</div>
+        <div class="slide" data-index="1" hidden>Dynamic Slide 2</div>
+        <div class="slide" data-index="2" hidden>Dynamic Slide 3</div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       D) Gesture-driven: drag/swipe to navigate
+       - Track + transform (no inertia)
+       - Mouse and touch support
+       - Optional buttons still present (can be ignored)
+       ============================================================ -->
+  <section class="demo" id="demo-carousel-gesture">
+    <h2>Carousel D: gesture-driven (drag/swipe) + optional buttons</h2>
+
+    <div class="carousel" id="carousel-gesture" data-animating="false" data-kind="gesture">
+      <div class="controls">
+        <button class="btn" type="button" id="carousel-gesture-prev">Prev</button>
+        <button class="btn" type="button" id="carousel-gesture-next">Next</button>
+        <span class="drag-hint">Drag inside viewport. Threshold triggers prev/next.</span>
+      </div>
+
+      <div class="viewport" id="carousel-gesture-viewport" aria-label="drag area">
+        <div class="track" id="carousel-gesture-track">
+          <div class="slide" data-index="0">Gesture Slide 1</div>
+          <div class="slide" data-index="1">Gesture Slide 2</div>
+          <div class="slide" data-index="2">Gesture Slide 3</div>
+          <div class="slide" data-index="3">Gesture Slide 4</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       E) Multi-item viewport (e.g. 3 visible items)
+       - Track contains item cards, not "slides" as full panels
+       - Next/Prev advances by "page" (visible count)
+       - Selection inside visible window (EQL motivation)
+       ============================================================ -->
+  <section class="demo" id="demo-carousel-multi">
+    <h2>Carousel E: multi-item viewport (3 visible items) + selection challenge</h2>
+
+    <div class="carousel" id="carousel-multi" data-animating="false" data-kind="multi">
+      <div class="controls">
+        <button class="btn" type="button" id="carousel-multi-prev">Prev</button>
+        <button class="btn" type="button" id="carousel-multi-next">Next</button>
+        <button class="btn" type="button" id="carousel-multi-select-target">Select item “Item 8”</button>
+        <span class="drag-hint">
+          Shows 3 items at a time. Selecting by text may require multiple nexts.
+        </span>
+      </div>
+
+      <div class="viewport" id="carousel-multi-viewport">
+        <div class="track" id="carousel-multi-track">
+          <!-- items are uniform cards -->
+          <div class="item-card" data-index="0" data-name="Item 1">Item 1</div>
+          <div class="item-card" data-index="1" data-name="Item 2">Item 2</div>
+          <div class="item-card" data-index="2" data-name="Item 3">Item 3</div>
+          <div class="item-card" data-index="3" data-name="Item 4">Item 4</div>
+          <div class="item-card" data-index="4" data-name="Item 5">Item 5</div>
+          <div class="item-card" data-index="5" data-name="Item 6">Item 6</div>
+          <div class="item-card" data-index="6" data-name="Item 7">Item 7</div>
+          <div class="item-card" data-index="7" data-name="Item 8">Item 8</div>
+          <div class="item-card" data-index="8" data-name="Item 9">Item 9</div>
+          <div class="item-card" data-index="9" data-name="Item 10">Item 10</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <script>
+    (function () {
+      function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+      // ---------- Carousel A (classic toggle) ----------
+      (function initClassic() {
+        var root = document.getElementById("carousel-classic");
+        var viewport = document.getElementById("carousel-classic-viewport");
+        var prev = document.getElementById("carousel-classic-prev");
+        var next = document.getElementById("carousel-classic-next");
+        var dots = Array.prototype.slice.call(document.getElementById("carousel-classic-dots").querySelectorAll(".dot"));
+
+        function slides() {
+          return Array.prototype.slice.call(viewport.querySelectorAll(".slide"));
+        }
+
+        var index = 0;
+
+        function setActive(i) {
+          var all = carousels();
+          if (all.length === 0) return;
+          index = clamp(i, 0, all.length - 1);
+
+          all.forEach(function (s, idx) {
+            if (idx === index) {
+              s.removeAttribute("hidden");
+              s.setAttribute("data-active", "true");
+            } else {
+              s.setAttribute("hidden", "");
+              s.setAttribute("data-active", "false");
+            }
+          });
+
+          dots.forEach(function (d, idx) {
+            d.setAttribute("data-active", idx === index ? "true" : "false");
+            d.setAttribute("aria-current", idx === index ? "true" : "false");
+          });
+
+          prev.disabled = index === 0;
+          next.disabled = index === all.length - 1;
+        }
+
+        prev.addEventListener("click", function () { setActive(index - 1); });
+        next.addEventListener("click", function () { setActive(index + 1); });
+
+        dots.forEach(function (d) {
+          function go() { setActive(Number(d.getAttribute("data-index"))); }
+          d.addEventListener("click", go);
+          d.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); }
+          });
+        });
+
+        setActive(0);
+      })();
+
+
+      // ---------- Carousel B (animated transform) ----------
+      (function initAnimated() {
+        var root = document.getElementById("carousel-animated");
+        var viewport = document.getElementById("carousel-animated-viewport");
+        var track = document.getElementById("carousel-animated-track");
+        var prev = document.getElementById("carousel-animated-prev");
+        var next = document.getElementById("carousel-animated-next");
+        var toggleLoop = document.getElementById("carousel-animated-toggle-loop");
+
+        var loop = false;
+        var index = 0;
+
+        function items() {
+          return Array.prototype.slice.call(track.querySelectorAll(".slide"));
+        }
+
+        function slideWidth() {
+          // Slide width = viewport width (one slide per view) + gap accounted by flex gap (approx)
+          // We will measure the first slide to include its margin/gap.
+          var first = items()[0];
+          if (!first) return viewport.clientWidth;
+          var rect = first.getBoundingClientRect();
+          // Since we use gap, approximate step as rect.width + 10px (gap)
+          return rect.width + 10;
+        }
+
+        function setAnimating(isAnimating) {
+          root.setAttribute("data-animating", isAnimating ? "true" : "false");
+        }
+
+        function markActive() {
+          items().forEach(function (s, idx) {
+            s.setAttribute("data-active", idx === index ? "true" : "false");
+          });
+        }
+
+        function moveTo(i) {
+          var all = items();
+          if (all.length === 0) return;
+
+          var max = all.length - 1;
+          if (loop) {
+            if (i < 0) i = max;
+            if (i > max) i = 0;
+          } else {
+            i = clamp(i, 0, max);
+          }
+
+          index = i;
+          markActive();
+
+          setAnimating(true);
+          var dx = -index * slideWidth();
+          track.style.transform = "translateX(" + dx + "px)";
+
+          // Disable buttons when not looping
+          prev.disabled = !loop && index === 0;
+          next.disabled = !loop && index === max;
+        }
+
+        track.addEventListener("transitionstart", function () { setAnimating(true); });
+        track.addEventListener("transitionend", function () { setAnimating(false); });
+
+        prev.addEventListener("click", function () { moveTo(index - 1); });
+        next.addEventListener("click", function () { moveTo(index + 1); });
+
+        toggleLoop.addEventListener("click", function () {
+          loop = !loop;
+          toggleLoop.textContent = "Loop: " + (loop ? "ON" : "OFF");
+          moveTo(index);
+        });
+
+        // Ensure slide widths are stable after first layout
+        window.addEventListener("resize", function () { moveTo(index); });
+
+        // Init
+        moveTo(0);
+        // Mark active immediately even before first transition end
+        markActive();
+        setAnimating(false);
+      })();
+
+
+      // ---------- Carousel C (dynamic add/remove) ----------
+      (function initDynamic() {
+        var root = document.getElementById("carousel-dynamic");
+        var viewport = document.getElementById("carousel-dynamic-viewport");
+        var prev = document.getElementById("carousel-dynamic-prev");
+        var next = document.getElementById("carousel-dynamic-next");
+        var add = document.getElementById("carousel-dynamic-add");
+        var remove = document.getElementById("carousel-dynamic-remove");
+
+        var index = 0;
+        var counter = 3;
+
+        function slides() {
+          return Array.prototype.slice.call(viewport.querySelectorAll(".slide"));
+        }
+
+        function renumber() {
+          carousels().forEach(function (s, idx) {
+            s.setAttribute("data-index", String(idx));
+          });
+        }
+
+        function setActive(i) {
+          var all = carousels();
+          if (all.length === 0) {
+            index = 0;
+            prev.disabled = true;
+            next.disabled = true;
+            remove.disabled = true;
+            return;
+          }
+
+          index = clamp(i, 0, all.length - 1);
+
+          all.forEach(function (s, idx) {
+            if (idx === index) {
+              s.removeAttribute("hidden");
+              s.setAttribute("data-active", "true");
+            } else {
+              s.setAttribute("hidden", "");
+              s.setAttribute("data-active", "false");
+            }
+          });
+
+          prev.disabled = index === 0;
+          next.disabled = index === all.length - 1;
+          remove.disabled = all.length === 0;
+        }
+
+        prev.addEventListener("click", function () { setActive(index - 1); });
+        next.addEventListener("click", function () { setActive(index + 1); });
+
+        add.addEventListener("click", function () {
+          counter += 1;
+          var s = document.createElement("div");
+          s.className = "slide";
+          s.textContent = "Dynamic Slide " + counter;
+          viewport.appendChild(s);
+          renumber();
+          setActive(index); // keep current selection
+        });
+
+        remove.addEventListener("click", function () {
+          var all = carousels();
+          if (all.length === 0) return;
+          all[index].remove();
+          renumber();
+          setActive(Math.min(index, carousels().length - 1));
+        });
+
+        // Init
+        renumber();
+        setActive(0);
+      })();
+
+
+      // ---------- Carousel D (gesture drag/swipe) ----------
+      (function initGesture() {
+        var root = document.getElementById("carousel-gesture");
+        var viewport = document.getElementById("carousel-gesture-viewport");
+        var track = document.getElementById("carousel-gesture-track");
+        var prev = document.getElementById("carousel-gesture-prev");
+        var next = document.getElementById("carousel-gesture-next");
+
+        var index = 0;
+        var startX = 0;
+        var currentX = 0;
+        var dragging = false;
+        var baseTranslate = 0;
+        var threshold = 60;
+
+        function slides() {
+          return Array.prototype.slice.call(track.querySelectorAll(".slide"));
+        }
+
+        function stepSize() {
+          var first = carousels()[0];
+          if (!first) return viewport.clientWidth;
+          var rect = first.getBoundingClientRect();
+          return rect.width + 10;
+        }
+
+        function setAnimating(isAnimating) {
+          root.setAttribute("data-animating", isAnimating ? "true" : "false");
+        }
+
+        function markActive() {
+          carousels().forEach(function (s, idx) {
+            s.setAttribute("data-active", idx === index ? "true" : "false");
+          });
+        }
+
+        function moveTo(i, animated) {
+          var all = carousels();
+          if (all.length === 0) return;
+
+          index = clamp(i, 0, all.length - 1);
+          markActive();
+
+          if (animated) {
+            track.style.transition = "transform 260ms ease";
+            setAnimating(true);
+          } else {
+            track.style.transition = "none";
+            setAnimating(false);
+          }
+
+          baseTranslate = -index * stepSize();
+          track.style.transform = "translateX(" + baseTranslate + "px)";
+
+          prev.disabled = index === 0;
+          next.disabled = index === all.length - 1;
+        }
+
+        track.addEventListener("transitionend", function () {
+          setAnimating(false);
+        });
+
+        function pointerDown(clientX) {
+          dragging = true;
+          startX = clientX;
+          currentX = clientX;
+          track.style.transition = "none";
+          setAnimating(false);
+        }
+
+        function pointerMove(clientX) {
+          if (!dragging) return;
+          currentX = clientX;
+          var dx = currentX - startX;
+          track.style.transform = "translateX(" + (baseTranslate + dx) + "px)";
+        }
+
+        function pointerUp() {
+          if (!dragging) return;
+          dragging = false;
+          var dx = currentX - startX;
+
+          if (dx > threshold) {
+            moveTo(index - 1, true);
+          } else if (dx < -threshold) {
+            moveTo(index + 1, true);
+          } else {
+            moveTo(index, true);
+          }
+        }
+
+        // Mouse events
+        viewport.addEventListener("mousedown", function (e) { pointerDown(e.clientX); });
+        window.addEventListener("mousemove", function (e) { pointerMove(e.clientX); });
+        window.addEventListener("mouseup", function () { pointerUp(); });
+
+        // Touch events
+        viewport.addEventListener("touchstart", function (e) {
+          if (e.touches.length > 0) pointerDown(e.touches[0].clientX);
+        }, { passive: true });
+
+        viewport.addEventListener("touchmove", function (e) {
+          if (e.touches.length > 0) pointerMove(e.touches[0].clientX);
+        }, { passive: true });
+
+        viewport.addEventListener("touchend", function () { pointerUp(); });
+
+        // Optional buttons
+        prev.addEventListener("click", function () { moveTo(index - 1, true); });
+        next.addEventListener("click", function () { moveTo(index + 1, true); });
+
+        window.addEventListener("resize", function () { moveTo(index, false); });
+
+        moveTo(0, false);
+        markActive();
+      })();
+
+
+      // ---------- Carousel E (multi-item viewport) ----------
+      (function initMulti() {
+        var root = document.getElementById("carousel-multi");
+        var viewport = document.getElementById("carousel-multi-viewport");
+        var track = document.getElementById("carousel-multi-track");
+        var prev = document.getElementById("carousel-multi-prev");
+        var next = document.getElementById("carousel-multi-next");
+        var selectTarget = document.getElementById("carousel-multi-select-target");
+
+        // 3 visible items at a time (page size)
+        var pageSize = 3;
+        var pageIndex = 0;
+
+        function items() {
+          return Array.prototype.slice.call(track.querySelectorAll(".item-card"));
+        }
+
+        function itemStep() {
+          var first = items()[0];
+          if (!first) return 200;
+          var rect = first.getBoundingClientRect();
+          // Add 10px implicit gap like other tracks
+          return rect.width + 10;
+        }
+
+        function maxPage() {
+          var count = items().length;
+          if (count <= pageSize) return 0;
+          return Math.ceil(count / pageSize) - 1;
+        }
+
+        function setAnimating(isAnimating) {
+          root.setAttribute("data-animating", isAnimating ? "true" : "false");
+        }
+
+        function update() {
+          pageIndex = clamp(pageIndex, 0, maxPage());
+
+          track.style.transition = "transform 280ms ease";
+          setAnimating(true);
+
+          var dx = -pageIndex * pageSize * itemStep();
+          track.style.transform = "translateX(" + dx + "px)";
+
+          prev.disabled = pageIndex === 0;
+          next.disabled = pageIndex === maxPage();
+        }
+
+        track.addEventListener("transitionend", function () { setAnimating(false); });
+
+        prev.addEventListener("click", function () {
+          pageIndex -= 1;
+          update();
+        });
+
+        next.addEventListener("click", function () {
+          pageIndex += 1;
+          update();
+        });
+
+        // “Selection challenge”: simulate “find Item 8” by paging until visible, then mark selected.
+        // This exists to drive future select-by-text/EQL logic.
+        selectTarget.addEventListener("click", function () {
+          // Clear previous selections
+          items().forEach(function (it) { it.setAttribute("data-selected", "false"); });
+
+          var targetName = "Item 8";
+          var all = items();
+          var targetIndex = all.findIndex(function (it) { return it.getAttribute("data-name") === targetName; });
+          if (targetIndex < 0) return;
+
+          // Compute the page that contains that item
+          var targetPage = Math.floor(targetIndex / pageSize);
+          pageIndex = targetPage;
+          update();
+
+          // After transition, mark item selected (simple delayed via transitionend event)
+          // NOTE: no setTimeout used; we wait on transitionend deterministically.
+          var onEnd = function () {
+            track.removeEventListener("transitionend", onEnd);
+            var refreshed = items();
+            var t = refreshed.find(function (it) { return it.getAttribute("data-name") === targetName; });
+            if (t) t.setAttribute("data-selected", "true");
+          };
+          track.addEventListener("transitionend", onEnd);
+        });
+
+        window.addEventListener("resize", function () { update(); });
+
+        // Init: ensure items have stable widths by setting fixed flex basis
+        // We keep it simple: cards auto size to viewport / pageSize.
+        function layout() {
+          var w = viewport.clientWidth;
+          var cardWidth = Math.floor((w - (pageSize - 1) * 10) / pageSize);
+          items().forEach(function (it) {
+            it.style.flex = "0 0 " + cardWidth + "px";
+          });
+          track.style.display = "flex";
+          track.style.gap = "10px";
+        }
+
+        layout();
+        update();
+        setAnimating(false);
+      })();
+    })();
+  </script>
+</body>
+</html>
