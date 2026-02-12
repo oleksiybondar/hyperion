@@ -13,6 +13,81 @@ It is important to acknowledge that versions prior to v1.0.0 are considered to b
 
 From its first version, our framework has included a dedicated REST client equipped with extensive, built-in logging features, alongside a UI harness that simplifies page object creation. This harness supports a unified API compatible with Selenium, Appium, and Playwright, ensuring a seamless and efficient testing process.
 
+## [0.7.00] - 2026-02-20
+
+### Added
+
+#### Conceptual Components Architecture
+
+Introduced a unified **component modeling layer** for complex UI structures.
+
+This includes:
+
+- **BaseComponent**  
+  A reusable foundation for higher-level UI components declared via decorators.
+
+- **Spec Objects (BySpec pattern)**  
+  Declarative, data-only specification objects separating structure from behavior.
+
+- **Slots (heterogeneous collections)**  
+  A runtime collection model allowing position-based materialization of different wrapper types.
+
+- **SlotRuleResolver**  
+  Deterministic, policy-by-ordering resolution engine for slot materialization.
+
+- **SlotPolicyRule**  
+  Declarative rule definition supporting:
+  - index-based matching
+  - predicate-based matching (`ALL`, `FIRST`, `LAST`)
+  - key-based matching (header-derived identity)
+  - explicit EQL-based matching
+
+This architecture formalizes the separation of:
+
+- Structure (locators)
+- Runtime behavior (materialization)
+- Interaction (Element/Widget APIs)
+
+---
+
+#### New UI Components
+
+Introduced reusable, spec-driven UI components:
+
+- **Button**
+- **Dropdown**
+- **RadioGroup**
+- **Table**
+
+These components:
+
+- Are declared via decorators (`@button`, `@dropdown`, `@radiogroup`, `@table`)
+- Use corresponding `BySpec` objects for structural modeling
+- Support lazy resolution
+- Follow consistent assertion / verification semantics
+- Support heterogeneous behavior where applicable (via slot policies)
+
+This establishes a consistent component abstraction layer
+for modeling complex, reusable UI widgets across Web, Mobile,
+Desktop, and Hybrid platforms.
+
+### Documentation
+
+- Added full API reference pages for:
+  - Button
+  - Dropdown
+  - RadioGroup
+  - Table
+  - Corresponding `BySpec` objects
+
+- Added modeling how-to guides for:
+  - Dropdown
+  - RadioGroup
+  - Table
+
+- Clarified slot policy resolution semantics
+- Documented key-based column behavior and heterogeneous slot materialization
+
 ## [0.6.23] - 2026-02-06
 
 ### Added
@@ -66,7 +141,6 @@ This feature added because when using Root as application, e.g. connect to deskt
 This is an edge case scenario and needed only when using WinAppDriver directly and the environments where its difficult to manage win app driver, for example remote execution on static environments.
 
 Using WinAppDriver over appium will nto cause the issue, as Appium server manages WinAppDriver instance and terminate it when appium session is ended.
-
 
 ## [0.6.11] - 2024-10-13
 
