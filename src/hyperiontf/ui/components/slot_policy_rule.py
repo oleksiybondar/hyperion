@@ -63,11 +63,9 @@ class SlotPolicyRule:
     ):
         self.value = value
         self.klass = klass
-        self.kind = kind
-        if self.kind is None:
-            self._resolve_kind()
+        self.kind: SlotRuleKindType = kind or self._resolve_kind()
 
-    def _resolve_kind(self) -> None:
+    def _resolve_kind(self) -> SlotRuleKindType:
         """
         Infer the rule kind from the selector value when no explicit kind is provided.
 
@@ -80,12 +78,12 @@ class SlotPolicyRule:
         explicitly declared by the caller.
         """
         if isinstance(self.value, int):
-            self.kind = SlotRuleKind.INDEX
-        else:
-            if self._value_is_predicate():
-                self.kind = SlotRuleKind.PREDICATE
-            else:
-                self.kind = SlotRuleKind.KEY
+            return SlotRuleKind.INDEX
+
+        if self._value_is_predicate():
+            return SlotRuleKind.PREDICATE
+
+        return SlotRuleKind.KEY
 
     def _value_is_predicate(self) -> bool:
         """
