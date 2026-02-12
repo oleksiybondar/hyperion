@@ -1,6 +1,6 @@
 ← [Back to Documentation Index](/docs/index.md)  
 ← Previous: [Component: Dropdown](/docs/how-to/dropdown.md)  
-→ Next: [WebPage](/docs/reference/public-api/webpage.md)
+→ Next: [Component: Carousel](/docs/how-to/carousel.md)
 
 ---
 
@@ -331,4 +331,4 @@ cells contain complex, heterogeneous content.
 
 ← [Back to Documentation Index](/docs/index.md)  
 ← Previous: [Component: Dropdown](/docs/how-to/dropdown.md)  
-→ Next: [WebPage](/docs/reference/public-api/webpage.md)
+→ Next: [Component: Carousel](/docs/how-to/carousel.md)

@@ -3,7 +3,7 @@
 ---
 
 ← [Back to Documentation Index](/docs/index.md)  
-← Previous: [Component: Table](/docs/how-to/table.md)  
+← Previous: [Component: Tabs](/docs/how-to/tabs.md)  
 → Next: [MobileScreen](/docs/reference/public-api/mobilescreen.md)
 
 ---
@@ -215,5 +215,5 @@ class ProductPage(WebPage):
 ---
 
 ← [Back to Documentation Index](/docs/index.md)  
-← Previous: [Component: Table](/docs/how-to/table.md)  
+← Previous: [Component: Tabs](/docs/how-to/tabs.md)  
 → Next: [MobileScreen](/docs/reference/public-api/mobilescreen.md)

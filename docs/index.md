@@ -90,6 +90,8 @@ Task-oriented guides for real-world problems.
 - [4.16 Radiogroup](/docs/how-to/radiogroup.md)
 - [4.17 DropDown](/docs/how-to/dropdown.md)
 - [4.18 Table](/docs/how-to/table.md)
+- [4.19 Carousel](/docs/how-to/carousel.md)
+- [4.20 Tabs](/docs/how-to/tabs.md)
 
 ---
 
