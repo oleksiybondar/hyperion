@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hyperion Tabs Test Page</title>
+  <style>
+    body { font-family: sans-serif; padding: 16px; }
+    .demo { border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin-bottom: 18px; }
+    .demo h2 { margin: 0 0 10px 0; font-size: 18px; }
+
+    .tabs { display: grid; gap: 10px; }
+    .tab-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tab-button {
+      border: 1px solid #999;
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      background: #fff;
+      user-select: none;
+    }
+    /* Convenience highlight only (not required by the concept) */
+    .tab-button[data-active="true"] {
+      border-color: #2b6;
+      outline: 2px solid rgba(34, 187, 102, 0.35);
+    }
+
+    .tab-label { font-weight: 600; }
+
+    .tab-contents { border: 1px dashed #bbb; border-radius: 6px; padding: 10px; }
+    .tab-content { padding: 8px; border-radius: 6px; background: #f8f8f8; }
+    .tab-content[hidden] { display: none; }
+
+    /* Small “table-like” structure to later nest Table inside a panel if desired */
+    table { border-collapse: collapse; width: 100%; background: #fff; }
+    td, th { border: 1px solid #ddd; padding: 6px; text-align: left; }
+    th { background: #f1f1f1; }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       Variant A: 1:1 mapping (buttons.count == contents.count)
+       - Selecting a tab toggles visibility of matching panel by index.
+       - Active state is provided as a convenience attribute.
+       ============================================================ -->
+  <section class="demo" id="demo-tabs-1to1">
+    <h2>Tabs Variant A: 1:1 mapping (visibility toggling)</h2>
+
+    <div class="tabs" id="tabs-1to1">
+      <div class="tab-buttons" id="tabs-1to1-buttons" role="tablist" aria-label="Tabs A">
+        <!-- NOTE: "click target" is .tab-button, label is .tab-label (separable for ButtonBySpec later) -->
+        <div class="tab-button" role="tab" tabindex="0" aria-selected="false" data-tab-index="0" id="tabs-1to1-tab-0">
+          <span class="tab-label">Overview</span>
+        </div>
+        <div class="tab-button" role="tab" tabindex="0" aria-selected="false" data-tab-index="1" id="tabs-1to1-tab-1">
+          <span class="tab-label">Users</span>
+        </div>
+        <div class="tab-button" role="tab" tabindex="0" aria-selected="false" data-tab-index="2" id="tabs-1to1-tab-2">
+          <span class="tab-label">Settings</span>
+        </div>
+      </div>
+
+      <div class="tab-contents" id="tabs-1to1-contents">
+        <div class="tab-content" role="tabpanel" id="tabs-1to1-panel-0" data-tab-index="0">
+          <p><strong>Overview</strong> panel</p>
+          <p>This is a simple content block.</p>
+        </div>
+
+        <div class="tab-content" role="tabpanel" id="tabs-1to1-panel-1" data-tab-index="1" hidden>
+          <p><strong>Users</strong> panel (includes a small table-like structure)</p>
+          <table id="tabs-1to1-users-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Alice</td>
+                <td>Admin</td>
+                <td><button type="button">Edit</button></td>
+              </tr>
+              <tr>
+                <td>Bob</td>
+                <td>User</td>
+                <td><button type="button">Edit</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="tab-content" role="tabpanel" id="tabs-1to1-panel-2" data-tab-index="2" hidden>
+          <p><strong>Settings</strong> panel</p>
+          <label>
+            <span>Language:</span>
+            <select id="tabs-1to1-language">
+              <option>English</option>
+              <option>French</option>
+              <option>Spanish</option>
+            </select>
+          </label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       Variant B: N:1 content container (re-render on selection)
+       - Many buttons, but only one content root.
+       - Clicking a button replaces the inner HTML from templates.
+       ============================================================ -->
+  <section class="demo" id="demo-tabs-rerender">
+    <h2>Tabs Variant B: many buttons → one content (re-render)</h2>
+
+    <div class="tabs" id="tabs-rerender">
+      <div class="tab-buttons" id="tabs-rerender-buttons" role="tablist" aria-label="Tabs B">
+        <div class="tab-button" role="tab" tabindex="0" aria-selected="false" data-tab-key="home" id="tabs-rerender-tab-home">
+          <span class="tab-label">Home</span>
+        </div>
+        <div class="tab-button" role="tab" tabindex="0" aria-selected="false" data-tab-key="profile" id="tabs-rerender-tab-profile">
+          <span class="tab-label">Profile</span>
+        </div>
+        <div class="tab-button" role="tab" tabindex="0" aria-selected="false" data-tab-key="activity" id="tabs-rerender-tab-activity">
+          <span class="tab-label">Activity</span>
+        </div>
+        <div class="tab-button" role="tab" tabindex="0" aria-selected="false" data-tab-key="help" id="tabs-rerender-tab-help">
+          <span class="tab-label">Help</span>
+        </div>
+      </div>
+
+      <div class="tab-contents" id="tabs-rerender-contents">
+        <!-- Single panel always present -->
+        <div class="tab-content" role="tabpanel" id="tabs-rerender-panel">
+          <!-- content inserted by JS -->
+        </div>
+
+        <!-- Templates are kept outside panel for deterministic rerendering -->
+        <template id="tpl-home">
+          <p><strong>Home</strong> (re-rendered)</p>
+          <p>Welcome. This content is replaced on each tab selection.</p>
+        </template>
+
+        <template id="tpl-profile">
+          <p><strong>Profile</strong> (re-rendered)</p>
+          <p>Name: <span id="profile-name">Alice</span></p>
+          <p>Status: <span id="profile-status">Active</span></p>
+        </template>
+
+        <template id="tpl-activity">
+          <p><strong>Activity</strong> (re-rendered)</p>
+          <ul>
+            <li>Logged in</li>
+            <li>Viewed dashboard</li>
+            <li>Updated settings</li>
+          </ul>
+        </template>
+
+        <template id="tpl-help">
+          <p><strong>Help</strong> (re-rendered)</p>
+          <p>Contact: <a href="#" id="help-link">support@example.invalid</a></p>
+        </template>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    (function () {
+      function setActiveButton(buttons, activeButton) {
+        buttons.forEach(function (btn) {
+          var isActive = btn === activeButton;
+          btn.setAttribute("aria-selected", isActive ? "true" : "false");
+          btn.setAttribute("data-active", isActive ? "true" : "false");
+        });
+      }
+
+      // ---------- Variant A (1:1 mapping by index) ----------
+      (function initTabs1to1() {
+        var root = document.getElementById("tabs-1to1");
+        var buttonsContainer = document.getElementById("tabs-1to1-buttons");
+        var contentsContainer = document.getElementById("tabs-1to1-contents");
+
+        var buttons = Array.prototype.slice.call(buttonsContainer.querySelectorAll(".tab-button"));
+        var panels = Array.prototype.slice.call(contentsContainer.querySelectorAll(".tab-content"));
+
+        function selectByIndex(index) {
+          var idx = Number(index);
+          if (Number.isNaN(idx) || idx < 0 || idx >= buttons.length) return;
+
+          setActiveButton(buttons, buttons[idx]);
+
+          panels.forEach(function (p, i) {
+            if (i === idx) {
+              p.removeAttribute("hidden");
+            } else {
+              p.setAttribute("hidden", "");
+            }
+          });
+        }
+
+        buttons.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            selectByIndex(btn.getAttribute("data-tab-index"));
+          });
+          btn.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              selectByIndex(btn.getAttribute("data-tab-index"));
+            }
+          });
+        });
+
+        // Default selection
+        selectByIndex(0);
+      })();
+
+      // ---------- Variant B (many buttons -> one panel, re-render by key) ----------
+      (function initTabsRerender() {
+        var buttonsContainer = document.getElementById("tabs-rerender-buttons");
+        var panel = document.getElementById("tabs-rerender-panel");
+
+        var buttons = Array.prototype.slice.call(buttonsContainer.querySelectorAll(".tab-button"));
+
+        function renderKey(key) {
+          var tpl = document.getElementById("tpl-" + key);
+          if (!tpl) return;
+
+          // Clear and re-render
+          panel.innerHTML = "";
+          panel.appendChild(tpl.content.cloneNode(true));
+        }
+
+        function selectByKey(key, btn) {
+          setActiveButton(buttons, btn);
+          renderKey(key);
+        }
+
+        buttons.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            selectByKey(btn.getAttribute("data-tab-key"), btn);
+          });
+          btn.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              selectByKey(btn.getAttribute("data-tab-key"), btn);
+            }
+          });
+        });
+
+        // Default selection
+        selectByKey("home", buttons[0]);
+      })();
+    })();
+  </script>
+</body>
+</html>
