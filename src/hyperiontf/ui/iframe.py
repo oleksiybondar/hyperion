@@ -12,6 +12,7 @@ logger = getLogger("IFrame")
 class IFrame(LocatableElement):
     def __init__(self, parent, locator, name):
         super().__init__(parent, locator, name)
+        self._logger = logger
         self.viewport_manager = ViewportManager(self, logger)
         auto_decorate_class_methods_with_logging(self, IFrame, logger)
 

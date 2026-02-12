@@ -18,6 +18,7 @@ logger = getLogger(LoggerSource.WEB_VIEW)
 class WebView(LocatableElement):
     def __init__(self, parent, locator, name):
         super().__init__(parent, locator, name)
+        self._logger = logger
         # does not have own, uses parent, at least with Appium, which is currently the only supported
         self._element_adapter = self.root.automation_adapter
         self.viewport_manager = ViewportManager(self, logger)

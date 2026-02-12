@@ -342,3 +342,6 @@ class Radiogroup(BaseComponent):
             self._logger,
         )
         return verify.to_be_less_than_or_equal_to(1)
+
+    def force_refresh(self):
+        self.radio_items.force_refresh()

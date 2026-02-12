@@ -426,3 +426,6 @@ class Dropdown(Button):
         if element_tag in ["select", "input"]:
             return self.get_attribute("value", log=log)
         return self.get_text(log=log)
+
+    def force_refresh(self):
+        self.dropdown_options.force_refresh()

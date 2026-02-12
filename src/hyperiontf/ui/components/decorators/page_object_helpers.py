@@ -2,6 +2,7 @@ from typing import Optional, Callable, Any
 
 from hyperiontf.ui import Element
 from hyperiontf.ui.components.radiogroup.radigroup import Radiogroup
+from hyperiontf.ui.components.table.table import Table
 from hyperiontf.ui.decorators.element_accessor import element_property
 from hyperiontf.ui.components.button.button import Button
 from hyperiontf.ui.components.dropdown.dropdown import Dropdown
@@ -104,3 +105,54 @@ def slots(
         A read-only property resolving to a structured `Slots` collection.
     """
     return element_property(source_function=locator_getter, klass=Element, is_list=True)
+
+
+def table(
+    locator_getter: Optional[Callable] = None,
+) -> Any:
+    """
+    Decorator for declaring a reusable Table component on a Page Object.
+
+    The decorated method must return a ``TableBySpec`` instance that
+    declaratively defines:
+
+    - the table root scope
+    - how rows are located
+    - how cells are located within each row
+    - optional header cell locators
+    - optional slot policy rules for heterogeneous cell materialization
+
+    The decorator transforms the method into a read-only property that
+    returns a lazily constructed :class:`Table` component instance.
+
+    Usage
+    -----
+
+        @table
+        def users(self) -> TableBySpec:
+            return TableBySpec(
+                root=By.id("users"),
+                rows=By.css("tbody tr"),
+                cells=By.css("td"),
+                header_cells=By.css("thead th"),
+            )
+
+    The resulting property:
+
+    - Is resolved lazily on first access
+    - Is scoped to the owning Page Object instance
+    - Preserves the declarative specification without eager element resolution
+    - Enables row/cell navigation, slot-based materialization,
+      and table-level assertions/verification
+
+    Parameters
+    ----------
+    locator_getter:
+        Optional function to decorate when the decorator is used without parentheses.
+
+    Returns
+    -------
+    property
+        A property that returns a :class:`Table` component instance.
+    """
+    return element_property(source_function=locator_getter, klass=Table)
