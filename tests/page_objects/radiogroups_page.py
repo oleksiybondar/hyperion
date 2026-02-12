@@ -99,6 +99,6 @@ class RadioGroupsPage(WebPage):
         """
         return RadioGroupBySpec(
             root=By.id("rg-js-only"),
-            items=By.css("#rg-js-only .js-radio"),
+            items=By.css(".js-radio"),
             checked_expression="attribute:data-selected == 'true'",
         )
