@@ -349,7 +349,7 @@ class Element:
         """
         try:
             # Try real user click first (fail fast)
-            self.element.click(timeout=1000)
+            self.element.click(timeout=3000)
         except TimeoutError as e:
             if "element is not visible" in e.message:
                 tag = self.element.evaluate("element => element.tagName.toLowerCase()")
