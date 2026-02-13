@@ -57,7 +57,7 @@ class TablesPage(WebPage):
             header_cells=By.css(".ht-header .ht-cell"),
             rows=By.css(".ht-row[data-row]"),
             cells=By.css(".ht-cell"),
-            slot_policy=[
+            slot_policies=[
                 SlotPolicyRule("LAST", ActionsCell),
             ],
         )
@@ -76,7 +76,7 @@ class TablesPage(WebPage):
             header_cells=By.css(".ht-header .ht-cell"),
             rows=By.css(".ht-row[data-row]"),
             cells=By.css(".ht-cell"),
-            slot_policy=[
+            slot_policies=[
                 SlotPolicyRule("Icon", IconCell),  # key-based substitution
                 SlotPolicyRule(-1, ActionsCell),  # last column actions
             ],

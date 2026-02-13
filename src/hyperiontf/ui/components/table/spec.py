@@ -65,9 +65,9 @@ class TableBySpec(ComponentSpec):
         rows: LocatorTree,
         cells: LocatorTree,
         header_cells: Optional[LocatorTree] = None,
-        slot_policy: Optional[SlotPolicyType] = None,
+        slot_policies: Optional[SlotPolicyType] = None,
     ):
-        super().__init__(root, slot_policy)
+        super().__init__(root, slot_policies)
         self.rows = rows
         self.cells = cells
         self.header_cells = header_cells

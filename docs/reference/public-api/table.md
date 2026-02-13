@@ -36,7 +36,7 @@ The returned object is a **Cell**, which may be:
 - a plain `Element`
 - or a specialized widget resolved by slot policy
 
-The exact runtime type depends on the configured `slot_policy`.
+The exact runtime type depends on the configured `slot_policies`.
 
 Only **currently rendered rows and cells** are modeled. Virtualized tables
 are supported implicitly: only present DOM/UI nodes are represented.
