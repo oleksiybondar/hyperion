@@ -87,7 +87,7 @@ The `cells` locator:
 - Is purely structural
 
 What a cell *becomes* at runtime (plain `Element` vs custom `Widget`)
-is determined separately via `slot_policy`.
+is determined separately via `slot_policies`.
 
 Cells are:
 
@@ -127,7 +127,7 @@ Some Table behaviors depend on **column position or identity**, for example:
 - “Second column is image”
 - “All cells are inputs except the last one”
 
-Hyperion models this using a **slot policy** (`slot_policy`).
+Hyperion models this using a **slot policy** (`slot_policies`).
 
 A slot policy is:
 
@@ -210,7 +210,7 @@ All cells materialize as plain `Element` instances.
 
 ## Modeling Approach
 
-Keep `cells` purely structural and override materialization via `slot_policy`.
+Keep `cells` purely structural and override materialization via `slot_policies`.
 
 {codeblock}python
 from hyperiontf import SlotPolicyRule, ActionsCell, TableBySpec, By
@@ -219,7 +219,7 @@ TableBySpec(
     root=By.id("users"),
     rows=By.css("tr"),
     cells=By.css("td"),
-    slot_policy=[
+    slot_policies=[
         SlotPolicyRule(-1, ActionsCell),
     ],
 )
@@ -249,7 +249,7 @@ TableBySpec(
     root=By.id("settings"),
     rows=By.css("tr"),
     cells=By.css("td"),
-    slot_policy=[
+    slot_policies=[
         SlotPolicyRule("ALL", InputCell),
         SlotPolicyRule(-1, ActionsCell),
     ],
@@ -305,7 +305,7 @@ The returned object type depends on slot policy resolution.
 
 - Treat Table as a **structural + behavioral composition**
 - Keep `cells` purely about *where* cells are
-- Use `slot_policy` to decide *what* cells become
+- Use `slot_policies` to decide *what* cells become
 - Prefer index-based rules for simplicity
 - Layer simple rules instead of complex logic
 - Do not assume all rows are rendered

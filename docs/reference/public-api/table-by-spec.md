@@ -44,7 +44,7 @@ TableBySpec(
     rows: LocatorTree,
     cells: LocatorTree,
     header_cells: Optional[LocatorTree] = None,
-    slot_policy: Optional[SlotPolicyType] = None,
+    slot_policies: Optional[SlotPolicyType] = None,
 )
 {codeblock}
 
@@ -121,7 +121,7 @@ When omitted:
 
 ---
 
-## `slot_policy`
+## `slot_policies`
 
 **Type:** `Optional[SlotPolicyType]`  
 **Required:** no  
@@ -227,7 +227,7 @@ class UsersPage(WebPage):
             root=By.id("users"),
             rows=By.css("tr"),
             cells=By.css("td"),
-            slot_policy=[
+            slot_policies=[
                 SlotPolicyRule("ALL", InputCell),
                 SlotPolicyRule(-1, ActionsCell),
             ],
