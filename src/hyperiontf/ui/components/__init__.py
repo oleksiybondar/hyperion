@@ -11,9 +11,11 @@ from .radiogroup.radigroup import Radiogroup
 from .table.table import Table
 from .tabs.tabs import Tabs
 
-from .decorators.page_object_helpers import button, dropdown, radiogroup, table
+from .decorators.page_object_helpers import button, dropdown, radiogroup, table, tabs
+from .decorators.components import components
 
 __all__ = [
+    "components",
     "SlotPolicyRule",
     "ButtonBySpec",
     "DropdownBySpec",

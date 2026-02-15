@@ -127,10 +127,11 @@ class Tabs(BaseComponent):
             raise NoSuchElementException(f"There is no tab: {tab_name}")
 
         option.click()
+        self.selected_tab_index = int(getattr(option, "_locator").value)
         if self.has_shared_panel:
+            # Shared panel content is rerendered in-place; refresh collections.
             self.tabs.force_refresh()
-        else:
-            self.selected_tab_index = int(getattr(option, "_locator").value)
+            self.panels.force_refresh()
 
     def _find_tab(self, expression: Union[int, str, re.Pattern]):
         """
@@ -171,7 +172,21 @@ class Tabs(BaseComponent):
         - Per-tab mode returns `panels[selected_tab_index]`.
         """
         if self.use_shared_panel:
-            return self.panels[0]
+            shared_panel = self.panels[0]
+            # In shared-panel mode, panel index is always 0. Resolve slot class
+            # by the currently selected tab index instead.
+            klass = self.slot_resolver.resolve(
+                self.selected_tab_index,
+                shared_panel,
+                len(self.tabs),
+            )
+            if klass is not None:
+                return klass(
+                    self.panels,
+                    getattr(shared_panel, "_locator"),
+                    getattr(shared_panel, "_name", "0"),
+                )
+            return shared_panel
         return self.panels[self.selected_tab_index]
 
     @property
