@@ -1,5 +1,6 @@
 from typing import Optional, Callable, Any
 from hyperiontf.ui.components.radiogroup.radigroup import Radiogroup
+from hyperiontf.ui.components.tabs.tabs import Tabs
 from hyperiontf.ui.decorators.element_accessor import element_property
 from hyperiontf.ui.components.button.button import Button
 from hyperiontf.ui.components.dropdown.dropdown import Dropdown
@@ -122,3 +123,10 @@ def table(
         A property that returns a :class:`Table` component instance.
     """
     return element_property(source_function=locator_getter, klass=Table)
+
+
+def tabs(
+    locator_getter: Optional[Callable] = None,
+) -> Any:
+
+    return element_property(source_function=locator_getter, klass=Tabs)

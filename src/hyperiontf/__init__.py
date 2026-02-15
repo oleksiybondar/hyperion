@@ -25,6 +25,7 @@ from .ui.components import (
     DropdownBySpec,
     TableBySpec,
     RadioGroupBySpec,
+    TabsBySpec,
     button,
     Button,
     dropdown,
@@ -33,6 +34,8 @@ from .ui.components import (
     Radiogroup,
     table,
     Table,
+    tabs,
+    Tabs,
 )
 from .cli import CLIClient, SSHClient
 from .logging import getLogger
@@ -77,6 +80,7 @@ __all__ = [
     "DropdownBySpec",
     "TableBySpec",
     "RadioGroupBySpec",
+    "TabsBySpec",
     "button",
     "Button",
     "dropdown",
@@ -85,4 +89,6 @@ __all__ = [
     "Radiogroup",
     "table",
     "Table",
+    "tabs",
+    "Tabs",
 ]
