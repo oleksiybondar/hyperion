@@ -1,10 +1,12 @@
 import re
+
 from typing import Optional, Union
 
+from hyperiontf.ui.components.button.spec import ButtonBySpec
 from hyperiontf.helpers.regexp import verify_semantic_match
 from hyperiontf.typing import NoSuchElementException
 from hyperiontf.ui.components.button.button import Button
-from hyperiontf.ui.decorators.page_object_helpers import elements
+from hyperiontf.ui.components.decorators.components import components
 from hyperiontf.ui.helpers.prepare_expect_object import prepare_expect_object
 from hyperiontf.ui.components.helpers.make_eql_selector import make_eql_selector
 
@@ -15,7 +17,7 @@ class Dropdown(Button):
 
     Dropdown represents a selectable UI control composed of:
     - a clickable trigger (inherited from Button)
-    - a dynamically rendered collection of option elements
+    - a dynamically rendered collection of option components
 
     The component supports dropdown implementations where options may be
     rendered outside the trigger hierarchy (e.g. overlays, portals, or
@@ -31,23 +33,30 @@ class Dropdown(Button):
     assertion/verification helpers.
     """
 
-    @elements
+    @components(klass=Button)
     def dropdown_options(self):
         """
-        Return the collection of dropdown option elements.
+        Return the collection of dropdown option components.
 
         Options are resolved using the locator defined in the associated
-        DropdownBySpec. The returned collection may represent elements
+        DropdownBySpec. The returned collection may represent components
         rendered outside the trigger hierarchy (e.g. sibling menus, portals).
 
+        Each option is exposed as a `Button` component via
+        `@components(klass=Button)`.
+
         Returns:
-            Elements:
-                Collection representing the currently resolvable options.
+            Components:
+                Collection of Button-like components representing the currently
+                resolvable options.
                 Presence/visibility depends on the dropdown being open and on
                 the UI implementation (some dropdowns render options only
                 while opened).
         """
-        return self.component_spec.options
+        return ButtonBySpec(
+            root=self.component_spec.options,
+            label=self.component_spec.option_label,
+        )
 
     @property
     def are_options_opened(self) -> bool:

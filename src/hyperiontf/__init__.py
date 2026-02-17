@@ -26,18 +26,20 @@ from .ui.components import (
     TableBySpec,
     RadioGroupBySpec,
     TabsBySpec,
-    button,
-    components,
     Button,
-    dropdown,
     Dropdown,
-    radiogroup,
     Radiogroup,
-    table,
     Table,
-    tabs,
     Tabs,
 )
+from .ui.components.decorators.page_object_helpers import (
+    button,
+    dropdown,
+    radiogroup,
+    table,
+    tabs,
+)
+from .ui.components.decorators.components import components
 from .cli import CLIClient, SSHClient
 from .logging import getLogger
 from .assertions import expect, verify

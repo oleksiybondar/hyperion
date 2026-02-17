@@ -12,6 +12,7 @@ It is a **data-only specification object** used inside Page Objects to describe:
 - the dropdown trigger (interaction target)
 - the dropdown options collection
 - optional separation of interaction and identity (label)
+- optional option-level label resolution (`option_label`)
 - the **selected value resolution strategy**
 
 `DropdownBySpec` extends `ButtonBySpec` and therefore supports the same
@@ -30,6 +31,7 @@ DropdownBySpec(
     options: LocatorTree,
     label: Optional[LocatorTree] = None,
     value_attribute: Optional[str] = "AUTO",
+    option_label: Optional[LocatorTree] = None,
 )
 ```
 
@@ -86,6 +88,23 @@ Important characteristics:
 
 This design supports modern UI frameworks that render menus via overlays,
 portals, or document-level containers.
+
+At runtime, options are consumed as `Button` components by Dropdown.
+
+---
+
+### `option_label`
+
+**Type:** `Optional[LocatorTree]`  
+**Required:** no  
+
+Defines where each option's visible text/label should be resolved from.
+
+Use this when:
+- the clickable option container does not expose meaningful text directly
+- option text is rendered by a nested child element
+
+When omitted, option text is resolved from the option root.
 
 ---
 
@@ -177,6 +196,7 @@ class SettingsPage(WebPage):
             root=By.id("language-select"),
             label=By.css(".selected-value"),
             options=By.css(".menu .option"),
+            option_label=By.css(".option-text"),
             value_attribute="text",
         )
 ```
