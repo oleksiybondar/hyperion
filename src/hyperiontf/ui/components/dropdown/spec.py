@@ -9,7 +9,7 @@ class DropdownBySpec(ButtonBySpec):
     Specification object for a Dropdown component.
 
     DropdownBySpec extends ButtonBySpec to model a dropdown as a
-    **clickable trigger with externally resolved options** and a
+    **clickable trigger with externally resolved option components** and a
     **configurable selected-value resolution strategy**.
 
     By inheriting from ButtonBySpec, a dropdown explicitly separates:
@@ -18,7 +18,7 @@ class DropdownBySpec(ButtonBySpec):
 
     In Hyperion terms, a dropdown consists of:
     - a trigger element that opens the dropdown and reflects the current selection
-    - a collection of option elements that may be rendered anywhere in the UI tree
+    - a collection of option components that may be rendered anywhere in the UI tree
     - a selected-value resolution strategy defining how the current value is read
 
     Parameters:
@@ -33,9 +33,10 @@ class DropdownBySpec(ButtonBySpec):
         options:
             Locator tree describing the dropdown options.
 
-            Options are modeled as a flat collection and are not required to be
-            children of the trigger element. They may be rendered as siblings,
-            overlays, portals, or at document scope.
+            Options are modeled as a flat collection of Button-compatible
+            components and are not required to be children of the trigger
+            element. They may be rendered as siblings, overlays, portals, or
+            at document scope.
 
             Resolution scope is fully controlled by the locator definition.
 
@@ -50,6 +51,13 @@ class DropdownBySpec(ButtonBySpec):
 
             When omitted, the trigger element is treated as the label source
             unless overridden by value resolution rules.
+
+        option_label:
+            Optional locator tree describing where each option's label/text
+            should be resolved from.
+
+            This is useful when an option container is clickable, but the
+            human-readable text is rendered by a nested child element.
 
         value_attribute:
             Defines how the selected value should be resolved.
@@ -90,7 +98,9 @@ class DropdownBySpec(ButtonBySpec):
         options: LocatorTree,
         label: Optional[LocatorTree] = None,
         value_attribute: Optional[str] = "AUTO",
+        option_label: Optional[LocatorTree] = None,
     ):
         super().__init__(root, label)
         self.options = options
         self.value_attribute = value_attribute
+        self.option_label = option_label

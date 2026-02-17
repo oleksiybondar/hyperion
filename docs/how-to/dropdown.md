@@ -60,7 +60,7 @@ A **Dropdown** is a logical control with a single trigger.
 
 ### Dropdown options
 
-Dropdown options are modeled as a **flat collection of elements**.
+Dropdown options are modeled as a **flat collection of Button-compatible components**.
 
 - Options do **not** need to be children of the trigger
 - Options may be:
@@ -80,8 +80,9 @@ A Dropdown is declared by returning a `DropdownBySpec` from a Page Object proper
 
 Conceptually:
 - `root` defines the trigger
-- `options` defines how option elements are located
+- `options` defines how option components are located
 - `label` (optional) defines where the selected value text is resolved from
+- `option_label` (optional) defines where each option's text is resolved from
 
 ```python
 from hyperiontf import By, dropdown, DropdownBySpec, WebPage
@@ -119,7 +120,7 @@ Only **structure and locator modeling** are covered here.
 ### Modeling approach
 
 - `root` selects the trigger
-- `options` selects option elements as descendants
+- `options` selects option components as descendants
 
 ```python
 DropdownBySpec(
@@ -259,6 +260,7 @@ Always resolve the selected value using visible text.
 ```python
 DropdownBySpec(
     root=By.id("language-select"),
+    option_label=By.css(".language-option__text"),
     label=By.css(".selected-value"),
     options=By.css(".option"),
     value_attribute="text",
@@ -300,6 +302,7 @@ Dropdown modeling in Hyperion is intentionally explicit:
 - one trigger
 - one flat collection of options
 - optional decoupled label
+- optional decoupled option label
 - explicit selected value resolution strategy
 - no hierarchy assumptions
 
