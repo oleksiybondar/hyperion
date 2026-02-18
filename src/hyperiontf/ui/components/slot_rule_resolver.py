@@ -270,3 +270,13 @@ class SlotRuleResolver:
             return rule.klass
 
         return None
+
+    def register_policy(self, policy: SlotPolicyRule):
+        if policy in self.slot_policies:
+            return
+        self.slot_policies.append(policy)
+
+    def unregister_policy(self, policy: SlotPolicyRule):
+        if policy not in self.slot_policies:
+            return
+        self.slot_policies.remove(policy)
