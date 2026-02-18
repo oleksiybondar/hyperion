@@ -7,8 +7,9 @@ from hyperiontf.ui.components.decorators.components import components
 from hyperiontf.ui.components.helpers.make_eql_selector import make_eql_selector
 from hyperiontf.ui.components.slot_rule_resolver import SlotRuleResolver
 from hyperiontf.ui.components.decorators.slots import slots
-from hyperiontf.ui.components.button.button import Button
-from hyperiontf.ui.components.button.spec import ButtonBySpec
+from hyperiontf.ui.components.tabs.tab_button_spec import TabButtonBySpec
+from hyperiontf.ui.components.tabs.tabs_button import TabButton
+from hyperiontf.ui.components.slot_policy_rule import SlotPolicyRule
 from hyperiontf.ui.helpers.prepare_expect_object import prepare_expect_object
 
 
@@ -55,6 +56,12 @@ class Tabs(BaseComponent):
             self.tab_name_to_index_resolver,
         )
 
+    def register_panel(self, panel_descriptor: SlotPolicyRule):
+        self.slot_resolver.register_policy(panel_descriptor)
+
+    def unregister_panel(self, panel_descriptor: SlotPolicyRule):
+        self.slot_resolver.unregister_policy(panel_descriptor)
+
     @property
     def has_shared_panel(self) -> bool:
         """Return True when this tabs spec uses a single shared panel root."""
@@ -94,15 +101,17 @@ class Tabs(BaseComponent):
         """Return the currently tracked selected tab name."""
         return self.tabs_names[self.selected_tab_index]
 
-    @components(klass=Button)
+    @components(klass=TabButton)
     def tabs(self):
         """
         Return tab headers as a collection of `Button` widgets.
 
         Tab text is resolved using `TabsBySpec.tab_label` when configured.
         """
-        return ButtonBySpec(
-            root=self.component_spec.tabs, label=self.component_spec.tab_label
+        return TabButtonBySpec(
+            root=self.component_spec.tabs,
+            label=self.component_spec.tab_label,
+            close_button=self.component_spec.close_tab_button,
         )
 
     def activate(self, tab_name: Union[str, int, re.Pattern]):
@@ -132,6 +141,30 @@ class Tabs(BaseComponent):
             # Shared panel content is rerendered in-place; refresh collections.
             self.tabs.force_refresh()
             self.panels.force_refresh()
+
+    def close_tab(self, tab_name: Union[str, int, re.Pattern]):
+        """
+        Activate a tab by index, exact text, or regex pattern.
+
+        Parameters:
+            tab_name:
+                Tab selector expression.
+
+        Raises:
+            NoSuchElementException:
+                If no matching tab can be resolved.
+
+        Notes:
+            - For shared-panel layouts, slot collections are force-refreshed.
+            - For per-tab layouts, `selected_tab_index` is updated from the
+              resolved tab locator index.
+        """
+        option = self._find_tab(tab_name)
+        if not option:
+            raise NoSuchElementException(f"There is no tab: {tab_name}")
+
+        option.close_button.click()
+        self.force_refresh()
 
     def _find_tab(self, expression: Union[int, str, re.Pattern]):
         """

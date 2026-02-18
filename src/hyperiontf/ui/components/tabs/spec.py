@@ -63,9 +63,11 @@ class TabsBySpec(ComponentSpec):
         use_shared_panel: bool = False,
         tab_label: Optional[LocatorTree] = None,
         slot_policies: Optional[SlotPolicyType] = None,
+        close_tab_button: Optional[LocatorTree] = None,
     ):
         super().__init__(root, slot_policies)
         self.tabs = tabs
         self.panels = panels
         self.use_shared_panel = use_shared_panel
         self.tab_label = tab_label
+        self.close_tab_button = close_tab_button
