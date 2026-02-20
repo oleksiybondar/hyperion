@@ -15,12 +15,13 @@ It focuses on **component design and Page Object modeling**, not on test design.
 
 ## Core Model
 
-A `Tabs` component is defined by five concepts:
+A `Tabs` component is defined by these concepts:
 
 - `root`: logical scope of the tabs component
 - `tabs`: locator for tab trigger items
 - `panels`: locator for panel root(s)
 - `tab_label` (optional): label source for tab identity/text
+- `close_button` (optional): close action locator on each tab trigger (configured via `close_tab_button=...` in `TabsBySpec`)
 - `slot_policies` (optional): mapping from logical slot to concrete panel widget class
 
 `Tabs.activate(...)` accepts:
@@ -71,6 +72,7 @@ class TabsPage(WebPage):
             tabs=By.css("#tabs-1to1-buttons .tab-button"),
             panels=By.css("#tabs-1to1-contents .tab-content"),
             tab_label=By.css(".tab-label"),
+            close_tab_button=By.css(".tab-close"),
             slot_policies=[
                 SlotPolicyRule(0, OverviewPanel),
                 SlotPolicyRule(1, UsersPanel),
@@ -86,6 +88,7 @@ class TabsPage(WebPage):
             panels=By.css("#tabs-rerender-panel"),
             use_shared_panel=True,
             tab_label=By.css(".tab-label"),
+            close_tab_button=By.css(".tab-close"),
             slot_policies=[
                 SlotPolicyRule(0, HomePanel),
                 SlotPolicyRule(1, ProfilePanel),
@@ -174,6 +177,47 @@ Model your Page Object API around logical slot identity, not raw DOM count.
 
 ---
 
+## Using Tabs As a Tabs Host (Tabbed Workspace)
+
+When tabs are used as a dynamic host (tabbed workspace), tabs may appear/disappear
+at runtime and panel content is replaced externally.
+
+Model selection depends on real DOM behavior:
+
+- Use `use_shared_panel=True` only when all tabs render into one shared panel root.
+- Keep `use_shared_panel=False` when each tab has its own physical panel node.
+- Define expected workspace tabs upfront with key-based slot policies when names are stable.
+- Use tab names as slot keys (`SlotPolicyRule("Tab Name", PanelWidget)`) for readable slot mapping.
+
+If `use_shared_panel=True` is set for a true multi-panel DOM, panel resolution will
+always target `panels[0]` and can break tab-to-panel behavior.
+
+### Refresh caveats for dynamic behavior
+
+- Closing a tab via `tabs.close_tab(...)` already invalidates caches internally.
+- Opening a new tab is usually an external action; call `tabs.force_refresh()` before using new tab/panel data.
+- Dynamic slot policy changes (`register_panel(...)`, `unregister_panel(...)`) require `tabs.force_refresh()` to re-sync tab names and panel slots.
+- These refresh requirements apply to both modes (`use_shared_panel=False` and `use_shared_panel=True`) because tab collections and bindings are cached.
+
+Minimal example:
+
+```python
+workspace_tabs.activate("Users")
+workspace_tabs.close_tab("Users")      # closes and refreshes internally
+
+open_new_workspace_tab("Activity")     # external action
+workspace_tabs.force_refresh()          # required
+workspace_tabs.activate("Activity")
+
+workspace_tabs.register_panel(SlotPolicyRule("Reports", ReportsPanel))
+workspace_tabs.force_refresh()          # required after dynamic slot policy update
+```
+
+If your application creates fully unpredictable tabs, dynamic slot registration
+is supported, but predeclared key-based mappings are still preferred for stability.
+
+---
+
 ## Common Modeling Mistakes
 
 - Treating shared-panel mode as “no slot policy needed”.
@@ -197,4 +241,3 @@ DOM rendering strategy changes.
 ← [Back to Documentation Index](/docs/index.md)  
 ← Previous: [Component: Carousel](/docs/how-to/carousel.md)  
 → Next: [WebPage](/docs/reference/public-api/webpage.md)
-

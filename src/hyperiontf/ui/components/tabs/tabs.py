@@ -17,6 +17,11 @@ class Tabs(BaseComponent):
     """
     Reusable Tabs component with panel-slot materialization.
 
+    ``Tabs`` is intentionally modeled as one component that supports two
+    behavioral use cases:
+    - regular static tabs
+    - dynamic tab-host/tabbed-workspace flows
+
     ``Tabs`` models:
     - a collection of tab buttons (`tabs`)
     - a collection of tab panels (`panels`)

@@ -9,11 +9,19 @@
 `Tabs` is a reusable navigation component that models tab triggers and tab-bound
 content panels.
 
+It is one component with two valid usage intents:
+
+- regular static tabs
+- dynamic tab host / tabbed workspace
+
 It supports two structural modes:
 
 - multi-panel mode (`use_shared_panel=False`): one logical tab maps to one panel node
 - shared-panel mode (`use_shared_panel=True`): one physical panel node is reused,
   while logical content changes by active tab
+
+The selected mode must reflect real DOM structure. Setting shared-panel mode for
+a true multi-panel DOM can force panel resolution through `panels[0]`.
 
 `Tabs` is specification-driven and consumes `TabsBySpec`.
 
@@ -48,6 +56,28 @@ class SettingsPage(WebPage):
 Returns the tabs trigger collection as `Button` components.
 
 Identity/text resolution for each tab trigger uses `tab_label` when configured.
+
+---
+
+### `has_shared_panel -> bool`
+
+Convenience mode check.
+
+Purpose:
+
+- use in client code when behavior should branch by panel model
+- equivalent to `use_shared_panel`, but named for readability
+
+---
+
+### `use_shared_panel -> bool`
+
+Returns the raw mode configured in `TabsBySpec`.
+
+Purpose:
+
+- explicit visibility into panel lookup strategy
+- useful for diagnostics and guard checks in reusable helpers
 
 ---
 
@@ -86,9 +116,65 @@ Behavior:
 - updates `selected_tab_index`
 - in shared-panel mode, refreshes tabs/panels collections after click
 
+When tabs are added externally (outside `activate(...)`/`close_tab(...)`), call
+`force_refresh()` before reading `tabs`, `tabs_names`, `panel`, or `panels`.
+
 Raises:
 
 - `NoSuchElementException` if no matching tab is found
+
+---
+
+### `close_tab(tab_name: Union[str, int, re.Pattern])`
+
+Closes a tab by:
+
+- index (`int`)
+- exact tab name (`str`)
+- regex/pattern (`re.Pattern`)
+
+Behavior:
+
+- resolves target tab
+- clicks tab close control (`close_tab_button` in spec)
+- calls `force_refresh()` to invalidate cached names/bindings
+
+Purpose:
+
+- explicit lifecycle action for dynamic tab-host scenarios
+- keeps cached tab collections consistent after tab removal
+
+Raises:
+
+- `NoSuchElementException` if no matching tab is found
+
+---
+
+### `register_panel(panel_descriptor: SlotPolicyRule)`
+
+Registers a slot policy at runtime.
+
+Purpose:
+
+- add mapping for newly introduced logical tabs/panels in dynamic workspaces
+
+Note:
+
+- call `force_refresh()` after dynamic policy updates to re-sync names and slots
+
+---
+
+### `unregister_panel(panel_descriptor: SlotPolicyRule)`
+
+Unregisters a previously added slot policy at runtime.
+
+Purpose:
+
+- remove obsolete mapping when workspace tab set changes dynamically
+
+Note:
+
+- call `force_refresh()` after dynamic policy updates to re-sync names and slots
 
 ---
 
@@ -122,6 +208,9 @@ State reset:
 
 - cached tab names
 - selected tab index (back to `0`)
+
+Call this after external tab lifecycle changes (for example, opening new tabs via
+other UI actions) and after dynamic slot policy updates.
 
 ---
 
