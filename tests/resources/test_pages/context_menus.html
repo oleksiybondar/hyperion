@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hyperion Components - Context Menus</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 24px; }
+    h1 { margin: 0 0 12px; }
+    h2 { margin: 0 0 10px; font-size: 1.1rem; }
+    p { margin: 6px 0 18px; }
+    .note { color: #555; font-size: 0.95rem; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin: 16px 0; }
+    .label { display: inline-block; padding: 8px 10px; border-radius: 8px; background: #f0f3ff; border: 1px solid #c9d2ff; }
+
+    .panel {
+      position: relative;
+      min-height: 180px;
+      border: 1px dashed #9ca3af;
+      border-radius: 8px;
+      background: #fafafa;
+      padding: 12px;
+      user-select: none;
+    }
+
+    .panel-title { font-weight: 600; margin-bottom: 8px; }
+
+    .menu {
+      position: absolute;
+      margin: 0;
+      padding: 6px;
+      list-style: none;
+      min-width: 210px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
+      z-index: 20;
+    }
+
+    .menu[hidden] { display: none; }
+
+    .menu-item {
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .menu-item:hover { background: #f2f2f2; }
+
+    .split {
+      display: flex;
+      gap: 12px;
+      min-height: 280px;
+    }
+
+    .split-main {
+      flex: 2 1 0;
+      min-width: 0;
+    }
+
+    .split-side {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .panel-c-free {
+      height: 100%;
+      min-height: 220px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #f8fafc;
+      padding: 10px;
+    }
+
+    .nested-panel {
+      position: relative;
+      min-height: 220px;
+      border: 1px solid #94a3b8;
+      border-radius: 8px;
+      background: #f8fafc;
+      padding: 10px;
+    }
+
+    /* Global menu is outside panel B and positioned in viewport space. */
+    #global-menu {
+      position: fixed;
+      z-index: 50;
+    }
+  </style>
+</head>
+<body>
+  <h1>Context Menus (etalon)</h1>
+  <p class="note">
+    This page provides three deterministic context-menu scenarios for component testing.
+    Browser context menu is suppressed for these test hosts.
+  </p>
+
+  <section class="card" id="section-result">
+    <h2>Assertion Label</h2>
+    <p class="note">Use this value in tests after clicking a menu item.</p>
+    <span class="label" id="last-clicked-label">Last clicked: none</span>
+  </section>
+
+  <section class="card" id="section-panel-a">
+    <h2>Panel A: Internal Static Menu</h2>
+    <p class="note">
+      Right-click inside this panel. Menu items are always present in DOM and only hidden/shown.
+    </p>
+
+    <div class="panel" id="panel-a" data-menu-host="panel-a">
+      <div class="panel-title">Panel A host</div>
+      <div>Menu is an internal child of this panel.</div>
+
+      <ul class="menu" id="panel-a-menu" hidden>
+        <li class="menu-item" data-action="A/Open">A: Open</li>
+        <li class="menu-item" data-action="A/Rename">A: Rename</li>
+        <li class="menu-item" data-action="A/Delete">A: Delete</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card" id="section-panel-b">
+    <h2>Panel B: Global Outside Menu</h2>
+    <p class="note">
+      Right-click inside this panel. Menu items are hardcoded but rendered outside panel B.
+    </p>
+
+    <div class="panel" id="panel-b" data-menu-host="panel-b">
+      <div class="panel-title">Panel B host</div>
+      <div>Menu is not a child of panel B.</div>
+    </div>
+  </section>
+
+  <section class="card" id="section-panel-c">
+    <h2>Panel C: Mixed + Nested Hosts</h2>
+    <p class="note">
+      Main area (2/3) uses dynamic create/destroy menu items.
+      Nested area (1/3) has its own static menu.
+    </p>
+
+    <div class="panel" id="panel-c-main" data-menu-host="panel-c-main">
+      <div class="panel-title">Panel C main host (dynamic menu)</div>
+      <div class="note">Right-click in left area to build/remove dynamic menu. Right area is nested host.</div>
+
+      <div class="split" id="panel-c-root">
+        <div class="split-main">
+          <div class="panel-c-free" id="panel-c-free-area">2/3 free invocation area</div>
+        </div>
+
+        <div class="split-side">
+          <div class="nested-panel" id="panel-c-nested" data-menu-host="panel-c-nested">
+            <div class="panel-title">Nested host (static menu)</div>
+            <div>Right-click here for nested context menu.</div>
+
+            <ul class="menu" id="panel-c-nested-menu" hidden>
+              <li class="menu-item" data-action="C-Nested/Inspect">C-Nested: Inspect</li>
+              <li class="menu-item" data-action="C-Nested/Copy">C-Nested: Copy</li>
+              <li class="menu-item" data-action="C-Nested/Close">C-Nested: Close</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Global menu container (outside panel B element subtree) -->
+  <ul class="menu" id="global-menu" hidden>
+    <li class="menu-item" data-action="B/Refresh">B: Refresh</li>
+    <li class="menu-item" data-action="B/Settings">B: Settings</li>
+    <li class="menu-item" data-action="B/Help">B: Help</li>
+  </ul>
+
+  <script>
+    (function () {
+      const panelA = document.getElementById("panel-a");
+      const panelAMenu = document.getElementById("panel-a-menu");
+
+      const panelB = document.getElementById("panel-b");
+      const globalMenu = document.getElementById("global-menu");
+
+      const panelCMain = document.getElementById("panel-c-main");
+      const panelCNested = document.getElementById("panel-c-nested");
+      const panelCNestedMenu = document.getElementById("panel-c-nested-menu");
+
+      const lastClickedLabel = document.getElementById("last-clicked-label");
+
+      let dynamicMenuEl = null;
+      let dynamicBuildCount = 0;
+
+      function setLastClicked(action) {
+        lastClickedLabel.textContent = "Last clicked: " + action;
+      }
+
+      function closeAllMenus() {
+        panelAMenu.hidden = true;
+        globalMenu.hidden = true;
+        panelCNestedMenu.hidden = true;
+
+        if (dynamicMenuEl) {
+          dynamicMenuEl.remove();
+          dynamicMenuEl = null;
+        }
+      }
+
+      function positionAbsoluteWithinHost(menuEl, hostEl, clientX, clientY) {
+        const rect = hostEl.getBoundingClientRect();
+        menuEl.style.left = (clientX - rect.left) + "px";
+        menuEl.style.top = (clientY - rect.top) + "px";
+      }
+
+      function positionFixed(menuEl, clientX, clientY) {
+        menuEl.style.left = clientX + "px";
+        menuEl.style.top = clientY + "px";
+      }
+
+      function openPanelA(clientX, clientY) {
+        closeAllMenus();
+        positionAbsoluteWithinHost(panelAMenu, panelA, clientX, clientY);
+        panelAMenu.hidden = false;
+      }
+
+      function openGlobalB(clientX, clientY) {
+        closeAllMenus();
+        positionFixed(globalMenu, clientX, clientY);
+        globalMenu.hidden = false;
+      }
+
+      function buildAndOpenDynamicMain(clientX, clientY) {
+        closeAllMenus();
+
+        dynamicBuildCount += 1;
+
+        dynamicMenuEl = document.createElement("ul");
+        dynamicMenuEl.className = "menu";
+        dynamicMenuEl.id = "panel-c-main-menu-dynamic";
+
+        const suffix = "#" + dynamicBuildCount;
+        const actions = [
+          "C-Main/Edit " + suffix,
+          "C-Main/Share " + suffix,
+          "C-Main/Archive " + suffix,
+        ];
+
+        actions.forEach(function (action) {
+          const item = document.createElement("li");
+          item.className = "menu-item";
+          item.setAttribute("data-action", action);
+          item.textContent = action;
+          dynamicMenuEl.appendChild(item);
+        });
+
+        panelCMain.appendChild(dynamicMenuEl);
+        positionAbsoluteWithinHost(dynamicMenuEl, panelCMain, clientX, clientY);
+      }
+
+      function openNestedStatic(clientX, clientY) {
+        closeAllMenus();
+        positionAbsoluteWithinHost(panelCNestedMenu, panelCNested, clientX, clientY);
+        panelCNestedMenu.hidden = false;
+      }
+
+      document.addEventListener("contextmenu", function (event) {
+        const target = event.target;
+
+        if (panelCNested.contains(target)) {
+          event.preventDefault();
+          openNestedStatic(event.clientX, event.clientY);
+          return;
+        }
+
+        if (panelCMain.contains(target)) {
+          event.preventDefault();
+          buildAndOpenDynamicMain(event.clientX, event.clientY);
+          return;
+        }
+
+        if (panelA.contains(target)) {
+          event.preventDefault();
+          openPanelA(event.clientX, event.clientY);
+          return;
+        }
+
+        if (panelB.contains(target)) {
+          event.preventDefault();
+          openGlobalB(event.clientX, event.clientY);
+          return;
+        }
+      });
+
+      document.addEventListener("click", function (event) {
+        const item = event.target.closest(".menu-item");
+        if (item) {
+          const action = item.getAttribute("data-action") || item.textContent || "unknown";
+          setLastClicked(action);
+          closeAllMenus();
+          return;
+        }
+
+        closeAllMenus();
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          closeAllMenus();
+        }
+      });
+
+      // Deterministic initial state for tests.
+      setLastClicked("none");
+      closeAllMenus();
+    })();
+  </script>
+</body>
+</html>

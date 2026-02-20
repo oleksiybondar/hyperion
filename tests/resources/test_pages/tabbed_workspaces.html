@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hyperion Components - Tabbed Workspaces</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 24px; }
+    h1 { margin: 0 0 12px; }
+    .note { color: #555; font-size: 0.95rem; margin: 6px 0 18px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 3fr;
+      gap: 14px;
+      min-height: 560px;
+    }
+
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: #fff;
+      padding: 12px;
+    }
+
+    .sidebar-title,
+    .workspace-title {
+      font-weight: 600;
+      margin: 0 0 10px;
+    }
+
+    .sidebar-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-btn {
+      text-align: left;
+      padding: 10px 12px;
+      border: 1px solid #999;
+      border-radius: 8px;
+      background: #f7f7f7;
+      cursor: pointer;
+    }
+
+    .sidebar-btn:hover { background: #efefef; }
+
+    .workspace {
+      display: flex;
+      flex-direction: column;
+      min-height: 530px;
+    }
+
+    .tabs {
+      display: flex;
+      align-items: stretch;
+      gap: 6px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 8px;
+      min-height: 42px;
+    }
+
+    .tabs-empty {
+      color: #666;
+      font-size: 0.95rem;
+      padding: 8px 0;
+    }
+
+    .tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid #b7b7b7;
+      border-radius: 8px;
+      background: #f2f2f2;
+      padding: 6px 8px;
+    }
+
+    .tab.active {
+      background: #e6f0ff;
+      border-color: #89a7e0;
+    }
+
+    .tab-label {
+      border: 0;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .tab-close {
+      border: 1px solid #aaa;
+      border-radius: 6px;
+      background: #fff;
+      line-height: 1;
+      padding: 2px 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .tab-close:hover { background: #f1f1f1; }
+
+    .workspace-area {
+      position: relative;
+      flex: 1;
+      min-height: 420px;
+      padding-top: 10px;
+    }
+
+    .panel {
+      border: 1px dashed #9ca3af;
+      border-radius: 8px;
+      background: #fafafa;
+      padding: 12px;
+      min-height: 380px;
+    }
+
+    .panel[hidden] { display: none; }
+
+    .panel-title {
+      margin: 0 0 10px;
+      font-weight: 600;
+    }
+
+    .meta {
+      margin-top: 12px;
+      color: #444;
+      font-size: 0.95rem;
+    }
+
+    .label {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #f0f3ff;
+      border: 1px solid #c9d2ff;
+    }
+
+    .unique {
+      margin-top: 14px;
+      padding: 8px 10px;
+      border: 1px solid #d3d3d3;
+      border-radius: 8px;
+      background: #fff;
+      width: fit-content;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tabbed Workspaces (etalon)</h1>
+  <p class="note">
+    Sidebar buttons upsert and activate tabs in workspace. Tabs can be closed.
+    Closing active tab selects previous index when possible, otherwise first tab.
+  </p>
+
+  <div class="layout" id="workspace-layout">
+    <section class="card" id="sidebar">
+      <div class="sidebar-title">Sidebar (1/4)</div>
+      <div class="sidebar-buttons">
+        <button type="button" class="sidebar-btn" data-panel-id="panel-files">Open Files Panel</button>
+        <button type="button" class="sidebar-btn" data-panel-id="panel-search">Open Search Panel</button>
+        <button type="button" class="sidebar-btn" data-panel-id="panel-terminal">Open Terminal Panel</button>
+        <button type="button" class="sidebar-btn" data-panel-id="panel-git">Open Git Panel</button>
+      </div>
+    </section>
+
+    <section class="card workspace" id="workspace">
+      <div class="workspace-title">Workspace (3/4)</div>
+      <div class="tabs" id="workspace-tabs" aria-label="Workspace tabs"></div>
+      <div class="workspace-area" id="workspace-area"></div>
+      <div class="label" id="workspace-last-action">Last action: none</div>
+    </section>
+  </div>
+
+  <template id="tpl-panel-files">
+    <section class="panel" id="panel-files" data-panel-key="files" hidden>
+      <h2 class="panel-title">Files Panel</h2>
+      <div class="meta">Project files explorer style content.</div>
+      <div class="unique" id="unique-files-tree-root">Unique element: files tree root</div>
+    </section>
+  </template>
+
+  <template id="tpl-panel-search">
+    <section class="panel" id="panel-search" data-panel-key="search" hidden>
+      <h2 class="panel-title">Search Panel</h2>
+      <div class="meta">Search workspace content.</div>
+      <div class="unique" id="unique-search-query-input">Unique element: search query input marker</div>
+    </section>
+  </template>
+
+  <template id="tpl-panel-terminal">
+    <section class="panel" id="panel-terminal" data-panel-key="terminal" hidden>
+      <h2 class="panel-title">Terminal Panel</h2>
+      <div class="meta">Terminal session view.</div>
+      <div class="unique" id="unique-terminal-session-output">Unique element: terminal session output</div>
+    </section>
+  </template>
+
+  <template id="tpl-panel-git">
+    <section class="panel" id="panel-git" data-panel-key="git" hidden>
+      <h2 class="panel-title">Git Panel</h2>
+      <div class="meta">Source control status and actions.</div>
+      <div class="unique" id="unique-git-commit-stage">Unique element: git commit stage</div>
+    </section>
+  </template>
+
+  <script>
+    (function () {
+      const tabsEl = document.getElementById("workspace-tabs");
+      const areaEl = document.getElementById("workspace-area");
+      const lastActionEl = document.getElementById("workspace-last-action");
+      const sidebarButtons = Array.from(document.querySelectorAll(".sidebar-btn"));
+
+      const panelDefinitions = {
+        "panel-files": { title: "Files", templateId: "tpl-panel-files" },
+        "panel-search": { title: "Search", templateId: "tpl-panel-search" },
+        "panel-terminal": { title: "Terminal", templateId: "tpl-panel-terminal" },
+        "panel-git": { title: "Git", templateId: "tpl-panel-git" }
+      };
+
+      const openTabs = [];
+      let activePanelId = null;
+
+      function setLastAction(value) {
+        lastActionEl.textContent = "Last action: " + value;
+      }
+
+      function getTabIndex(panelId) {
+        return openTabs.indexOf(panelId);
+      }
+
+      function ensurePanelMounted(panelId) {
+        if (areaEl.querySelector("#" + panelId)) return;
+        const definition = panelDefinitions[panelId];
+        const tpl = document.getElementById(definition.templateId);
+        const node = tpl.content.firstElementChild.cloneNode(true);
+        areaEl.appendChild(node);
+      }
+
+      function removePanel(panelId) {
+        const panelEl = areaEl.querySelector("#" + panelId);
+        if (panelEl) panelEl.remove();
+      }
+
+      function renderTabs() {
+        tabsEl.innerHTML = "";
+
+        if (openTabs.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "tabs-empty";
+          empty.id = "workspace-tabs-empty";
+          empty.textContent = "No tabs open.";
+          tabsEl.appendChild(empty);
+          return;
+        }
+
+        openTabs.forEach(function (panelId) {
+          const tab = document.createElement("div");
+          tab.className = "tab" + (panelId === activePanelId ? " active" : "");
+          tab.setAttribute("data-panel-id", panelId);
+
+          const labelBtn = document.createElement("button");
+          labelBtn.type = "button";
+          labelBtn.className = "tab-label";
+          labelBtn.setAttribute("data-tab-activate", panelId);
+          labelBtn.textContent = panelDefinitions[panelId].title;
+
+          const closeBtn = document.createElement("button");
+          closeBtn.type = "button";
+          closeBtn.className = "tab-close";
+          closeBtn.setAttribute("aria-label", "Close " + panelDefinitions[panelId].title + " tab");
+          closeBtn.setAttribute("data-tab-close", panelId);
+          closeBtn.textContent = "x";
+
+          tab.appendChild(labelBtn);
+          tab.appendChild(closeBtn);
+          tabsEl.appendChild(tab);
+        });
+      }
+
+      function renderPanels() {
+        const panels = Array.from(areaEl.querySelectorAll(".panel"));
+        panels.forEach(function (panel) {
+          panel.hidden = panel.id !== activePanelId;
+        });
+      }
+
+      function activatePanel(panelId) {
+        activePanelId = panelId;
+        renderTabs();
+        renderPanels();
+        setLastAction("activate " + panelId);
+      }
+
+      function upsertAndActivate(panelId) {
+        const exists = getTabIndex(panelId) !== -1;
+        if (!exists) {
+          openTabs.push(panelId);
+          ensurePanelMounted(panelId);
+          setLastAction("create " + panelId);
+        }
+        activatePanel(panelId);
+      }
+
+      function closeTab(panelId) {
+        const closingIndex = getTabIndex(panelId);
+        if (closingIndex === -1) return;
+
+        const wasActive = activePanelId === panelId;
+        openTabs.splice(closingIndex, 1);
+        removePanel(panelId);
+
+        if (openTabs.length === 0) {
+          activePanelId = null;
+          renderTabs();
+          renderPanels();
+          setLastAction("close " + panelId);
+          return;
+        }
+
+        if (wasActive) {
+          const nextActiveIndex = closingIndex - 1 >= 0 ? closingIndex - 1 : 0;
+          activePanelId = openTabs[nextActiveIndex];
+        }
+
+        renderTabs();
+        renderPanels();
+        setLastAction("close " + panelId);
+      }
+
+      sidebarButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          const panelId = button.getAttribute("data-panel-id");
+          upsertAndActivate(panelId);
+        });
+      });
+
+      tabsEl.addEventListener("click", function (event) {
+        const activateBtn = event.target.closest("[data-tab-activate]");
+        if (activateBtn) {
+          const panelId = activateBtn.getAttribute("data-tab-activate");
+          activatePanel(panelId);
+          return;
+        }
+
+        const closeBtn = event.target.closest("[data-tab-close]");
+        if (closeBtn) {
+          const panelId = closeBtn.getAttribute("data-tab-close");
+          closeTab(panelId);
+        }
+      });
+
+      // Deterministic initial state.
+      renderTabs();
+      renderPanels();
+      setLastAction("none");
+    })();
+  </script>
+</body>
+</html>
