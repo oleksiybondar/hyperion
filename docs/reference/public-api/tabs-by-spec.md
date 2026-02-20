@@ -14,6 +14,7 @@ It is a data-only object used inside Page Objects to describe:
 - tab trigger collection (`tabs`)
 - panel root collection (`panels`)
 - optional tab label source (`tab_label`)
+- optional tab close-button source (`close_tab_button`)
 - panel lookup mode (`use_shared_panel`)
 - optional slot materialization rules (`slot_policies`)
 
@@ -33,6 +34,7 @@ TabsBySpec(
     use_shared_panel: bool = False,
     tab_label: Optional[LocatorTree] = None,
     slot_policies: Optional[SlotPolicyType] = None,
+    close_tab_button: Optional[LocatorTree] = None,
 )
 ```
 
@@ -86,7 +88,13 @@ Controls active panel lookup mode:
 - `True`: physical root may stay `panels[0]`, while logical panel slot follows
   selected tab
 
-Use `True` for re-render-in-place tab UIs.
+Set this to match actual DOM structure:
+
+- use `True` only when tabs render into one shared panel container
+- keep `False` when separate panel nodes exist for each tab
+
+Using `True` with a real multi-panel DOM can route panel resolution through
+`panels[0]` and break expected behavior.
 
 ---
 
@@ -100,6 +108,17 @@ Optional label locator relative to each tab trigger.
 Use this when clickable tab root and visible text source are different nodes.
 
 This also improves reliability for key-based slot policies using tab names.
+
+---
+
+### `close_tab_button`
+
+**Type:** `Optional[LocatorTree]`  
+**Required:** no  
+
+Optional locator for the close control relative to each tab trigger.
+
+When provided, runtime can close tabs via `tabs.close_tab(...)`.
 
 ---
 
