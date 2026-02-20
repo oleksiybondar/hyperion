@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hyperion Components - Menus</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --surface: #ffffff;
+      --border: #d8dde8;
+      --text: #1f2937;
+      --muted: #5b6475;
+      --accent: #2563eb;
+      --hover: #eff4ff;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .appbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .toolbar {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .brand {
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .nav-left,
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-btn {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .nav-btn:hover,
+    .menu-link:hover {
+      background: var(--hover);
+    }
+
+    .menu {
+      position: absolute;
+      margin: 0;
+      padding: 6px;
+      list-style: none;
+      min-width: 220px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      box-shadow: 0 10px 24px rgba(18, 33, 60, 0.15);
+      z-index: 60;
+    }
+
+    .menu[hidden] { display: none; }
+
+    .menu-item {
+      position: relative;
+      border-radius: 8px;
+    }
+
+    .menu-link,
+    .submenu-trigger {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      text-decoration: none;
+      font: inherit;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+      display: block;
+      padding: 8px 10px;
+    }
+
+    .submenu-trigger::after {
+      content: ">";
+      position: absolute;
+      right: 10px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .menu-divider {
+      border-top: 1px solid var(--border);
+      margin: 4px 2px;
+    }
+
+    .content {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      padding: 16px;
+    }
+
+    .note { color: var(--muted); }
+
+    .label {
+      display: inline-block;
+      margin-top: 10px;
+      border: 1px solid #bfd0ff;
+      background: #e9efff;
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: #1e3a8a;
+    }
+  </style>
+</head>
+<body>
+  <header class="appbar" id="menu-appbar">
+    <div class="toolbar" id="menu-toolbar">
+      <div class="nav-left">
+        <span class="brand" id="menu-brand">Hyperion</span>
+
+        <button
+          id="nav-products-trigger"
+          class="nav-btn"
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          aria-controls="nav-products-menu"
+        >
+          Products
+        </button>
+
+        <button
+          id="nav-docs-trigger"
+          class="nav-btn"
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          aria-controls="nav-docs-menu"
+        >
+          Docs
+        </button>
+
+        <a
+          id="nav-pricing-link"
+          class="nav-btn"
+          href="/pricing"
+          onclick="return onNavPath(event, '/pricing')"
+        >Pricing</a>
+      </div>
+
+      <div class="nav-right">
+        <button
+          id="user-menu-trigger"
+          class="nav-btn"
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          aria-controls="user-menu"
+        >
+          User
+        </button>
+      </div>
+    </div>
+
+    <!-- Single-level menu -->
+    <ul class="menu" id="nav-docs-menu" role="menu" hidden>
+      <li class="menu-item" role="none">
+        <a class="menu-link" role="menuitem" href="/docs/getting-started" onclick="return onNavPath(event, '/docs/getting-started')">Getting Started</a>
+      </li>
+      <li class="menu-item" role="none">
+        <a class="menu-link" role="menuitem" href="/docs/api" onclick="return onNavPath(event, '/docs/api')">API Reference</a>
+      </li>
+      <li class="menu-item" role="none">
+        <a class="menu-link" role="menuitem" href="/docs/changelog" onclick="return onNavPath(event, '/docs/changelog')">Changelog</a>
+      </li>
+    </ul>
+
+    <!-- Multi-level menu -->
+    <ul class="menu" id="nav-products-menu" role="menu" hidden>
+      <li class="menu-item" role="none">
+        <a class="menu-link" role="menuitem" href="/products/overview" onclick="return onNavPath(event, '/products/overview')">Overview</a>
+      </li>
+      <li class="menu-item" role="none">
+        <button
+          id="products-platform-trigger"
+          class="submenu-trigger"
+          type="button"
+          role="menuitem"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          aria-controls="products-platform-menu"
+        >
+          Platform
+        </button>
+      </li>
+      <li class="menu-item" role="none">
+        <a class="menu-link" role="menuitem" href="/products/pricing" onclick="return onNavPath(event, '/products/pricing')">Product Pricing</a>
+      </li>
+    </ul>
+
+    <ul class="menu" id="products-platform-menu" role="menu" hidden>
+      <li class="menu-item" role="none">
+        <a class="menu-link" role="menuitem" href="/products/platform/web" onclick="return onNavPath(event, '/products/platform/web')">Web</a>
+      </li>
+      <li class="menu-item" role="none">
+        <button
+          id="products-platform-api-trigger"
+          class="submenu-trigger"
+          type="button"
+          role="menuitem"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          aria-controls="products-platform-api-menu"
+        >
+          API
+        </button>
+      </li>
+      <li class="menu-item" role="none">
+        <a class="menu-link" role="menuitem" href="/products/platform/mobile" onclick="return onNavPath(event, '/products/platform/mobile')">Mobile</a>
+      </li>
+    </ul>
+
+    <ul class="menu" id="products-platform-api-menu" role="menu" hidden>
+      <li class="menu-item" role="none">
+        <a class="menu-link" role="menuitem" href="/products/platform/api/public" onclick="return onNavPath(event, '/products/platform/api/public')">Public API</a>
+      </li>
+      <li class="menu-item" role="none">
+        <a class="menu-link" role="menuitem" href="/products/platform/api/admin" onclick="return onNavPath(event, '/products/platform/api/admin')">Admin API</a>
+      </li>
+    </ul>
+
+    <!-- User actions menu -->
+    <ul class="menu" id="user-menu" role="menu" hidden>
+      <li class="menu-item" role="none">
+        <a class="menu-link" role="menuitem" href="/user/profile" onclick="return onNavPath(event, '/user/profile')">Profile</a>
+      </li>
+      <li class="menu-item" role="none">
+        <a class="menu-link" role="menuitem" href="/user/settings" onclick="return onNavPath(event, '/user/settings')">Settings</a>
+      </li>
+      <li class="menu-divider" aria-hidden="true"></li>
+      <li class="menu-item" role="none">
+        <a class="menu-link" role="menuitem" href="/logout" onclick="return onNavPath(event, '/logout')">Sign Out</a>
+      </li>
+    </ul>
+  </header>
+
+  <main class="content">
+    <section class="card">
+      <h1>Menus (etalon)</h1>
+      <p class="note">
+        Test page for single-level and multilevel navigation menus plus user actions menu.
+        All links prevent default navigation and update current URI label.
+      </p>
+      <span class="label" id="current-uri-label">Current URI: /</span>
+    </section>
+  </main>
+
+  <script>
+    function onNavPath(event, path) {
+      event.preventDefault();
+      var label = document.getElementById("current-uri-label");
+      label.textContent = "Current URI: " + path;
+      closeAllMenus();
+      return false;
+    }
+
+    (function () {
+      var productsTrigger = document.getElementById("nav-products-trigger");
+      var docsTrigger = document.getElementById("nav-docs-trigger");
+      var userTrigger = document.getElementById("user-menu-trigger");
+      var platformTrigger = document.getElementById("products-platform-trigger");
+      var platformApiTrigger = document.getElementById("products-platform-api-trigger");
+
+      var productsMenu = document.getElementById("nav-products-menu");
+      var docsMenu = document.getElementById("nav-docs-menu");
+      var userMenu = document.getElementById("user-menu");
+      var platformMenu = document.getElementById("products-platform-menu");
+      var platformApiMenu = document.getElementById("products-platform-api-menu");
+
+      function setExpanded(trigger, expanded) {
+        trigger.setAttribute("aria-expanded", expanded ? "true" : "false");
+      }
+
+      function placeBelow(trigger, menu) {
+        var rect = trigger.getBoundingClientRect();
+        menu.style.left = rect.left + "px";
+        menu.style.top = (rect.bottom + 6) + "px";
+      }
+
+      function placeRightOf(trigger, menu) {
+        var rect = trigger.getBoundingClientRect();
+        menu.style.left = (rect.right + 4) + "px";
+        menu.style.top = rect.top + "px";
+      }
+
+      window.closeAllMenus = function closeAllMenus() {
+        docsMenu.hidden = true;
+        productsMenu.hidden = true;
+        platformMenu.hidden = true;
+        platformApiMenu.hidden = true;
+        userMenu.hidden = true;
+
+        setExpanded(docsTrigger, false);
+        setExpanded(productsTrigger, false);
+        setExpanded(userTrigger, false);
+        setExpanded(platformTrigger, false);
+        setExpanded(platformApiTrigger, false);
+      };
+
+      docsTrigger.addEventListener("click", function () {
+        var opening = docsMenu.hidden;
+        closeAllMenus();
+        if (opening) {
+          placeBelow(docsTrigger, docsMenu);
+          docsMenu.hidden = false;
+          setExpanded(docsTrigger, true);
+        }
+      });
+
+      userTrigger.addEventListener("click", function () {
+        var opening = userMenu.hidden;
+        closeAllMenus();
+        if (opening) {
+          placeBelow(userTrigger, userMenu);
+          userMenu.hidden = false;
+          setExpanded(userTrigger, true);
+        }
+      });
+
+      productsTrigger.addEventListener("click", function () {
+        var opening = productsMenu.hidden;
+        closeAllMenus();
+        if (opening) {
+          placeBelow(productsTrigger, productsMenu);
+          productsMenu.hidden = false;
+          setExpanded(productsTrigger, true);
+        }
+      });
+
+      platformTrigger.addEventListener("mouseenter", function () {
+        if (productsMenu.hidden) return;
+        placeRightOf(platformTrigger, platformMenu);
+        platformMenu.hidden = false;
+        setExpanded(platformTrigger, true);
+      });
+
+      platformTrigger.addEventListener("click", function () {
+        if (productsMenu.hidden) return;
+        var opening = platformMenu.hidden;
+        platformApiMenu.hidden = true;
+        setExpanded(platformApiTrigger, false);
+        if (opening) {
+          placeRightOf(platformTrigger, platformMenu);
+          platformMenu.hidden = false;
+          setExpanded(platformTrigger, true);
+        } else {
+          platformMenu.hidden = true;
+          setExpanded(platformTrigger, false);
+        }
+      });
+
+      platformApiTrigger.addEventListener("mouseenter", function () {
+        if (platformMenu.hidden) return;
+        placeRightOf(platformApiTrigger, platformApiMenu);
+        platformApiMenu.hidden = false;
+        setExpanded(platformApiTrigger, true);
+      });
+
+      platformApiTrigger.addEventListener("click", function () {
+        if (platformMenu.hidden) return;
+        var opening = platformApiMenu.hidden;
+        if (opening) {
+          placeRightOf(platformApiTrigger, platformApiMenu);
+          platformApiMenu.hidden = false;
+          setExpanded(platformApiTrigger, true);
+        } else {
+          platformApiMenu.hidden = true;
+          setExpanded(platformApiTrigger, false);
+        }
+      });
+
+      document.addEventListener("click", function (event) {
+        var target = event.target;
+        var insideAny =
+          productsTrigger.contains(target) ||
+          docsTrigger.contains(target) ||
+          userTrigger.contains(target) ||
+          productsMenu.contains(target) ||
+          docsMenu.contains(target) ||
+          userMenu.contains(target) ||
+          platformMenu.contains(target) ||
+          platformApiMenu.contains(target);
+
+        if (!insideAny) {
+          closeAllMenus();
+        }
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          closeAllMenus();
+        }
+      });
+
+      // Deterministic default state.
+      closeAllMenus();
+      document.getElementById("current-uri-label").textContent = "Current URI: /";
+    })();
+  </script>
+</body>
+</html>

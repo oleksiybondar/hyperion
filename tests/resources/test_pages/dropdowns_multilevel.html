@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hyperion Components - Multilevel Dropdowns</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 24px; }
+    h1 { margin: 0 0 12px; }
+    h2 { margin: 0 0 10px; font-size: 1.1rem; }
+    p { margin: 6px 0 14px; }
+    .note { color: #555; font-size: 0.95rem; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin: 16px 0; }
+    .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .label { display: inline-block; padding: 8px 10px; border-radius: 8px; background: #f0f3ff; border: 1px solid #c9d2ff; }
+
+    .trigger {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #999;
+      background: #f7f7f7;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .menu {
+      position: absolute;
+      margin: 0;
+      padding: 6px;
+      list-style: none;
+      min-width: 220px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
+      z-index: 20;
+    }
+
+    .popper {
+      position: absolute;
+      z-index: 20;
+    }
+
+    .popper[hidden] { display: none; }
+
+    .menu[hidden] { display: none; }
+
+    .menu-item {
+      position: relative;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .menu-item:hover { background: #f2f2f2; }
+
+    .menu-item.expandable::after {
+      content: ">";
+      position: absolute;
+      right: 10px;
+      color: #666;
+      font-weight: 600;
+    }
+
+    .host { position: relative; min-height: 110px; }
+
+    #dd2-submenu-portal,
+    #dd2-menu-root {
+      position: fixed;
+      z-index: 40;
+    }
+
+    .columns {
+      position: absolute;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      z-index: 25;
+    }
+
+    .column {
+      margin: 0;
+      padding: 6px;
+      list-style: none;
+      min-width: 160px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
+    }
+
+    .columns[hidden] { display: none; }
+
+    .column[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Multilevel Dropdowns (etalon)</h1>
+  <p class="note">
+    This page provides multiple common multilevel dropdown constructions.
+    Includes MUI-like cascading popup style and deterministic selected-value labels.
+  </p>
+
+  <section class="card" id="section-dd1">
+    <h2>Approach 1: Nested DOM Menus (single host tree)</h2>
+    <p class="note">Submenus are in DOM near root dropdown and shown by expansion state.</p>
+    <div class="host" id="dd1-host">
+      <div class="row">
+        <button id="dd1-trigger" class="trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span id="dd1-selected-text">Choose option</span>
+        </button>
+        <input id="dd1-selected-value" type="hidden" value="" />
+      </div>
+
+      <div class="popper" id="dd1-popper-root" hidden>
+        <ul class="menu" id="dd1-menu-root" role="listbox" aria-label="DD1 options">
+          <li class="menu-item" role="option" data-value="new" data-label="New">New</li>
+          <li class="menu-item expandable" role="option" aria-haspopup="listbox" data-expand="dd1-submenu-share">Share</li>
+          <li class="menu-item" role="option" data-value="delete" data-label="Delete">Delete</li>
+        </ul>
+      </div>
+
+      <ul class="menu" id="dd1-submenu-share" role="listbox" aria-label="DD1 share options" data-parent="dd1-menu-root" hidden>
+        <li class="menu-item" role="option" data-value="share_link" data-label="Share by link">By Link</li>
+        <li class="menu-item expandable" role="option" aria-haspopup="listbox" data-expand="dd1-submenu-advanced">Advanced</li>
+      </ul>
+
+      <ul class="menu" id="dd1-submenu-advanced" role="listbox" aria-label="DD1 advanced share options" data-parent="dd1-submenu-share" hidden>
+        <li class="menu-item" role="option" data-value="share_team" data-label="Share with team">Team</li>
+        <li class="menu-item" role="option" data-value="share_guests" data-label="Share with guests">Guests</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card" id="section-dd2">
+    <h2>Approach 2: Root + Portaled Submenu (MUI-like popper flow)</h2>
+    <p class="note">Root opens near trigger; submenu is detached and positioned independently.</p>
+    <div class="host" id="dd2-host">
+      <div class="row">
+        <button id="dd2-trigger" class="trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span id="dd2-selected-text">Choose option</span>
+        </button>
+        <input id="dd2-selected-value" type="hidden" value="" />
+      </div>
+    </div>
+
+    <div id="dd2-portal-root">
+      <ul class="menu" id="dd2-menu-root" role="listbox" aria-label="DD2 options" hidden>
+        <li class="menu-item" role="option" data-value="open" data-label="Open">Open</li>
+        <li class="menu-item expandable" role="option" aria-haspopup="listbox" data-expand="dd2-submenu-portal">More Tools</li>
+        <li class="menu-item" role="option" data-value="close" data-label="Close">Close</li>
+      </ul>
+
+      <ul class="menu" id="dd2-submenu-portal" role="listbox" aria-label="DD2 tools options" hidden>
+        <li class="menu-item" role="option" data-value="tools_format" data-label="Format">Format</li>
+        <li class="menu-item" role="option" data-value="tools_validate" data-label="Validate">Validate</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card" id="section-dd3">
+    <h2>Approach 3: Dynamic Submenu Build/Destroy</h2>
+    <p class="note">Nested items are created on demand and removed when closed.</p>
+    <div class="host" id="dd3-host">
+      <div class="row">
+        <button id="dd3-trigger" class="trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span id="dd3-selected-text">Choose option</span>
+        </button>
+        <input id="dd3-selected-value" type="hidden" value="" />
+      </div>
+
+      <ul class="menu" id="dd3-menu-root" role="listbox" aria-label="DD3 options" hidden>
+        <li class="menu-item" role="option" data-value="edit" data-label="Edit">Edit</li>
+        <li class="menu-item expandable" role="option" aria-haspopup="listbox" data-expand="dynamic">Filters</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card" id="section-dd4">
+    <h2>Approach 4: Cascading Columns (desktop workspace style)</h2>
+    <p class="note">One popup with multiple columns representing levels instead of separate nested popups.</p>
+    <div class="host" id="dd4-host">
+      <div class="row">
+        <button id="dd4-trigger" class="trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span id="dd4-selected-text">Choose option</span>
+        </button>
+        <input id="dd4-selected-value" type="hidden" value="" />
+      </div>
+
+      <div class="columns" id="dd4-columns" role="dialog" aria-label="DD4 cascading dropdown" hidden>
+        <ul class="column" id="dd4-col-1" role="listbox" aria-label="DD4 level 1">
+          <li class="menu-item" role="option" data-col1="File">File</li>
+          <li class="menu-item" role="option" data-col1="Edit">Edit</li>
+          <li class="menu-item" role="option" data-col1="View">View</li>
+        </ul>
+
+        <ul class="column" id="dd4-col-2" role="listbox" aria-label="DD4 level 2" hidden></ul>
+        <ul class="column" id="dd4-col-3" role="listbox" aria-label="DD4 level 3" hidden></ul>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    (function () {
+      const dd1SelectedText = document.getElementById("dd1-selected-text");
+      const dd2SelectedText = document.getElementById("dd2-selected-text");
+      const dd3SelectedText = document.getElementById("dd3-selected-text");
+      const dd4SelectedText = document.getElementById("dd4-selected-text");
+
+      const dd1SelectedValue = document.getElementById("dd1-selected-value");
+      const dd2SelectedValue = document.getElementById("dd2-selected-value");
+      const dd3SelectedValue = document.getElementById("dd3-selected-value");
+      const dd4SelectedValue = document.getElementById("dd4-selected-value");
+      const dd1PopperRoot = document.getElementById("dd1-popper-root");
+
+      function applySelection(textEl, valueInputEl, optionEl) {
+        const label = optionEl.getAttribute("data-label") || optionEl.textContent.trim();
+        const value = optionEl.getAttribute("data-value") || label;
+        textEl.textContent = label;
+        valueInputEl.value = value;
+      }
+
+      function setExpanded(triggerEl, expanded) {
+        triggerEl.setAttribute("aria-expanded", expanded ? "true" : "false");
+      }
+
+      function hide(el) { el.hidden = true; }
+      function show(el) { el.hidden = false; }
+
+      // --------------------------
+      // Approach 1: nested DOM
+      // --------------------------
+      const dd1Host = document.getElementById("dd1-host");
+      const dd1Trigger = document.getElementById("dd1-trigger");
+      const dd1Root = document.getElementById("dd1-menu-root");
+      const dd1Submenus = [
+        document.getElementById("dd1-submenu-share"),
+        document.getElementById("dd1-submenu-advanced"),
+      ];
+
+      function dd1CloseAll() {
+        hide(dd1PopperRoot);
+        dd1Submenus.forEach(hide);
+        setExpanded(dd1Trigger, false);
+      }
+
+      function dd1OpenRoot() {
+        const hostRect = dd1Host.getBoundingClientRect();
+        const triggerRect = dd1Trigger.getBoundingClientRect();
+        dd1CloseAll();
+        dd1PopperRoot.style.left = (triggerRect.left - hostRect.left) + "px";
+        dd1PopperRoot.style.top = (triggerRect.bottom - hostRect.top + 6) + "px";
+        show(dd1PopperRoot);
+        setExpanded(dd1Trigger, true);
+      }
+
+      function dd1OpenSubmenu(item) {
+        const submenuId = item.getAttribute("data-expand");
+        if (!submenuId) return;
+        const target = document.getElementById(submenuId);
+        if (!target) return;
+
+        const keepVisible = new Set();
+        let cursorId = submenuId;
+        while (cursorId) {
+          keepVisible.add(cursorId);
+          const menu = document.getElementById(cursorId);
+          cursorId = menu ? menu.getAttribute("data-parent") : null;
+          if (cursorId === "dd1-menu-root") break;
+        }
+
+        dd1Submenus.forEach(function (submenu) {
+          if (!keepVisible.has(submenu.id)) hide(submenu);
+        });
+
+        const hostRect = dd1Host.getBoundingClientRect();
+        const itemRect = item.getBoundingClientRect();
+        target.style.left = (itemRect.right - hostRect.left + 2) + "px";
+        target.style.top = (itemRect.top - hostRect.top) + "px";
+        show(target);
+      }
+
+      dd1Trigger.addEventListener("click", function () {
+        if (dd1PopperRoot.hidden) dd1OpenRoot();
+        else dd1CloseAll();
+      });
+
+      dd1Host.addEventListener("mouseover", function (event) {
+        const item = event.target.closest(".menu-item.expandable");
+        if (!item || !dd1Host.contains(item) || dd1PopperRoot.hidden) return;
+        dd1OpenSubmenu(item);
+      });
+
+      dd1Host.addEventListener("click", function (event) {
+        const item = event.target.closest(".menu-item");
+        if (!item || !dd1Host.contains(item)) return;
+
+        if (item.hasAttribute("data-expand")) {
+          dd1OpenSubmenu(item);
+          return;
+        }
+
+        if (item.hasAttribute("data-value")) {
+          applySelection(dd1SelectedText, dd1SelectedValue, item);
+          dd1CloseAll();
+        }
+      });
+
+      // -------------------------------------
+      // Approach 2: root + portaled submenu
+      // -------------------------------------
+      const dd2Host = document.getElementById("dd2-host");
+      const dd2Trigger = document.getElementById("dd2-trigger");
+      const dd2Root = document.getElementById("dd2-menu-root");
+      const dd2Portal = document.getElementById("dd2-submenu-portal");
+
+      function dd2CloseAll() {
+        hide(dd2Root);
+        hide(dd2Portal);
+        setExpanded(dd2Trigger, false);
+      }
+
+      function dd2OpenRoot() {
+        const triggerRect = dd2Trigger.getBoundingClientRect();
+        dd2CloseAll();
+        dd2Root.style.left = triggerRect.left + "px";
+        dd2Root.style.top = (triggerRect.bottom + 6) + "px";
+        show(dd2Root);
+        setExpanded(dd2Trigger, true);
+      }
+
+      function dd2OpenPortalFrom(item) {
+        const itemRect = item.getBoundingClientRect();
+        dd2Portal.style.left = (itemRect.right + 2) + "px";
+        dd2Portal.style.top = itemRect.top + "px";
+        show(dd2Portal);
+      }
+
+      dd2Trigger.addEventListener("click", function () {
+        if (dd2Root.hidden) dd2OpenRoot();
+        else dd2CloseAll();
+      });
+
+      document.addEventListener("mouseover", function (event) {
+        const item = event.target.closest("#dd2-menu-root .menu-item.expandable");
+        if (!item || dd2Root.hidden) return;
+        dd2OpenPortalFrom(item);
+      });
+
+      document.addEventListener("click", function (event) {
+        const rootItem = event.target.closest("#dd2-menu-root .menu-item");
+        const portalItem = event.target.closest("#dd2-submenu-portal .menu-item");
+
+        if (rootItem) {
+          if (rootItem.hasAttribute("data-expand")) {
+            dd2OpenPortalFrom(rootItem);
+            return;
+          }
+          applySelection(dd2SelectedText, dd2SelectedValue, rootItem);
+          dd2CloseAll();
+          return;
+        }
+
+        if (portalItem) {
+          applySelection(dd2SelectedText, dd2SelectedValue, portalItem);
+          dd2CloseAll();
+          return;
+        }
+
+        const isInsideDd2 = dd2Host.contains(event.target) || dd2Root.contains(event.target) || dd2Portal.contains(event.target);
+        if (!isInsideDd2) dd2CloseAll();
+      });
+
+      // ---------------------------------
+      // Approach 3: dynamic build/remove
+      // ---------------------------------
+      const dd3Host = document.getElementById("dd3-host");
+      const dd3Trigger = document.getElementById("dd3-trigger");
+      const dd3Root = document.getElementById("dd3-menu-root");
+      let dd3DynamicSubmenu = null;
+
+      function dd3CloseAll() {
+        hide(dd3Root);
+        if (dd3DynamicSubmenu) {
+          dd3DynamicSubmenu.remove();
+          dd3DynamicSubmenu = null;
+        }
+        setExpanded(dd3Trigger, false);
+      }
+
+      function dd3OpenRoot() {
+        const hostRect = dd3Host.getBoundingClientRect();
+        const triggerRect = dd3Trigger.getBoundingClientRect();
+        dd3CloseAll();
+        dd3Root.style.left = (triggerRect.left - hostRect.left) + "px";
+        dd3Root.style.top = (triggerRect.bottom - hostRect.top + 6) + "px";
+        show(dd3Root);
+        setExpanded(dd3Trigger, true);
+      }
+
+      function dd3BuildSubmenuFrom(item) {
+        if (dd3DynamicSubmenu) dd3DynamicSubmenu.remove();
+
+        dd3DynamicSubmenu = document.createElement("ul");
+        dd3DynamicSubmenu.id = "dd3-submenu-dynamic";
+        dd3DynamicSubmenu.className = "menu";
+        dd3DynamicSubmenu.setAttribute("role", "listbox");
+        dd3DynamicSubmenu.setAttribute("aria-label", "DD3 filters options");
+
+        const actions = [
+          { value: "filter_type", label: "Type" },
+          { value: "filter_date", label: "Date" },
+          { value: "filter_status", label: "Status" },
+        ];
+
+        actions.forEach(function (entry) {
+          const li = document.createElement("li");
+          li.className = "menu-item";
+          li.setAttribute("role", "option");
+          li.setAttribute("data-value", entry.value);
+          li.setAttribute("data-label", entry.label);
+          li.textContent = entry.label;
+          dd3DynamicSubmenu.appendChild(li);
+        });
+
+        dd3Host.appendChild(dd3DynamicSubmenu);
+
+        const hostRect = dd3Host.getBoundingClientRect();
+        const itemRect = item.getBoundingClientRect();
+        dd3DynamicSubmenu.style.left = (itemRect.right - hostRect.left + 2) + "px";
+        dd3DynamicSubmenu.style.top = (itemRect.top - hostRect.top) + "px";
+      }
+
+      dd3Trigger.addEventListener("click", function () {
+        if (dd3Root.hidden) dd3OpenRoot();
+        else dd3CloseAll();
+      });
+
+      dd3Host.addEventListener("click", function (event) {
+        const rootItem = event.target.closest("#dd3-menu-root .menu-item");
+        const dynamicItem = event.target.closest("#dd3-submenu-dynamic .menu-item");
+
+        if (rootItem) {
+          if (rootItem.hasAttribute("data-expand")) {
+            dd3BuildSubmenuFrom(rootItem);
+            return;
+          }
+
+          if (rootItem.hasAttribute("data-value")) {
+            applySelection(dd3SelectedText, dd3SelectedValue, rootItem);
+            dd3CloseAll();
+          }
+          return;
+        }
+
+        if (dynamicItem) {
+          applySelection(dd3SelectedText, dd3SelectedValue, dynamicItem);
+          dd3CloseAll();
+        }
+      });
+
+      // -----------------------------------
+      // Approach 4: cascading column model
+      // -----------------------------------
+      const dd4Host = document.getElementById("dd4-host");
+      const dd4Trigger = document.getElementById("dd4-trigger");
+      const dd4Columns = document.getElementById("dd4-columns");
+      const dd4Col2 = document.getElementById("dd4-col-2");
+      const dd4Col3 = document.getElementById("dd4-col-3");
+
+      const dd4Tree = {
+        File: { New: ["Project", "File"], Export: ["PDF", "HTML"] },
+        Edit: { Transform: ["Uppercase", "Lowercase"], Clipboard: ["Copy", "Paste"] },
+        View: { Layout: ["Grid", "List"], Zoom: ["100%", "125%"] },
+      };
+
+      function dd4ClearColumns() {
+        dd4Col2.innerHTML = "";
+        dd4Col3.innerHTML = "";
+        hide(dd4Col2);
+        hide(dd4Col3);
+      }
+
+      function dd4CloseAll() {
+        hide(dd4Columns);
+        dd4ClearColumns();
+        setExpanded(dd4Trigger, false);
+      }
+
+      function dd4Open() {
+        const hostRect = dd4Host.getBoundingClientRect();
+        const triggerRect = dd4Trigger.getBoundingClientRect();
+        dd4CloseAll();
+        dd4Columns.style.left = (triggerRect.left - hostRect.left) + "px";
+        dd4Columns.style.top = (triggerRect.bottom - hostRect.top + 6) + "px";
+        show(dd4Columns);
+        setExpanded(dd4Trigger, true);
+      }
+
+      function dd4RenderCol2(level1) {
+        dd4Col2.innerHTML = "";
+        dd4Col3.innerHTML = "";
+        hide(dd4Col3);
+
+        const branch = dd4Tree[level1] || {};
+        Object.keys(branch).forEach(function (level2) {
+          const li = document.createElement("li");
+          li.className = "menu-item";
+          li.setAttribute("role", "option");
+          li.setAttribute("data-col2", level2);
+          li.setAttribute("data-parent1", level1);
+          li.textContent = level2;
+          dd4Col2.appendChild(li);
+        });
+        show(dd4Col2);
+      }
+
+      function dd4RenderCol3(level1, level2) {
+        dd4Col3.innerHTML = "";
+        const leafs = (dd4Tree[level1] && dd4Tree[level1][level2]) || [];
+        leafs.forEach(function (leaf) {
+          const li = document.createElement("li");
+          li.className = "menu-item";
+          li.setAttribute("role", "option");
+          li.setAttribute("data-value", (level1 + "_" + level2 + "_" + leaf).toLowerCase());
+          li.setAttribute("data-label", leaf);
+          li.textContent = leaf;
+          dd4Col3.appendChild(li);
+        });
+        show(dd4Col3);
+      }
+
+      dd4Trigger.addEventListener("click", function () {
+        if (dd4Columns.hidden) dd4Open();
+        else dd4CloseAll();
+      });
+
+      dd4Columns.addEventListener("mouseover", function (event) {
+        const col1Item = event.target.closest("#dd4-col-1 .menu-item[data-col1]");
+        if (col1Item) {
+          dd4RenderCol2(col1Item.getAttribute("data-col1"));
+          return;
+        }
+
+        const col2Item = event.target.closest("#dd4-col-2 .menu-item[data-col2]");
+        if (col2Item) {
+          dd4RenderCol3(
+            col2Item.getAttribute("data-parent1"),
+            col2Item.getAttribute("data-col2")
+          );
+        }
+      });
+
+      dd4Columns.addEventListener("click", function (event) {
+        const leaf = event.target.closest("#dd4-col-3 .menu-item[data-value]");
+        if (!leaf) return;
+        applySelection(dd4SelectedText, dd4SelectedValue, leaf);
+        dd4CloseAll();
+      });
+
+      // Global close rules
+      document.addEventListener("click", function (event) {
+        const target = event.target;
+
+        if (!dd1Host.contains(target) && target !== dd1Trigger) dd1CloseAll();
+
+        const inDd2 = dd2Host.contains(target) || dd2Root.contains(target) || dd2Portal.contains(target);
+        if (!inDd2 && target !== dd2Trigger) dd2CloseAll();
+
+        if (!dd3Host.contains(target) && target !== dd3Trigger) dd3CloseAll();
+
+        if (!dd4Host.contains(target) && !dd4Columns.contains(target) && target !== dd4Trigger) dd4CloseAll();
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key !== "Escape") return;
+        dd1CloseAll();
+        dd2CloseAll();
+        dd3CloseAll();
+        dd4CloseAll();
+      });
+
+      dd1SelectedText.textContent = "Choose option";
+      dd2SelectedText.textContent = "Choose option";
+      dd3SelectedText.textContent = "Choose option";
+      dd4SelectedText.textContent = "Choose option";
+      dd1SelectedValue.value = "";
+      dd2SelectedValue.value = "";
+      dd3SelectedValue.value = "";
+      dd4SelectedValue.value = "";
+      dd1CloseAll();
+      dd2CloseAll();
+      dd3CloseAll();
+      dd4CloseAll();
+    })();
+  </script>
+</body>
+</html>
