@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hyperion Components - Multilevel Context Menu</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 24px; }
+    h1 { margin: 0 0 12px; }
+    h2 { margin: 0 0 10px; font-size: 1.1rem; }
+    .note { color: #555; font-size: 0.95rem; margin: 6px 0 18px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin: 16px 0; }
+    .label { display: inline-block; padding: 8px 10px; border-radius: 8px; background: #f0f3ff; border: 1px solid #c9d2ff; }
+
+    .panel {
+      position: relative;
+      min-height: 280px;
+      border: 1px dashed #9ca3af;
+      border-radius: 8px;
+      background: #fafafa;
+      padding: 12px;
+      user-select: none;
+    }
+
+    .panel-title { font-weight: 600; margin-bottom: 8px; }
+
+    .menu,
+    .submenu {
+      position: absolute;
+      margin: 0;
+      padding: 6px;
+      list-style: none;
+      min-width: 220px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
+      z-index: 20;
+    }
+
+    .menu[hidden],
+    .submenu[hidden] { display: none; }
+
+    .menu-item {
+      position: relative;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .menu-item:hover { background: #f2f2f2; }
+
+    .menu-item.expandable::after {
+      content: ">";
+      position: absolute;
+      right: 10px;
+      color: #666;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h1>Multilevel Context Menu (etalon)</h1>
+  <p class="note">
+    Right-click inside the panel to open custom context menu.
+    Menu includes mixed leaf and expandable items up to 3 levels.
+  </p>
+
+  <section class="card" id="section-result">
+    <h2>Assertion Label</h2>
+    <p class="note">Use this value in tests after clicking a leaf item.</p>
+    <span class="label" id="last-clicked-label">Last clicked: none</span>
+  </section>
+
+  <section class="card" id="section-context-menu-host">
+    <h2>Single Host Panel</h2>
+    <div class="panel" id="multi-menu-panel" data-menu-host="multi-menu-panel">
+      <div class="panel-title">Right-click host</div>
+      <div>This panel exposes one multilevel context menu for component testing.</div>
+
+      <ul class="menu" id="root-menu" hidden>
+        <li class="menu-item" data-action="Open">Open</li>
+
+        <li class="menu-item expandable" data-expand="submenu-share">Share</li>
+        <li class="menu-item" data-action="Rename">Rename</li>
+
+        <li class="menu-item expandable" data-expand="submenu-tools">Tools</li>
+      </ul>
+
+      <ul class="submenu" id="submenu-share" data-parent="root-menu" hidden>
+        <li class="menu-item" data-action="Share/By Link">By Link</li>
+        <li class="menu-item" data-action="Share/By Email">By Email</li>
+        <li class="menu-item expandable" data-expand="submenu-share-advanced">Advanced</li>
+      </ul>
+
+      <ul class="submenu" id="submenu-tools" data-parent="root-menu" hidden>
+        <li class="menu-item" data-action="Tools/Format">Format</li>
+        <li class="menu-item" data-action="Tools/Validate">Validate</li>
+      </ul>
+
+      <ul class="submenu" id="submenu-share-advanced" data-parent="submenu-share" hidden>
+        <li class="menu-item" data-action="Share/Advanced/Permissions">Permissions</li>
+        <li class="menu-item" data-action="Share/Advanced/Expiration">Expiration</li>
+      </ul>
+    </div>
+  </section>
+
+  <script>
+    (function () {
+      const panel = document.getElementById("multi-menu-panel");
+      const rootMenu = document.getElementById("root-menu");
+      const submenus = Array.from(document.querySelectorAll(".submenu"));
+      const lastClickedLabel = document.getElementById("last-clicked-label");
+
+      function setLastClicked(action) {
+        lastClickedLabel.textContent = "Last clicked: " + action;
+      }
+
+      function closeAllSubmenus() {
+        submenus.forEach(function (submenu) {
+          submenu.hidden = true;
+        });
+      }
+
+      function closeAllMenus() {
+        rootMenu.hidden = true;
+        closeAllSubmenus();
+      }
+
+      function openRootMenu(clientX, clientY) {
+        const rect = panel.getBoundingClientRect();
+        closeAllMenus();
+        rootMenu.style.left = (clientX - rect.left) + "px";
+        rootMenu.style.top = (clientY - rect.top) + "px";
+        rootMenu.hidden = false;
+      }
+
+      function hideDeeperSubmenus(currentSubmenuId) {
+        const keepVisible = new Set();
+        let cursorId = currentSubmenuId;
+        while (cursorId) {
+          keepVisible.add(cursorId);
+          const menu = document.getElementById(cursorId);
+          cursorId = menu ? menu.getAttribute("data-parent") : null;
+          if (cursorId === "root-menu") break;
+        }
+
+        submenus.forEach(function (submenu) {
+          if (!keepVisible.has(submenu.id)) {
+            submenu.hidden = true;
+          }
+        });
+      }
+
+      function openSubmenuForItem(itemEl) {
+        const submenuId = itemEl.getAttribute("data-expand");
+        if (!submenuId) return;
+
+        const submenu = document.getElementById(submenuId);
+        if (!submenu) return;
+
+        hideDeeperSubmenus(submenuId);
+
+        const panelRect = panel.getBoundingClientRect();
+        const itemRect = itemEl.getBoundingClientRect();
+
+        submenu.style.left = (itemRect.right - panelRect.left + 2) + "px";
+        submenu.style.top = (itemRect.top - panelRect.top) + "px";
+        submenu.hidden = false;
+      }
+
+      document.addEventListener("contextmenu", function (event) {
+        if (!panel.contains(event.target)) return;
+
+        event.preventDefault();
+        openRootMenu(event.clientX, event.clientY);
+      });
+
+      document.addEventListener("click", function (event) {
+        const clickedItem = event.target.closest(".menu-item");
+        if (clickedItem) {
+          const submenuId = clickedItem.getAttribute("data-expand");
+          if (submenuId) {
+            openSubmenuForItem(clickedItem);
+            return;
+          }
+
+          const action = clickedItem.getAttribute("data-action") || clickedItem.textContent || "unknown";
+          setLastClicked(action);
+          closeAllMenus();
+          return;
+        }
+
+        if (!panel.contains(event.target)) {
+          closeAllMenus();
+        }
+      });
+
+      document.addEventListener("mouseover", function (event) {
+        const hoveredItem = event.target.closest(".menu-item.expandable");
+        if (!hoveredItem) return;
+
+        if (!rootMenu.hidden && panel.contains(hoveredItem)) {
+          openSubmenuForItem(hoveredItem);
+        }
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          closeAllMenus();
+        }
+      });
+
+      setLastClicked("none");
+      closeAllMenus();
+    })();
+  </script>
+</body>
+</html>
