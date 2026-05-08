@@ -166,3 +166,6 @@ logs/
 log.html
 /src/hyperiontf/ui/eql/parser.out
 /src/hyperiontf/ui/eql/parsetab.py
+
+logs/
+log.html

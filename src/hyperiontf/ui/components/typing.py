@@ -94,3 +94,14 @@ WidgetClassType: TypeAlias = Type[Widget]
 # Forward-referenced to avoid import cycles with the rule implementation module.
 SlotPolicyRule = TypeVar("SlotPolicyRule")
 SlotPolicyType: TypeAlias = Sequence[SlotPolicyRule]
+
+
+AUTO_SELECT = "AUTO"
+
+MenuActivatorType = Literal["click", "move", "any"]
+
+
+class MenuActivator:
+    CLICK: MenuActivatorType = "click"
+    MOVE: MenuActivatorType = "move"
+    ANY: MenuActivatorType = "any"
