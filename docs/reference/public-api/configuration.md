@@ -171,6 +171,7 @@ Default values:
 - `automation`: `"selenium"`
 - `browser`: OS-dependent default (`edge`, `firefox`, `safari`, or `chrome`)
 - `headless`: `True`
+- `accept_ssl_certificate_errors`: `True`
 
 Capabilities are merged with user-provided values at runtime.
 
@@ -216,6 +217,7 @@ Default values:
 - `follow_redirects`: `True`
 - `post_redirect_get`: `False`
 - `accept_errors`: `False`
+- `accept_ssl_certificate_errors`: `True`
 - `redirections_limit`: `20`
 - `connection_timeout`: `10`
 - `request_timeout`: `30`
@@ -258,6 +260,14 @@ Guarantees:
 - framework defaults are applied first
 - user-provided values override defaults
 - keys may be transformed to camelCase when required by the backend
+
+For `web_capabilities`, Hyperion also applies backend-specific processing for a small set of keys:
+
+- `automation`, `browser`: used for backend and browser routing
+- `headless`: applied to Selenium/Playwright browser startup behavior
+- `accept_ssl_certificate_errors`: mapped to backend SSL flags (`acceptInsecureCerts` for Selenium, `ignore_https_errors` for Playwright)
+
+All other capability keys are passed through as user-provided values for backend-specific handling.
 
 This behavior is internal to the framework and requires no special handling by tests.
 

@@ -191,6 +191,10 @@ class Page:
         from selenium.webdriver import FirefoxOptions
 
         firefox_options = FirefoxOptions()
+        accept_ssl_certificate_errors = caps.get("accept_ssl_certificate_errors", True)
+        firefox_options.set_capability(
+            "acceptInsecureCerts", accept_ssl_certificate_errors
+        )
 
         # Set headless mode if specified
         if "headless" in caps and caps["headless"]:
@@ -209,6 +213,9 @@ class Page:
 
     @staticmethod
     def process_chrome_family_caps(caps, options):
+        accept_ssl_certificate_errors = caps.get("accept_ssl_certificate_errors", True)
+        options.set_capability("acceptInsecureCerts", accept_ssl_certificate_errors)
+
         # Set headless mode if specified
         if "headless" in caps and caps["headless"]:
             options.add_argument("--headless")

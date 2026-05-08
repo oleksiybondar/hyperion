@@ -77,9 +77,12 @@ class Page:
                 "height": mobile_emulation["height"],
                 "deviceScaleFactor": mobile_emulation.get("pixelRatio", 1.0),
             }
+        ignore_https_errors = caps.get("accept_ssl_certificate_errors", True)
 
         browser_instance = browser_map[browser.lower()](headless=headless)
-        context = browser_instance.new_context(viewport=viewport)
+        context = browser_instance.new_context(
+            viewport=viewport, ignore_https_errors=ignore_https_errors
+        )
 
         # Open a new page
         page = context.new_page()

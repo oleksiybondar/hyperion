@@ -10,6 +10,7 @@ class Rest(Section):
         self.follow_redirects = True
         self.post_redirect_get = False
         self.accept_errors = False
+        self.accept_ssl_certificate_errors = True
         self.redirections_limit = 20
         self.connection_timeout = 10
         self.request_timeout = 30

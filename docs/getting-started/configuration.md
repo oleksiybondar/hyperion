@@ -164,6 +164,7 @@ from hyperiontf import config
 config.web_capabilities.automation = "selenium"
 config.web_capabilities.browser = "chrome"
 config.web_capabilities.headless = True
+config.web_capabilities.accept_ssl_certificate_errors = True
 ```
 
 ---
