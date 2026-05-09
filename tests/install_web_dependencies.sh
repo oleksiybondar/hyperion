@@ -13,3 +13,4 @@ pip install opencv-contrib-python
 pip install ptyprocess
 pip install paramiko
 pip install lxml
+pip install pyyaml
