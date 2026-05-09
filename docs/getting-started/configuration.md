@@ -56,6 +56,14 @@ If no configuration file is found, Hyperion continues using default values.
 
 No error is raised.
 
+### Test project default
+
+This repository includes a default test configuration file:
+
+- `tests/hyperion.yaml`
+
+When tests are run from the `tests/` directory, Hyperion loads it automatically and writes logs to `tests/logs/`.
+
 ---
 
 ## Configuration formats

@@ -2,7 +2,7 @@ import os
 import re
 
 import pytest
-from hyperiontf.executors.pytest import fixture, hyperion_test_case_setup  # noqa: F401
+from hyperiontf.executors.pytest import fixture
 
 from ..page_objects.radiogroups_page import RadioGroupsPage
 from .caps_variants import caps_variants

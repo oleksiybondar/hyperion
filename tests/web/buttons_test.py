@@ -1,7 +1,7 @@
 import os
 
 import pytest
-from hyperiontf.executors.pytest import fixture, hyperion_test_case_setup  # noqa: F401
+from hyperiontf.executors.pytest import fixture
 
 from ..page_objects.buttons_page import ButtonsPage
 from .caps_variants import caps_variants

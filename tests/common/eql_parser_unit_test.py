@@ -1,6 +1,5 @@
 import pytest
 import re
-from hyperiontf.executors.pytest import hyperion_test_case_setup  # noqa: F401
 from hyperiontf import expect
 from hyperiontf.ui.eql.parser import parse
 

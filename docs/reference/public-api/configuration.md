@@ -44,9 +44,21 @@ There is no need to pass configuration values through APIs.
 
 Hyperion supports loading configuration from:
 
+- `.ini`
+- `.conf`
 - `.cfg`
 - `.json`
 - `.yml` / `.yaml`
+
+On first access, Hyperion also auto-discovers default files (first match wins):
+
+1. `PWD/hyperion.ini`
+2. `PWD/hyperion.conf`
+3. `PWD/hyperion.cfg`
+4. `PWD/hyperion.json`
+5. `PWD/hyperion.yml`
+6. `PWD/hyperion.yaml`
+7. Same filenames under `PWD/config/` (same order)
 
 To load configuration from a file:
 

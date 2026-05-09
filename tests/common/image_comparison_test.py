@@ -1,5 +1,4 @@
 import pytest
-from hyperiontf.executors.pytest import hyperion_test_case_setup  # noqa: F401
 from hyperiontf import verify, Image
 
 # from hyperiontf.typing import FailedExpectationException
