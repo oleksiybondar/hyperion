@@ -15,6 +15,8 @@ from .action_builder import SeleniumActionBuilder
 from hyperiontf.typing import LocatorStrategies
 
 import base64
+import re
+import subprocess
 
 logger = getLogger()
 
@@ -105,9 +107,40 @@ class Page:
         try:
             from webdriver_manager.microsoft import EdgeChromiumDriverManager
 
+            edge_version = Page.detect_edge_version()
+            if edge_version:
+                edge_major = edge_version.split(".")[0]
+                try:
+                    return EdgeChromiumDriverManager(
+                        driver_version=edge_major
+                    ).install()
+                except TypeError:
+                    return EdgeChromiumDriverManager(version=edge_major).install()
+
             return EdgeChromiumDriverManager().install()
         except Exception:
             return DRIVER_DOWNLOAD_FAILURE_FLAG
+
+    @staticmethod
+    def detect_edge_version():
+        version_pattern = re.compile(r"\d+\.\d+\.\d+\.\d+")
+        browser_commands = [
+            ["msedge", "--version"],
+            ["microsoft-edge", "--version"],
+            ["/usr/bin/microsoft-edge", "--version"],
+        ]
+
+        for command in browser_commands:
+            try:
+                output = subprocess.check_output(command, text=True).strip()
+            except Exception:
+                continue
+
+            match = version_pattern.search(output)
+            if match:
+                return match.group(0)
+
+        return None
 
     def __init__(self, driver: Any):
         self.automation_type = AutomationTool.SELENIUM
