@@ -99,6 +99,10 @@ class Element:
         self.page = page
 
     @property
+    def browser(self):
+        return self.page.browser
+
+    @property
     @map_exception
     @assert_stale_reference
     def text(self):
@@ -361,7 +365,7 @@ class Element:
 
     @property
     def click_timeout(self):
-        if self.page.browser == "webkit":
+        if self.browser == "webkit":
             return 5000
         return 3000
 
