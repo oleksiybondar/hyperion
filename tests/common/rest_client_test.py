@@ -1,6 +1,20 @@
 import pytest
-from hyperiontf.executors.pytest import hyperion_test_case_setup  # noqa: F401
 from hyperiontf import RESTClient
+
+
+@pytest.mark.REST
+def test_ssl_certificate_verification_disabled_by_default():
+    client = RESTClient("https://example.com")
+    assert client.session.verify is False
+
+
+@pytest.mark.REST
+def test_accept_ssl_certificate_errors_false_enables_verification():
+    client = RESTClient(
+        "https://example.com",
+        accept_ssl_certificate_errors=False,
+    )
+    assert client.session.verify is True
 
 
 @pytest.mark.REST

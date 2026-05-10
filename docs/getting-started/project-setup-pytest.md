@@ -37,7 +37,11 @@ Test discovery, ordering, filtering, and execution semantics remain **pure pytes
 
 Hyperion provides an **auto-invoked pytest fixture** named `hyperion_test_case_setup`.
 
-This fixture is activated simply by importing it:
+This fixture is activated simply by importing it.
+
+Recommended single place:
+
+`tests/conftest.py`
 
 ```python
 from hyperiontf.executors.pytest import hyperion_test_case_setup  # noqa: F401
@@ -48,7 +52,8 @@ Important points:
 - The fixture is used for **side effects only**
 - It does **not** need to be referenced in test code
 - The `# noqa: F401` comment is intentional
-- Importing it once (for example in `conftest.py`) is sufficient
+- Importing it once in `tests/conftest.py` is sufficient for the whole test suite under `tests/`
+- Test modules should not import `hyperion_test_case_setup` directly once `conftest.py` is in place
 
 This fixture integrates pytest’s test lifecycle with Hyperion’s logging and execution context.
 

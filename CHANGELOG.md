@@ -13,6 +13,36 @@ It is important to acknowledge that versions prior to v1.0.0 are considered to b
 
 From its first version, our framework has included a dedicated REST client equipped with extensive, built-in logging features, alongside a UI harness that simplifies page object creation. This harness supports a unified API compatible with Selenium, Appium, and Playwright, ensuring a seamless and efficient testing process.
 
+## [0.8.00] - 2026-05-08
+
+### Added
+
+- New REST client option: `accept_ssl_certificate_errors`.
+- New REST config default: `config.rest.accept_ssl_certificate_errors` (default: `True`).
+- New web capability default: `config.web_capabilities.accept_ssl_certificate_errors` (default: `True`).
+
+### Changed
+
+- REST client session creation now applies SSL behavior directly:
+  - `accept_ssl_certificate_errors=True` -> `requests.Session.verify=False`
+  - `accept_ssl_certificate_errors=False` -> `requests.Session.verify=True`
+- Selenium web adapter now processes `accept_ssl_certificate_errors` and maps it to `acceptInsecureCerts` during options/capability construction.
+- Playwright web adapter now processes `accept_ssl_certificate_errors` and maps it to `ignore_https_errors` when creating browser contexts.
+- Default behavior for REST and Web automation is now to ignore SSL certificate verification errors unless explicitly disabled.
+
+### Tests
+
+- Added REST tests covering SSL verification default and explicit override behavior.
+- Added web adapter tests covering:
+  - Selenium `acceptInsecureCerts` mapping
+  - Playwright `ignore_https_errors` context mapping
+
+### Documentation
+
+- Updated REST API docs and configuration docs for `accept_ssl_certificate_errors`.
+- Updated web capability docs to clarify processed keys vs pass-through vendor capabilities.
+- Updated `WebPage` and Getting Started configuration examples to include SSL behavior.
+
 ## [0.7.00] - 2026-02-20
 
 ### Added

@@ -1,6 +1,5 @@
 import pytest
 from hyperiontf import SSHClient, expect
-from hyperiontf.executors.pytest import hyperion_test_case_setup  # noqa: F401
 from hyperiontf.executors.pytest import fixture
 from hyperiontf.typing import CommandExecutionTimeoutException
 

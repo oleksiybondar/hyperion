@@ -27,6 +27,7 @@ class Client:
         log_redirects: bool = config.rest.log_redirects,
         post_redirect_get: bool = config.rest.log_redirects,
         accept_errors: bool = config.rest.accept_errors,
+        accept_ssl_certificate_errors: bool = config.rest.accept_ssl_certificate_errors,
         redirections_limit: int = config.rest.redirections_limit,
         connection_timeout: int = config.rest.connection_timeout,
         request_timeout: int = config.rest.request_timeout,
@@ -51,6 +52,8 @@ class Client:
         :param post_redirect_get: If True, the client will automatically convert redirected POST requests into GET
         requests.
         :param accept_errors: If True, the client will not raise exceptions for HTTP error status codes.
+        :param accept_ssl_certificate_errors: If True, SSL certificate validation will be disabled for this client
+        session.
         :param redirections_limit: The maximum number of redirects the client will follow for a single request.
         :param connection_timeout: The timeout for establishing a connection.
         :param request_timeout: The timeout for completing a request.
@@ -75,6 +78,7 @@ class Client:
         self.log_redirects = log_redirects
         self.post_redirect_get = post_redirect_get
         self.accept_errors = accept_errors
+        self.accept_ssl_certificate_errors = accept_ssl_certificate_errors
         self.redirections_limit = redirections_limit
         self.connection_timeout = connection_timeout
         self.request_timeout = request_timeout
@@ -84,6 +88,7 @@ class Client:
 
         self.session = requests.Session()
         self.session.max_redirects = redirections_limit
+        self.session.verify = not self.accept_ssl_certificate_errors
 
     @property
     def default_event_logging_level(self) -> str:

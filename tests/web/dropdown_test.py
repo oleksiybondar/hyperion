@@ -2,7 +2,7 @@ import os
 import re
 
 import pytest
-from hyperiontf.executors.pytest import fixture, hyperion_test_case_setup  # noqa: F401
+from hyperiontf.executors.pytest import fixture
 from hyperiontf.typing import FailedExpectationException
 
 from ..page_objects.dropdowns_page import DropdownsPage

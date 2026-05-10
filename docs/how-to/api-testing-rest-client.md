@@ -163,6 +163,24 @@ def test_validation_error_payload(client: Client):
     assert response.status == 400
 ```
 
+### SSL certificate behavior
+
+By default, Hyperion REST client accepts SSL certificate verification errors
+(`accept_ssl_certificate_errors=True`, which sets `requests.Session.verify=False`).
+
+If you need strict TLS verification for a specific client, set:
+
+```python
+from hyperiontf import RESTClient
+
+client = RESTClient(
+    url="https://api.example.test",
+    accept_ssl_certificate_errors=False,
+)
+```
+
+This sets the underlying `requests.Session.verify` to `True` for that client session.
+
 ---
 
 ## Polling / waiting for eventual consistency

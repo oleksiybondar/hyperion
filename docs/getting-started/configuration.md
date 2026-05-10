@@ -56,6 +56,14 @@ If no configuration file is found, Hyperion continues using default values.
 
 No error is raised.
 
+### Test project default
+
+This repository includes a default test configuration file:
+
+- `tests/hyperion.yaml`
+
+When tests are run from the `tests/` directory, Hyperion loads it automatically and writes logs to `tests/logs/`.
+
 ---
 
 ## Configuration formats
@@ -164,6 +172,7 @@ from hyperiontf import config
 config.web_capabilities.automation = "selenium"
 config.web_capabilities.browser = "chrome"
 config.web_capabilities.headless = True
+config.web_capabilities.accept_ssl_certificate_errors = True
 ```
 
 ---

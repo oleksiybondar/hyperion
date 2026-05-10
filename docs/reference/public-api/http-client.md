@@ -28,7 +28,7 @@ This page documents Hyperion’s **REST / HTTP public API** as a single logical 
 
 **Signature**
 
-`Client.__init__(url: Optional[str] = None, scheme: Optional[str] = None, netloc: Optional[str] = None, path: Optional[str] = None, params: Optional[str] = None, query: Optional[str] = None, fragment: Optional[str] = None, headers: Optional[dict] = None, cookies: Optional[dict] = None, auth: Optional[dict] = None, follow_redirects: bool = config.rest.follow_redirects, log_redirects: bool = config.rest.log_redirects, post_redirect_get: bool = config.rest.log_redirects, accept_errors: bool = config.rest.accept_errors, redirections_limit: int = config.rest.redirections_limit, connection_timeout: int = config.rest.connection_timeout, request_timeout: int = config.rest.request_timeout, default_event_logging_level: str = "info", logger = logger) -> None`
+`Client.__init__(url: Optional[str] = None, scheme: Optional[str] = None, netloc: Optional[str] = None, path: Optional[str] = None, params: Optional[str] = None, query: Optional[str] = None, fragment: Optional[str] = None, headers: Optional[dict] = None, cookies: Optional[dict] = None, auth: Optional[dict] = None, follow_redirects: bool = config.rest.follow_redirects, log_redirects: bool = config.rest.log_redirects, post_redirect_get: bool = config.rest.log_redirects, accept_errors: bool = config.rest.accept_errors, accept_ssl_certificate_errors: bool = config.rest.accept_ssl_certificate_errors, redirections_limit: int = config.rest.redirections_limit, connection_timeout: int = config.rest.connection_timeout, request_timeout: int = config.rest.request_timeout, default_event_logging_level: str = "info", logger = logger) -> None`
 
 **Contract**
 
@@ -48,6 +48,7 @@ Default `headers`, `cookies`, and `auth` are stored and later **merged** into ea
 - `log_redirects`: If `True` and redirects are followed, Hyperion performs redirect handling in a way that enables redirect logging.
 - `post_redirect_get`: Default redirect behavior for POST (kept as a per-request flag and passed into redirect requests).
 - `accept_errors`: Default error handling mode. If `False`, non-2xx responses raise during `Response` construction.
+- `accept_ssl_certificate_errors`: If `True`, SSL certificate verification is disabled for the client session (`session.verify=False`). Default is `True`.
 - `redirections_limit`: Default max redirect count (also applied to the underlying client session behavior).
 - `connection_timeout`: Default connection timeout seconds (used as part of the request timeout tuple).
 - `request_timeout`: Default request/read timeout seconds (used as part of the request timeout tuple).

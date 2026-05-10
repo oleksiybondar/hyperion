@@ -1,0 +1,36 @@
+name: Release to PyPI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-publish:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Build distribution
+        run: poetry build
+
+      - name: Publish package to PyPI (Trusted Publisher)
+        uses: pypa/gh-action-pypi-publish@release/v1

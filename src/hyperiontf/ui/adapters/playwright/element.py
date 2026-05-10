@@ -99,6 +99,10 @@ class Element:
         self.page = page
 
     @property
+    def browser(self):
+        return self.page.browser
+
+    @property
     @map_exception
     @assert_stale_reference
     def text(self):
@@ -349,7 +353,7 @@ class Element:
         """
         try:
             # Try real user click first (fail fast)
-            self.element.click(timeout=3000)
+            self.element.click(timeout=self.click_timeout)
         except TimeoutError as e:
             if "element is not visible" in e.message:
                 tag = self.element.evaluate("element => element.tagName.toLowerCase()")
@@ -358,6 +362,12 @@ class Element:
                     return self.element.evaluate(NATIVE_SELECT_HEADLESS_WORKAROUND)
 
             raise e
+
+    @property
+    def click_timeout(self):
+        if self.browser == "webkit":
+            return 5000
+        return 3000
 
     @map_exception
     @assert_stale_reference

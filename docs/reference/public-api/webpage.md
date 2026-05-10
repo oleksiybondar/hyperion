@@ -59,7 +59,16 @@ Supported values:
 - `webkit`
 - `remote`
 
-Other keys may be provided (for example `headless`) and will be forwarded to the selected automation backend.
+`headless`  
+Processed by Hyperion for Selenium and Playwright startup.
+
+`accept_ssl_certificate_errors`  
+Defaults to `True`.  
+Processed by Hyperion:
+- Selenium: mapped to `acceptInsecureCerts`
+- Playwright: mapped to browser context `ignore_https_errors`
+
+Other keys are treated as backend/vendor capability values and passed through.
 
 #### Examples
 

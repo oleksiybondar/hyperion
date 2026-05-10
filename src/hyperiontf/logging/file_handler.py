@@ -48,6 +48,7 @@ class FileHandler(logging.FileHandler):
         """
         Open the specified file and use it as the stream for logging.
         """
+        self._is_initialized = False
         super().__init__(filename, "a", encoding, True, errors)
         self.setFormatter(Formatter())
 
@@ -78,3 +79,13 @@ class FileHandler(logging.FileHandler):
         self.close()  # Close the current file if it's open
         self.baseFilename = os.fspath(new_file)  # Update the file name
         self._open()  # Reopen the file with the new name
+        self._is_initialized = True
+
+    def emit(self, record):
+        """
+        Drop records until the test-specific file is initialized.
+        This prevents creating a default 'log.html' before test setup.
+        """
+        if not self._is_initialized:
+            return
+        return super().emit(record)

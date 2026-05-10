@@ -1,7 +1,7 @@
 import os
 
 import pytest
-from hyperiontf.executors.pytest import fixture, hyperion_test_case_setup  # noqa: F401
+from hyperiontf.executors.pytest import fixture
 from hyperiontf.typing import FailedExpectationException
 from page_objects.widgets.actions_cell import ActionsCell
 from page_objects.widgets.icon_cell import IconCell

@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from typing import Iterable, Optional
 
@@ -32,11 +31,14 @@ def iter_default_config_candidates(cwd: Path) -> Iterable[Path]:
             yield root / filename
 
 
-def find_default_config_file(cwd: Path = Path(os.getcwd())) -> Optional[Path]:
+def find_default_config_file(cwd: Optional[Path] = None) -> Optional[Path]:
     """
     Return the first existing default config file according to deterministic
     lookup rules, or None if nothing is found.
     """
+    if cwd is None:
+        cwd = Path.cwd()
+
     for candidate in iter_default_config_candidates(cwd):
         if candidate.is_file():
             return candidate

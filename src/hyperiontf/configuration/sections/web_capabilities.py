@@ -11,6 +11,7 @@ class WebCapabilities(Capabilities):
         self.automation = "selenium"
         self.browser = self.get_default_browser()
         self.headless = True
+        self.accept_ssl_certificate_errors = True
 
     @staticmethod
     def get_default_browser():
