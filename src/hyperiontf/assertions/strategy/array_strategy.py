@@ -1,9 +1,9 @@
-from .default_strategy import DefaultStrategy
+from .json_schemed_strategy import JSONSchemedStrategy
 from hyperiontf.assertions.expectation_result import ExpectationResult
 from .decorators import with_array_diff
 
 
-class ArrayStrategy(DefaultStrategy):
+class ArrayStrategy(JSONSchemedStrategy):
     types = [list, set, tuple]
 
     @with_array_diff

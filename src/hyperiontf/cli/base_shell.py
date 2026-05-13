@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Optional, Union
+from typing import Optional, Union, List, Dict, Callable
 
 from hyperiontf.logging import getLogger
 from hyperiontf.typing import (
@@ -39,19 +39,31 @@ class BaseShell:
     :param tool: The tool to be used for the session (e.g., 'bash', 'sh', 'zsh', 'cmd', 'powershell', or other CLI tools).
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        shell: Optional[str] = None,
+        shell_args: Optional[List[str]] = None,
+        env: Optional[Dict[str, str]] = None,
+        disable_prompt_shortening: bool = True,
+        cmd_line_matcher: Optional[Callable[[str, str, Optional[str]], bool]] = None,
+    ):
         """
         Initializes the BaseShell for a specific tool.
 
         Subclasses should implement the session initialization logic for the required tool or shell.
         """
-        self.output_cache = []
-        self.exit_code = None
+        self.output_cache: List[str] = []
+        self.exit_code: Optional[int] = None
 
-        self.action_prompt = None
-        self.last_cmd = None
+        self.action_prompt: Optional[str] = None
+        self.last_cmd: Optional[str] = None
 
-        self.source = self.__class__.__name__
+        self.source = shell if shell else self.__class__.__name__
+        self._shell_executable = shell
+        self.shell_args = shell_args or []
+        self.env = env or {}
+        self.disable_prompt_shortening = disable_prompt_shortening
+        self.cmd_line_matcher = cmd_line_matcher
 
         self.logger = getLogger(LoggerSource.CLI)
 
@@ -93,11 +105,17 @@ class BaseShell:
         if data == self.action_prompt:
             return
 
+        self._process_cache_lines(data)
+
+    def _process_cache_lines(self, data):
         lines = data.split(self.line_separator)
         for line in lines:
             line = line.strip()
 
             if self._is_cmd_line(line):
+                trailing_output = self._extract_trailing_output_after_command(line)
+                if trailing_output:
+                    self.output_cache.append(trailing_output)
                 self.last_cmd = None
                 continue
 
@@ -113,23 +131,54 @@ class BaseShell:
         :param line: The line to check.
         :return: True if the line is a command or prompt, False otherwise.
         """
-        # Pattern to match different shell prompt and command formats
-        # - Full command only
-        # - Prompt + command
-        # - Shortened prompt due to path length
-        # % .*? %
-        # Example pattern: <path/end$ <cmd>
-
-        # Define a regex pattern to match prompt variations
-        pattern = r"^\s*<.*?(\$|\#)\s*"  # Matches <path$ or <path#
-
         if not self.last_cmd:
             return False
-        # Check if the line matches the last command or one of the patterns
-        return line == self.last_cmd or (
-            self.last_cmd in line
-            and (bool(re.search(pattern, line)) or self.action_prompt in line)
-        )
+
+        if line == self.last_cmd:
+            return True
+
+        if self.last_cmd not in line:
+            return False
+
+        if self._is_shortened_prompt_line(line):
+            return True
+
+        return self._contains_action_prompt(line)
+
+    @staticmethod
+    def _is_shortened_prompt_line(line: str) -> bool:
+        pattern = r"^\s*<.*?(\$|\#)\s*"
+        return bool(re.search(pattern, line))
+
+    def _contains_action_prompt(self, line: str) -> bool:
+        prompt = self.action_prompt
+        if prompt is None:
+            return False
+        return prompt in line
+
+    def _extract_trailing_output_after_command(self, line: str) -> str:
+        if not self.last_cmd:
+            return ""
+        if self.last_cmd not in line:
+            return ""
+        trailing_output = line.split(self.last_cmd, 1)[1].strip()
+        return trailing_output
+
+    def _is_posix_shell_prompt(self) -> bool:
+        shell_name = str(self._shell_executable or self.source).lower()
+        return shell_name in {"sh", "bash", "zsh"}
+
+    def _compose_spawn_argv(self) -> List[str]:
+        return [self._shell_executable or self.source, *self.shell_args]
+
+    def _compose_spawn_env(self) -> Dict[str, str]:
+        spawn_env = os.environ.copy()
+        spawn_env.update(self.env)
+        if self.disable_prompt_shortening and self._is_posix_shell_prompt():
+            spawn_env.setdefault("PS1", "hyperion$ ")
+            spawn_env.setdefault("PROMPT", "hyperion$ ")
+            spawn_env.setdefault("COLUMNS", "1024")
+        return spawn_env
 
     def _clear_cache(self):
         """
@@ -170,8 +219,26 @@ class BaseShell:
         which is the marker used to indicate when a command has finished executing.
         """
         data = self._read_output_buffer()
-        self.action_prompt = data.split(self.line_separator)[-1].strip()
+        self.action_prompt = self._extract_action_prompt(data)
         self._log_debug(f"Action prompt is:\n{self.action_prompt}")
+
+    def detect_action_prompt(self):
+        """
+        Detects and normalizes the tool's action prompt.
+
+        Sends a newline first so the shell prints a fresh prompt, then captures it.
+        """
+        self.send_keys("")
+        self._detect_action_prompt()
+
+    @staticmethod
+    def _extract_action_prompt(data: str) -> str:
+        lines = [line.strip() for line in data.splitlines() if line.strip()]
+        if not lines:
+            return ""
+        prompt = lines[-1]
+        prompt = re.sub(r"\s+", " ", prompt).strip()
+        return prompt
 
     def _write(self, data: str):
         """
@@ -364,10 +431,15 @@ class BaseShell:
         and converts the remaining value into an integer representing the exit code.
         """
         output = self._read_output_buffer()
-        output = output.replace(self.line_separator, "")
-        output = output.replace(self.exit_code_cmd, "")
-        output = output.replace(self.action_prompt, "")
-        self.exit_code = int(output)
+        self.exit_code = self._extract_exit_code(output)
+
+    def _extract_exit_code(self, output: str) -> int:
+        # Extract the last standalone integer token from the chunk.
+        # This is robust when prompt/command/result are merged in one line.
+        matches = re.findall(r"(?<!\S)-?\d+(?!\S)", output)
+        if not matches:
+            raise ValueError(f"Failed to parse exit code from output: {repr(output)}")
+        return int(matches[-1])
 
     def _remove_action_prompt_from_output(self):
         """

@@ -1,6 +1,7 @@
 from .base_shell import BaseShell, DEFAULT_EXIT_CODE_COMMAND
 
 from ptyprocess import PtyProcess
+from typing import Optional
 from hyperiontf.logging import getLogger
 from hyperiontf.typing import (
     LoggerSource,
@@ -39,16 +40,32 @@ class CLIClient(BaseShell):
     :param shell: The shell to be used for the session (default: 'bash').
     """
 
-    def __init__(self, shell="bash"):
+    def __init__(
+        self,
+        shell="bash",
+        shell_args=None,
+        env=None,
+        disable_prompt_shortening: bool = True,
+        cmd_line_matcher=None,
+    ):
         """
         Initializes the CLIClient for a specific shell.
 
         :param shell: The shell to be used (e.g., 'bash', 'sh', 'zsh', 'cmd', 'powershell').
         """
-        super().__init__()
+        shell_args = self._normalize_shell_args(
+            shell, shell_args, disable_prompt_shortening
+        )
 
-        self.source = shell
-        self.process = None
+        super().__init__(
+            shell=shell,
+            shell_args=shell_args,
+            env=env,
+            disable_prompt_shortening=disable_prompt_shortening,
+            cmd_line_matcher=cmd_line_matcher,
+        )
+
+        self.process: Optional[PtyProcess] = None
         self.exit_code_cmd = self._fetch_exit_code_cmd()
 
         self.start_session()
@@ -68,7 +85,10 @@ class CLIClient(BaseShell):
         """
         try:
             # Start a new shell session using PtyProcess
-            self.process = PtyProcess.spawn([self.shell])
+            self.process = PtyProcess.spawn(
+                self._compose_spawn_argv(),
+                env=self._compose_spawn_env(),
+            )
             self._log_action(f"Spawning a new {self.shell} session.")
             time.sleep(
                 config.cli.command_registration_time
@@ -80,6 +100,25 @@ class CLIClient(BaseShell):
                 f"Failed to start shell session: {str(e)}", CommandExecutionException
             )
 
+    @staticmethod
+    def _normalize_shell_args(shell, shell_args, disable_prompt_shortening):
+        normalized_shell_args = list(shell_args or [])
+        if not disable_prompt_shortening:
+            return normalized_shell_args
+        defaults_by_shell = {
+            "bash": ["--noprofile", "--norc"],
+            "zsh": ["-f"],
+        }
+        for default_arg in defaults_by_shell.get(shell, []):
+            if default_arg not in normalized_shell_args:
+                normalized_shell_args.append(default_arg)
+        return normalized_shell_args
+
+    def _require_process(self) -> PtyProcess:
+        if self.process is None:
+            raise CommandExecutionException("Shell session is not started.")
+        return self.process
+
     def _read_output_buffer(self) -> str:
         """
         Reads and decodes the current buffer from the shell session.
@@ -89,7 +128,7 @@ class CLIClient(BaseShell):
 
         :return: The decoded output from the shell.
         """
-        data = self.process.read().decode().strip()
+        data = self._require_process().read().decode().strip()
         self._log_debug(f"Reading output chunk:\n{data}")
         return data
 
@@ -103,7 +142,7 @@ class CLIClient(BaseShell):
         :param data: The string to write to the shell session.
         """
         self._log_debug(f"Writing data chunk:\n{data}")
-        self.process.write(f"{data}\n".encode("utf-8"))
+        self._require_process().write(f"{data}\n".encode("utf-8"))
         time.sleep(config.cli.command_registration_time)
 
     def _fetch_exit_code_cmd(self):

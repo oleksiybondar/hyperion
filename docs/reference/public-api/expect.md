@@ -353,7 +353,7 @@ Checks whether the dict contains / does not contain a value.
 
 **Contract**
 
-Validates the dict-like subject against a schema supported by Hyperion’s schema validation.
+Validates dict and array-like subjects against a JSON Schema.
 
 ---
 

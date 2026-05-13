@@ -8,6 +8,7 @@ from hyperiontf.assertions.strategy.numeric_strategy import NumericStrategy
 from hyperiontf.assertions.strategy.string_strategy import StringStrategy
 from hyperiontf.assertions.strategy.array_strategy import ArrayStrategy
 from hyperiontf.assertions.strategy.dict_strategy import DictStrategy
+from hyperiontf.assertions.strategy.json_schemed_strategy import JSONSchemedStrategy
 from hyperiontf.assertions.strategy.color_strategy import ColorStrategy
 from hyperiontf.assertions.strategy.filesystem_strategy import FileSystemStrategy
 from hyperiontf.assertions.strategy.image_strategy import ImageStrategy
@@ -1096,13 +1097,12 @@ class Expect:
         return self.strategy.not_to_contain_value(value)  # type: ignore
 
     @auto_log
-    @type_check(supported_strategies=[DictStrategy])
+    @type_check(supported_strategies=[JSONSchemedStrategy])
     def to_match_schema(self, schema: Union[dict, str]) -> ExpectationResult:
         """
-        Asserts that the actual dictionary matches a specified JSON schema. This method is crucial for validating
-        complex data structures, ensuring that dictionaries conform to predefined formats, structures, and type
-        requirements as defined by the JSON schema. It is particularly useful for API response validation, configuration
-        data verification, and ensuring data integrity across various application components.
+        Asserts that the actual value matches a specified JSON schema. This method is supported for
+        dictionary and array-like subjects and is useful for validating structured data contracts in
+        API responses, configuration payloads, and other JSON-like content.
 
         Args:
             schema (Union[dict, str]): The JSON schema to validate against, provided either as a dictionary representing
@@ -1110,7 +1110,7 @@ class Expect:
 
         Returns:
             ExpectationResult: An object representing the result of the schema validation, detailing whether the actual
-                               dictionary matches the specified JSON schema, including the validation outcome and any
+                               value matches the specified JSON schema, including the validation outcome and any
                                schema validation errors encountered.
 
         Note:
