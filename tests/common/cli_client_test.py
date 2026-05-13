@@ -2,6 +2,7 @@ import pytest
 from hyperiontf import CLIClient, expect
 from hyperiontf.executors.pytest import fixture
 import os
+import tempfile
 from hyperiontf.typing import CommandExecutionTimeoutException
 
 
@@ -16,6 +17,40 @@ def cli_client(request):
     request.addfinalizer(client.quit)
 
     yield client
+
+
+@fixture(log=False)
+def cli_client_with_custom_env(request):
+    client = CLIClient(shell="bash", env={"HYPERION_TEST_ENV": "from_env"})
+    request.addfinalizer(client.quit)
+    return client
+
+
+@fixture(log=False)
+def cli_client_with_rcfile(request):
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as rc_file:
+        rc_file.write("export HYPERION_FROM_RC=from_rc\n")
+        rc_path = rc_file.name
+
+    client = CLIClient(
+        shell="bash",
+        shell_args=["--rcfile", rc_path],
+        disable_prompt_shortening=False,
+    )
+    request.addfinalizer(client.quit)
+    request.addfinalizer(lambda: os.unlink(rc_path))
+    return client
+
+
+@fixture(log=False)
+def cli_client_with_env_passthrough(request):
+    client = CLIClient(
+        shell="bash",
+        env={"HYPERION_TEST_ENV2": "env_ok"},
+        disable_prompt_shortening=False,
+    )
+    request.addfinalizer(client.quit)
+    return client
 
 
 @pytest.mark.CLI
@@ -74,3 +109,26 @@ def test_command_execution_with_timeout(cli_client):
     """
     with pytest.raises(CommandExecutionTimeoutException):
         cli_client.execute("sleep 3", timeout=2)
+
+
+@pytest.mark.CLI
+@pytest.mark.ExecuteCommand
+def test_cli_client_passes_custom_env_to_real_shell(cli_client_with_custom_env):
+    cli_client_with_custom_env.execute("echo $HYPERION_TEST_ENV")
+    cli_client_with_custom_env.assert_output_contains("from_env")
+
+
+@pytest.mark.CLI
+@pytest.mark.ExecuteCommand
+def test_cli_client_passes_shell_args_to_real_shell(cli_client_with_rcfile):
+    cli_client_with_rcfile.execute("echo $HYPERION_FROM_RC")
+    cli_client_with_rcfile.assert_output_contains("from_rc")
+
+
+@pytest.mark.CLI
+@pytest.mark.ExecuteCommand
+def test_cli_client_passes_env_to_real_shell_with_custom_args(
+    cli_client_with_env_passthrough,
+):
+    cli_client_with_env_passthrough.execute("echo $HYPERION_TEST_ENV2")
+    cli_client_with_env_passthrough.assert_output_contains("env_ok")

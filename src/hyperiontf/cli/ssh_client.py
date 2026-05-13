@@ -26,8 +26,26 @@ class SSHClient(BaseShell):
     :param port: The SSH port (default: 22).
     """
 
-    def __init__(self, host, user, password=None, private_key=None, port=22):
-        super().__init__()
+    def __init__(
+        self,
+        host,
+        user,
+        password=None,
+        private_key=None,
+        port=22,
+        shell="bash",
+        shell_args=None,
+        env=None,
+        disable_prompt_shortening: bool = True,
+        cmd_line_matcher=None,
+    ):
+        super().__init__(
+            shell=shell,
+            shell_args=shell_args,
+            env=env,
+            disable_prompt_shortening=disable_prompt_shortening,
+            cmd_line_matcher=cmd_line_matcher,
+        )
 
         self.host = host
         self.user = user
@@ -55,17 +73,15 @@ class SSHClient(BaseShell):
         """
         try:
             self._log_action(f"Connecting to {self.host} as {self.user}.")
-            if self.private_key:
-                self._connect_using_private_key()
-            else:
-                self._connect_using_password()
+            self._connect()
             self._log_action("SSH session established.")
 
-            # Start an interactive shell
-            self.shell = self.ssh_client.invoke_shell()
+            self.shell = self._invoke_shell_with_environment()
             time.sleep(
                 config.cli.ssh_connection_explicit_wait
             )  # Wait for shell to initialize
+
+            self._prepare_prompt_settings()
 
             self._detect_action_prompt()
 
@@ -74,6 +90,22 @@ class SSHClient(BaseShell):
                 f"Failed to establish SSH connection: {str(e)}",
                 CommandExecutionException,
             )
+
+    def _connect(self):
+        if self.private_key:
+            self._connect_using_private_key()
+            return
+        self._connect_using_password()
+
+    def _invoke_shell_with_environment(self):
+        try:
+            return self.ssh_client.invoke_shell(environment=self._compose_spawn_env())
+        except TypeError:
+            return self.ssh_client.invoke_shell()
+
+    def _prepare_prompt_settings(self):
+        if self.disable_prompt_shortening and self._is_posix_shell_prompt():
+            self._apply_remote_prompt_settings()
 
     def _connect_using_private_key(self):
         self.ssh_client.connect(
@@ -131,3 +163,11 @@ class SSHClient(BaseShell):
         if self.ssh_client:
             self._log_action("Terminating SSH session.")
             self.ssh_client.close()
+
+    def _apply_remote_prompt_settings(self):
+        if not self.shell:
+            return
+        self.shell.send("export PS1='hyperion$ '\n")
+        self.shell.send("export PROMPT='hyperion$ '\n")
+        self.shell.send("export COLUMNS=1024\n")
+        time.sleep(config.cli.command_registration_time)
