@@ -105,11 +105,17 @@ class BaseShell:
         if data == self.action_prompt:
             return
 
+        self._process_cache_lines(data)
+
+    def _process_cache_lines(self, data):
         lines = data.split(self.line_separator)
         for line in lines:
             line = line.strip()
 
             if self._is_cmd_line(line):
+                trailing_output = self._extract_trailing_output_after_command(line)
+                if trailing_output:
+                    self.output_cache.append(trailing_output)
                 self.last_cmd = None
                 continue
 
@@ -149,6 +155,14 @@ class BaseShell:
         if prompt is None:
             return False
         return prompt in line
+
+    def _extract_trailing_output_after_command(self, line: str) -> str:
+        if not self.last_cmd:
+            return ""
+        if self.last_cmd not in line:
+            return ""
+        trailing_output = line.split(self.last_cmd, 1)[1].strip()
+        return trailing_output
 
     def _is_posix_shell_prompt(self) -> bool:
         shell_name = str(self._shell_executable or self.source).lower()
@@ -205,8 +219,26 @@ class BaseShell:
         which is the marker used to indicate when a command has finished executing.
         """
         data = self._read_output_buffer()
-        self.action_prompt = data.split(self.line_separator)[-1].strip()
+        self.action_prompt = self._extract_action_prompt(data)
         self._log_debug(f"Action prompt is:\n{self.action_prompt}")
+
+    def detect_action_prompt(self):
+        """
+        Detects and normalizes the tool's action prompt.
+
+        Sends a newline first so the shell prints a fresh prompt, then captures it.
+        """
+        self.send_keys("")
+        self._detect_action_prompt()
+
+    @staticmethod
+    def _extract_action_prompt(data: str) -> str:
+        lines = [line.strip() for line in data.splitlines() if line.strip()]
+        if not lines:
+            return ""
+        prompt = lines[-1]
+        prompt = re.sub(r"\s+", " ", prompt).strip()
+        return prompt
 
     def _write(self, data: str):
         """
@@ -399,10 +431,15 @@ class BaseShell:
         and converts the remaining value into an integer representing the exit code.
         """
         output = self._read_output_buffer()
-        output = output.replace(self.line_separator, "")
-        output = output.replace(self.exit_code_cmd, "")
-        output = output.replace(self.action_prompt, "")
-        self.exit_code = int(output)
+        self.exit_code = self._extract_exit_code(output)
+
+    def _extract_exit_code(self, output: str) -> int:
+        # Extract the last standalone integer token from the chunk.
+        # This is robust when prompt/command/result are merged in one line.
+        matches = re.findall(r"(?<!\S)-?\d+(?!\S)", output)
+        if not matches:
+            raise ValueError(f"Failed to parse exit code from output: {repr(output)}")
+        return int(matches[-1])
 
     def _remove_action_prompt_from_output(self):
         """

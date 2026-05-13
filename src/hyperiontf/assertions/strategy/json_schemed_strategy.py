@@ -8,6 +8,8 @@ from .default_strategy import DefaultStrategy
 
 
 class JSONSchemedStrategy(DefaultStrategy):
+    types = [dict, list, set, tuple]
+
     def to_match_schema(self, schema) -> ExpectationResult:
         """
         Validates the actual value against the provided JSON Schema. The schema can be

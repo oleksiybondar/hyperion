@@ -1,5 +1,6 @@
 from .base_shell import BaseShell
 import paramiko
+import shlex
 from hyperiontf.typing import CommandExecutionException
 from hyperiontf.configuration.config import config
 import time
@@ -81,9 +82,11 @@ class SSHClient(BaseShell):
                 config.cli.ssh_connection_explicit_wait
             )  # Wait for shell to initialize
 
-            self._prepare_prompt_settings()
+            self._activate_requested_shell()
 
             self._detect_action_prompt()
+
+            self._prepare_prompt_settings()
 
         except Exception as e:
             self._log_error(
@@ -98,14 +101,26 @@ class SSHClient(BaseShell):
         self._connect_using_password()
 
     def _invoke_shell_with_environment(self):
+        if not self.env:
+            return self.ssh_client.invoke_shell()
         try:
-            return self.ssh_client.invoke_shell(environment=self._compose_spawn_env())
+            return self.ssh_client.invoke_shell(environment=self.env)
         except TypeError:
             return self.ssh_client.invoke_shell()
 
     def _prepare_prompt_settings(self):
         if self.disable_prompt_shortening and self._is_posix_shell_prompt():
             self._apply_remote_prompt_settings()
+            self.action_prompt = "hyperion$"
+
+    def _activate_requested_shell(self):
+        if not self.shell:
+            return
+        shell_executable = self._shell_executable or "bash"
+        shell_argv = [shell_executable, *self.shell_args]
+        shell_command = "exec " + shlex.join(shell_argv)
+        self.shell.send(f"{shell_command}\n")
+        time.sleep(config.cli.command_registration_time)
 
     def _connect_using_private_key(self):
         self.ssh_client.connect(
@@ -167,7 +182,13 @@ class SSHClient(BaseShell):
     def _apply_remote_prompt_settings(self):
         if not self.shell:
             return
-        self.shell.send("export PS1='hyperion$ '\n")
-        self.shell.send("export PROMPT='hyperion$ '\n")
+        self.shell.send("export PS1='hyperion$'\n")
+        self.shell.send("export PROMPT='hyperion$'\n")
         self.shell.send("export COLUMNS=1024\n")
+        self.shell.send("\n")
         time.sleep(config.cli.command_registration_time)
+        try:
+            # Drain one noisy chunk produced by prompt reconfiguration.
+            self._read_output_buffer()
+        except Exception:
+            pass
