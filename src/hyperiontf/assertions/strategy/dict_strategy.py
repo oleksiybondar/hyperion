@@ -1,12 +1,9 @@
-from .default_strategy import DefaultStrategy
+from .json_schemed_strategy import JSONSchemedStrategy
 from hyperiontf.assertions.expectation_result import ExpectationResult
 from .decorators import with_dict_diff
 
-import jsonschema
-import json
 
-
-class DictStrategy(DefaultStrategy):
+class DictStrategy(JSONSchemedStrategy):
     types = [dict]
 
     @with_dict_diff
@@ -161,40 +158,3 @@ class DictStrategy(DefaultStrategy):
             method="not_to_contain_value",
             human_readable_description=human_readable_description,
         )
-
-    def to_match_schema(self, schema) -> ExpectationResult:
-        """
-        Validates the actual dictionary against the provided JSON Schema. The schema can be
-        provided directly as a dictionary representing the JSON Schema or as a string path
-        to a JSON Schema file.
-
-        Args:
-            schema (Union[dict, str]): The JSON Schema to validate against, either as a dictionary
-                                       or a string path to a JSON Schema file.
-
-        Returns:
-            ExpectationResult: The result of the JSON Schema validation, including a human-readable
-                               description of the action performed. If the validation fails, the 'diff'
-                               property of the result will contain the validation error message.
-        """
-        if isinstance(schema, str):
-            # Load the JSON Schema from file if a string is provided
-            with open(schema, "r") as schema_file:
-                schema = json.load(schema_file)
-
-        message = "Validate dictionary against the JSON Schema."
-        result = ExpectationResult(
-            result=True,
-            actual_value=self.actual_value,
-            expected_value=schema,
-            method="to_match_schema",
-            human_readable_description=message,
-        )
-
-        try:
-            jsonschema.validate(instance=self.actual_value, schema=schema)
-        except jsonschema.exceptions.ValidationError as e:
-            result.result = False
-            result.diff = e.message
-
-        return result
