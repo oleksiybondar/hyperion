@@ -77,7 +77,7 @@ class Response:
         :return: The HTTP status message.
         :rtype: str
         """
-        return self.response.reason
+        return self.response.reason or ""
 
     @property
     def raw_body(self) -> str:
