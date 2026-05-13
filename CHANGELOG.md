@@ -13,7 +13,27 @@ It is important to acknowledge that versions prior to v1.0.0 are considered to b
 
 From its first version, our framework has included a dedicated REST client equipped with extensive, built-in logging features, alongside a UI harness that simplifies page object creation. This harness supports a unified API compatible with Selenium, Appium, and Playwright, ensuring a seamless and efficient testing process.
 
-## [0.8.00] - 2026-05-08
+## [0.7.04] - 2026-05-13
+
+### Fixed
+
+- JSON Schema validation now works consistently for array-like values (`list`, `tuple`, `set`) in addition to dictionaries.
+- Resolved schema validation duplication across array/dict assertion strategies by moving shared behavior into a common schema-capable strategy layer.
+- Fixed CLI action-prompt handling edge cases where prompt/command parsing could cut output incorrectly in interactive shell sessions.
+
+### Added
+
+- New shell startup controls for CLI-based clients:
+  - `shell_args`: pass shell command-line arguments at process start.
+  - `env`: pass environment variables into spawned shell sessions.
+
+### Tests
+
+- Added real-shell integration coverage for CLI client startup customization:
+  - verifies environment variable passthrough;
+  - verifies shell argument passthrough.
+
+## [0.7.03] - 2026-05-08
 
 ### Added
 
